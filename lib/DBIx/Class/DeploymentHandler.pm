@@ -5,7 +5,7 @@ use Method::Signatures::Simple;
 require DBIx::Class::Schema;    # loaded for type constraint
 require DBIx::Class::Storage;   # loaded for type constraint
 require DBIx::Class::ResultSet; # loaded for type constraint
-use Carp 'carp';
+use Carp::Clan '^DBIx::Class::DeploymentHandler';
 
 has schema => (
    isa      => 'DBIx::Class::Schema',
@@ -92,11 +92,13 @@ method upgrade {
   my $schema_version = $self->schema_version;
 
   unless ($db_version) {
+      # croak?
       carp 'Upgrade not possible as database is unversioned. Please call install first.';
       return;
   }
 
   if ( $db_version eq $schema_version ) {
+      # croak?
       carp "Upgrade not necessary\n";
       return;
   }
@@ -126,6 +128,7 @@ method upgrade {
 
 method upgrade_single_step($db_version, $target_version) {
   if ($db_version eq $target_version) {
+    # croak?
     carp "Upgrade not necessary\n";
     return;
   }
@@ -140,18 +143,17 @@ method upgrade_single_step($db_version, $target_version) {
   $self->create_upgrade_path({ upgrade_file => $upgrade_file });
 
   unless (-f $upgrade_file) {
+    # croak?
     carp "Upgrade not possible, no upgrade file found ($upgrade_file), please create one\n";
     return;
   }
 
   carp "DB version ($db_version) is lower than the schema version (".$self->schema_version."). Attempting upgrade.\n";
 
-  # backup if necessary then apply upgrade
-  $self->_filedata($self->_read_sql_file($upgrade_file));
+  $self->_filedata($self->_read_sql_file($upgrade_file)); # I don't like this --fREW 2010-02-22
   $self->backup if $self->do_backup;
   $self->schema->txn_do(sub { $self->do_upgrade });
 
-  # set row in dbix_class_schema_versions table
   $self->version_rs->create({
      version     => $target_version,
      # ddl         => $ddl,
@@ -173,6 +175,7 @@ method run_upgrade($stm) {
 }
 
 method apply_statement($statement) {
+  # croak?
   $self->storage->dbh->do($_) or carp "SQL was: $_"
 }
 
@@ -185,6 +188,7 @@ sub _create_db_to_schema_diff {
 
   my $db = $driver_to_db_map{$self->storage->dbh->{Driver}{Name}};
   unless ($db) {
+    # croak?
     print "Sorry, this is an unsupported DB\n";
     return;
   }
