@@ -32,7 +32,11 @@ has storage => (
    lazy_build => 1,
 );
 
-method _build_storage { $self->schema->storage }
+method _build_storage {
+   my $s = $self->schema->storage;
+   $s->_determine_driver;
+   $s
+}
 
 has _filedata => (
    isa => 'Str',
