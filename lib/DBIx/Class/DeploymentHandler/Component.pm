@@ -3,11 +3,13 @@ package DBIx::Class::DepolymentHandler::Component;
 use strict;
 use warnings;
 
+use Carp 'carp';
+
 sub connection  {
   my $self = shift;
   $self->next::method(@_);
 
-  $args = $_[3] || {};
+  my $args = $_[3] || {};
 
   return if $args->{ignore_version} || $ENV{DBIC_NO_VERSION_CHECK};
 
