@@ -8,58 +8,58 @@ require DBIx::Class::ResultSet; # loaded for type constraint
 use Carp::Clan '^DBIx::Class::DeploymentHandler';
 
 has schema => (
-   isa      => 'DBIx::Class::Schema',
-   is       => 'ro',
-   required => 1,
-   handles => [qw{schema_version}],
+  isa      => 'DBIx::Class::Schema',
+  is       => 'ro',
+  required => 1,
+  handles => [qw{schema_version}],
 );
 
 has upgrade_directory => (
-   isa      => 'Str',
-   is       => 'ro',
-   required => 1,
-   default  => 'sql',
+  isa      => 'Str',
+  is       => 'ro',
+  required => 1,
+  default  => 'sql',
 );
 
 has backup_directory => (
-   isa => 'Str',
-   is  => 'ro',
+  isa => 'Str',
+  is  => 'ro',
 );
 
 has storage => (
-   isa        => 'DBIx::Class::Storage',
-   is         => 'ro',
-   lazy_build => 1,
+  isa        => 'DBIx::Class::Storage',
+  is         => 'ro',
+  lazy_build => 1,
 );
 
 method _build_storage {
-   my $s = $self->schema->storage;
-   $s->_determine_driver;
-   $s
+  my $s = $self->schema->storage;
+  $s->_determine_driver;
+  $s
 }
 
 has _filedata => (
-   isa => 'Str',
-   is  => 'rw',
+  isa => 'Str',
+  is  => 'rw',
 );
 
 has do_backup => (
-   isa     => 'Bool',
-   is      => 'ro',
-   default => undef,
+  isa     => 'Bool',
+  is      => 'ro',
+  default => undef,
 );
 
 has do_diff_on_init => (
-   isa     => 'Bool',
-   is      => 'ro',
-   default => undef,
+  isa     => 'Bool',
+  is      => 'ro',
+  default => undef,
 );
 
 has version_rs => (
-   isa        => 'DBIx::Class::ResultSet',
-   is         => 'ro',
-   lazy_build => 1,
-   handles    => [qw( is_installed db_version )],
+  isa        => 'DBIx::Class::ResultSet',
+  is         => 'ro',
+  lazy_build => 1,
+  handles    => [qw( is_installed db_version )],
 );
 
 method _build_version_rs { $self->schema->resultset('VersionResult') }
@@ -76,9 +76,9 @@ method install($new_version) {
     $self->schema->deploy;
 
     $self->version_rs->create({
-       version     => $new_version,
-       # ddl         => $ddl,
-       # upgrade_sql => $upgrade_sql,
+      version     => $new_version,
+      # ddl         => $ddl,
+      # upgrade_sql => $upgrade_sql,
     });
   }
 }
@@ -92,15 +92,15 @@ method upgrade {
   my $schema_version = $self->schema_version;
 
   unless ($db_version) {
-      # croak?
-      carp 'Upgrade not possible as database is unversioned. Please call install first.';
-      return;
+    # croak?
+    carp 'Upgrade not possible as database is unversioned. Please call install first.';
+    return;
   }
 
   if ( $db_version eq $schema_version ) {
-      # croak?
-      carp "Upgrade not necessary\n";
-      return;
+    # croak?
+    carp "Upgrade not necessary\n";
+    return;
   }
 
   my @version_list = $self->ordered_schema_versions ||
@@ -108,12 +108,12 @@ method upgrade {
 
   # remove all versions in list above the required version
   while ( @version_list && ( $version_list[-1] ne $schema_version ) ) {
-      pop @version_list;
+    pop @version_list;
   }
 
   # remove all versions in list below the current version
   while ( @version_list && ( $version_list[0] ne $db_version ) ) {
-      shift @version_list;
+    shift @version_list;
   }
 
   # check we have an appropriate list of versions
@@ -121,8 +121,8 @@ method upgrade {
 
   # do sets of upgrade
   while ( @version_list >= 2 ) {
-      $self->upgrade_single_step( $version_list[0], $version_list[1] );
-      shift @version_list;
+    $self->upgrade_single_step( $version_list[0], $version_list[1] );
+    shift @version_list;
   }
 }
 
@@ -155,9 +155,9 @@ method upgrade_single_step($db_version, $target_version) {
   $self->schema->txn_do(sub { $self->do_upgrade });
 
   $self->version_rs->create({
-     version     => $target_version,
-     # ddl         => $ddl,
-     # upgrade_sql => $upgrade_sql,
+    version     => $target_version,
+    # ddl         => $ddl,
+    # upgrade_sql => $upgrade_sql,
   });
 }
 
@@ -261,3 +261,7 @@ method _read_sql_file($file) {
 }
 
 1;
+
+__END__
+
+vim: ts=2,sw=2,expandtab
