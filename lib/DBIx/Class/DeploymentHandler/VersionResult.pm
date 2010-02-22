@@ -3,7 +3,7 @@ package DBIx::Class::DepolymentHandler::VersionResult;
 use strict;
 use warnings;
 
-use base 'DBIx::Class::Core';
+use parent 'DBIx::Class::Core';
 
 __PACKAGE__->table('dbix_class_deploymenthandler_versions');
 
@@ -28,5 +28,6 @@ __PACKAGE__->add_columns (
 
 __PACKAGE__->set_primary_key('installed');
 __PACKAGE__->add_unique_constraint(['version']);
+__PACKAGE__->resultset_class('DBIx::Class::DeploymentHandler::VersionResultSet');
 
 1;

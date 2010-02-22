@@ -2,8 +2,9 @@ package DBIx::Class::DeploymentHandler;
 
 use Moose;
 use Method::Signatures::Simple;
-require DBIx::Class::Schema; # loaded for type constraint
-require DBIx::Class::Storage; # loaded for type constraint
+require DBIx::Class::Schema;    # loaded for type constraint
+require DBIx::Class::Storage;   # loaded for type constraint
+require DBIx::Class::ResultSet; # loaded for type constraint
 use Carp 'carp';
 
 has schema => (
@@ -31,8 +32,11 @@ has storage => (
    lazy_build => 1,
 );
 
+method _build_storage { $self->schema->storage }
+
 has _filedata => (
-   is => 'ro',
+   isa => 'Str',
+   is  => 'rw',
 );
 
 has do_backup => (
@@ -47,90 +51,76 @@ has do_diff_on_init => (
    default => undef,
 );
 
-method _build_storage {
-   return $self->schema->storage;
-}
+has version_rs => (
+   isa        => 'DBIx::Class::ResultSet',
+   is         => 'ro',
+   lazy_build => 1,
+   handles    => [qw( is_installed db_version )],
+);
+
+method _build_version_rs { $self->schema->resultset('VersionResult') }
+
+method backup { $self->storage->backup($self->backup_directory) }
 
 method install($new_version) {
-  # must be called on a fresh database
-  if ($self->get_db_version) {
-    carp 'Install not possible as versions table already exists in database';
-  }
+  carp 'Install not possible as versions table already exists in database'
+    unless $self->is_installed;
 
-  # default to current version if none passed
-  $new_version ||= $self->schema_version();
+  $new_version ||= $self->schema_version;
 
   if ($new_version) {
-    # create versions table and version row
-    $self->{vschema}->deploy;
-    $self->_set_db_version({ version => $new_version });
+    $self->schema->deploy;
+
+    $self->version_rs->create({
+       version     => $new_version,
+       # ddl         => $ddl,
+       # upgrade_sql => $upgrade_sql,
+    });
   }
 }
 
-method deploy {
-  $self->next::method(@_);
-  $self->install();
-}
+method create_upgrade_path { }
 
-sub create_upgrade_path {
-  ## override this method
-}
-
-sub ordered_schema_versions {
-  ## override this method
-}
+method ordered_schema_versions { }
 
 method upgrade {
-  my $db_version = $self->get_db_version();
+  my $db_version     = $self->db_version;
+  my $schema_version = $self->schema_version;
 
-  # db unversioned
   unless ($db_version) {
       carp 'Upgrade not possible as database is unversioned. Please call install first.';
       return;
   }
 
-  # db and schema at same version. do nothing
-  if ( $db_version eq $self->schema_version ) {
+  if ( $db_version eq $schema_version ) {
       carp "Upgrade not necessary\n";
       return;
   }
 
-  my @version_list = $self->ordered_schema_versions;
-
-  # if nothing returned then we preload with min/max
-  @version_list = ( $db_version, $self->schema_version )
-    unless ( scalar(@version_list) );
-
-  # catch the case of someone returning an arrayref
-  @version_list = @{ $version_list[0] }
-    if ( ref( $version_list[0] ) eq 'ARRAY' );
+  my @version_list = $self->ordered_schema_versions ||
+    ( $db_version, $schema_version );
 
   # remove all versions in list above the required version
-  while ( scalar(@version_list)
-      && ( $version_list[-1] ne $self->schema_version ) )
-  {
+  while ( @version_list && ( $version_list[-1] ne $schema_version ) ) {
       pop @version_list;
   }
 
   # remove all versions in list below the current version
-  while ( scalar(@version_list) && ( $version_list[0] ne $db_version ) ) {
+  while ( @version_list && ( $version_list[0] ne $db_version ) ) {
       shift @version_list;
   }
 
   # check we have an appropriate list of versions
-  if ( scalar(@version_list) < 2 ) {
-      die;
-  }
+  die if @version_list < 2;
 
   # do sets of upgrade
-  while ( scalar(@version_list) >= 2 ) {
+  while ( @version_list >= 2 ) {
       $self->upgrade_single_step( $version_list[0], $version_list[1] );
       shift @version_list;
   }
 }
 
 method upgrade_single_step($db_version, $target_version) {
-  # db and schema at same version. do nothing
   if ($db_version eq $target_version) {
     carp "Upgrade not necessary\n";
     return;
@@ -143,11 +133,11 @@ method upgrade_single_step($db_version, $target_version) {
   $self->storage->sqlt_type;
 
   my $upgrade_file = $self->ddl_filename(
-                                         $self->storage->sqlt_type,
-                                         $target_version,
-                                         $self->upgrade_directory,
-                                         $db_version,
-                                        );
+    $self->storage->sqlt_type,
+    $target_version,
+    $self->upgrade_directory,
+    $db_version,
+  );
 
   $self->create_upgrade_path({ upgrade_file => $upgrade_file });
 
@@ -160,92 +150,32 @@ method upgrade_single_step($db_version, $target_version) {
 
   # backup if necessary then apply upgrade
   $self->_filedata($self->_read_sql_file($upgrade_file));
-  $self->backup() if($self->do_backup);
-  $self->txn_do(sub { $self->do_upgrade() });
+  $self->backup if $self->do_backup;
+  $self->schema->txn_do(sub { $self->do_upgrade });
 
   # set row in dbix_class_schema_versions table
-  $self->_set_db_version({version => $target_version});
+  $self->version_rs->create({
+     version     => $target_version,
+     # ddl         => $ddl,
+     # upgrade_sql => $upgrade_sql,
+  });
 }
 
-method do_upgrade {
-  # just run all the commands (including inserts) in order
-  $self->run_upgrade(qr/.*?/);
-}
+method do_upgrade { $self->run_upgrade(qr/.*?/) }
 
 method run_upgrade($stm) {
-    return unless ($self->_filedata);
-    my @statements = grep { $_ =~ $stm } @{$self->_filedata};
-    $self->_filedata([ grep { $_ !~ /$stm/i } @{$self->_filedata} ]);
+  return unless $self->_filedata;
+  my @statements = grep { $_ =~ $stm } @{$self->_filedata};
 
-    for (@statements) {
-        $self->storage->debugobj->query_start($_) if $self->storage->debug;
-        $self->apply_statement($_);
-        $self->storage->debugobj->query_end($_) if $self->storage->debug;
-    }
-
-    return 1;
+  for (@statements) {
+    $self->storage->debugobj->query_start($_) if $self->storage->debug;
+    $self->apply_statement($_);
+    $self->storage->debugobj->query_end($_) if $self->storage->debug;
+  }
 }
 
 method apply_statement($statement) {
-    $self->storage->dbh->do($_) or carp "SQL was: $_";
-}
-
-method get_db_version {
-    my $vtable = $self->schema->resultset('VersionResult');
-    my $version = $vtable->search(undef, {
-      order_by => { -desc => 'installed' },
-      rows => 1
-    })->get_column('version')->next || 0;
-    return $version;
-}
-
-method backup {
-    ## Make each ::DBI::Foo do this
-    $self->storage->backup($self->backup_directory());
-}
-
-method connection  {
-  $self->next::method(@_);
-  $self->_on_connect($_[3]);
-  return $self;
-}
-
-method _on_connect($args) {
-  $args ||= {};
-
-  $self->{vschema} = DBIx::Class::Version->connect(@{$self->storage->connect_info()});
-  my $vtable = $self->{vschema}->resultset('Table');
-
-  # useful when connecting from scripts etc
-  return if ($args->{ignore_version} || ($ENV{DBIC_NO_VERSION_CHECK} && !exists $args->{ignore_version}));
-
-  # check for legacy versions table and move to new if exists
-  my $vschema_compat = DBIx::Class::VersionCompat->connect(@{$self->storage->connect_info()});
-  unless ($self->_source_exists($vtable)) {
-    my $vtable_compat = $vschema_compat->resultset('TableCompat');
-    if ($self->_source_exists($vtable_compat)) {
-      $self->{vschema}->deploy;
-      map { $vtable->create({ installed => $_->Installed, version => $_->Version }) } $vtable_compat->all;
-      $self->storage->dbh->do("DROP TABLE " . $vtable_compat->result_source->from);
-    }
-  }
-
-  my $pversion = $self->get_db_version();
-
-  if($pversion eq $self->schema_version)
-    {
-#         carp "This version is already installed\n";
-        return 1;
-    }
-
-  if(!$pversion)
-    {
-        carp "Your DB is currently unversioned. Please call upgrade on your schema to sync the DB.\n";
-        return 1;
-    }
-
-  carp "Versions out of sync. This is " . $self->schema_version .
-    ", your database contains version $pversion, please call upgrade on your Schema.\n";
+  $self->storage->dbh->do($_) or carp "SQL was: $_"
 }
 
 sub _create_db_to_schema_diff {
@@ -326,15 +256,6 @@ method _read_sql_file($file) {
     join '', @data;
 
   return \@data;
-}
-
-method _source_exists($rs) {
-  my $c = eval {
-    $rs->search({ 1, 0 })->count;
-  };
-  return 0 if $@ || !defined $c;
-
-  return 1;
 }
 
 1;
