@@ -130,12 +130,6 @@ method upgrade_single_step($db_version, $target_version) {
     return;
   }
 
-  # strangely the first time this is called can
-  # differ to subsequent times. so we call it
-  # here to be sure.
-  # XXX - just fix it
-  $self->storage->sqlt_type;
-
   my $upgrade_file = $self->ddl_filename(
     $self->storage->sqlt_type,
     $target_version,
