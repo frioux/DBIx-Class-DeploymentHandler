@@ -10,6 +10,7 @@ has schema => (
    isa      => 'DBIx::Class::Schema',
    is       => 'ro',
    required => 1,
+   handles => [qw{schema_version}],
 );
 
 has upgrade_directory => (
@@ -189,17 +190,14 @@ method apply_statement($statement) {
     $self->storage->dbh->do($_) or carp "SQL was: $_";
 }
 
-method get_db_version($rs) {
-    my $vtable = $self->{vschema}->resultset('Table');
-    my $version = eval {
-      $vtable->search({}, { order_by => { -desc => 'installed' }, rows => 1 } )
-              ->get_column ('version')
-               ->next;
-    };
-    return $version || 0;
+method get_db_version {
+    my $vtable = $self->schema->resultset('VersionResult');
+    my $version = $vtable->search(undef, {
+      order_by => { -desc => 'installed' },
+      rows => 1
+    })->get_column('version')->next || 0;
+    return $version;
 }
-
-method schema_version {}
 
 method backup {
     ## Make each ::DBI::Foo do this
@@ -212,11 +210,8 @@ method connection  {
   return $self;
 }
 
-sub _on_connect
-{
-  my ($self, $args) = @_;
-
-  $args = {} unless $args;
+method _on_connect($args) {
+  $args ||= {};
 
   $self->{vschema} = DBIx::Class::Version->connect(@{$self->storage->connect_info()});
   my $vtable = $self->{vschema}->resultset('Table');
@@ -257,29 +252,30 @@ sub _create_db_to_schema_diff {
   my $self = shift;
 
   my %driver_to_db_map = (
-                          'mysql' => 'MySQL'
-                         );
+    'mysql' => 'MySQL'
+  );
 
-  my $db = $driver_to_db_map{$self->storage->dbh->{Driver}->{Name}};
+  my $db = $driver_to_db_map{$self->storage->dbh->{Driver}{Name}};
   unless ($db) {
     print "Sorry, this is an unsupported DB\n";
     return;
   }
 
   $self->throw_exception($self->storage->_sqlt_version_error)
-    if (not $self->storage->_sqlt_version_ok);
+    unless $self->storage->_sqlt_version_ok;
 
   my $db_tr = SQL::Translator->new({
-                                    add_drop_table => 1,
-                                    parser => 'DBI',
-                                    parser_args => { dbh => $self->storage->dbh }
-                                   });
+    add_drop_table => 1,
+    parser         => 'DBI',
+    parser_args    => { dbh  => $self->storage->dbh },
+    producer       => $db,
+  });
 
-  $db_tr->producer($db);
-  my $dbic_tr = SQL::Translator->new;
-  $dbic_tr->parser('SQL::Translator::Parser::DBIx::Class');
-  $dbic_tr->data($self);
-  $dbic_tr->producer($db);
+  my $dbic_tr = SQL::Translator->new({
+    parser   => 'SQL::Translator::Parser::DBIx::Class',
+    data     => $self,
+    producer => $db,
+  });
 
   $db_tr->schema->name('db_schema');
   $dbic_tr->schema->name('dbic_schema');
@@ -290,93 +286,55 @@ sub _create_db_to_schema_diff {
     $tr->parser->($tr, $$data);
   }
 
-  my $diff = SQL::Translator::Diff::schema_diff($db_tr->schema, $db,
-                                                $dbic_tr->schema, $db,
-                                                { ignore_constraint_names => 1, ignore_index_names => 1, caseopt => 1 });
+  my $diff = SQL::Translator::Diff::schema_diff(
+    $db_tr->schema,   $db,
+    $dbic_tr->schema, $db, {
+      ignore_constraint_names => 1,
+      ignore_index_names      => 1,
+      caseopt                 => 1,
+    }
+  );
 
   my $filename = $self->ddl_filename(
-                                         $db,
-                                         $self->schema_version,
-                                         $self->upgrade_directory,
-                                         'PRE',
-                                    );
-  my $file;
-  if(!open($file, ">$filename"))
-    {
-      $self->throw_exception("Can't open $filename for writing ($!)");
-      next;
-    }
-  print $file $diff;
-  close($file);
+    $db,
+    $self->schema_version,
+    $self->upgrade_directory,
+    'PRE',
+  );
 
-  carp "WARNING: There may be differences between your DB and your DBIC schema. Please review and if necessary run the SQL in $filename to sync your DB.\n";
+  open my $file, '>', $filename
+    or $self->throw_exception("Can't open $filename for writing ($!)");
+  print {$file} $diff;
+  close $file;
+
+  carp "WARNING: There may be differences between your DB and your DBIC schema.\n" .
+       "Please review and if necessary run the SQL in $filename to sync your DB.\n";
 }
 
-
-sub _set_db_version {
-  my $self = shift;
-  my ($params) = @_;
-  $params ||= {};
-
-  my $version = $params->{version} ? $params->{version} : $self->schema_version;
-  my $vtable = $self->{vschema}->resultset('Table');
-
-  ##############################################################################
-  #                             !!! NOTE !!!
-  ##############################################################################
-  #
-  # The travesty below replaces the old nice timestamp format of %Y-%m-%d %H:%M:%S
-  # This is necessary since there are legitimate cases when upgrades can happen
-  # back to back within the same second. This breaks things since we relay on the
-  # ability to sort by the 'installed' value. The logical choice of an autoinc
-  # is not possible, as it will break multiple legacy installations. Also it is
-  # not possible to format the string sanely, as the column is a varchar(20).
-  # The 'v' character is added to the front of the string, so that any version
-  # formatted by this new function will sort _after_ any existing 200... strings.
-  my @tm = gettimeofday();
-  my @dt = gmtime ($tm[0]);
-  my $o = $vtable->create({
-    version => $version,
-    installed => sprintf("v%04d%02d%02d_%02d%02d%02d.%03.0f",
-      $dt[5] + 1900,
-      $dt[4] + 1,
-      $dt[3],
-      $dt[2],
-      $dt[1],
-      $dt[0],
-      $tm[1] / 1000, # convert to millisecs, format as up/down rounded int above
-    ),
-  });
-}
-
-sub _read_sql_file {
-  my $self = shift;
-  my $file = shift || return;
+method _read_sql_file($file) {
+  return unless $file;
 
   open my $fh, '<', $file or carp("Can't open upgrade file, $file ($!)");
   my @data = split /\n/, join '', <$fh>;
   close $fh;
 
   @data = grep {
-     $_ &&
-     !/^--/ &&
-     !/^(BEGIN|BEGIN TRANSACTION|COMMIT)/m
+    $_ &&
+    !/^--/ &&
+    !/^(BEGIN|BEGIN TRANSACTION|COMMIT)/m
   } split /;/,
-     join '', @data;
+    join '', @data;
 
   return \@data;
 }
 
-sub _source_exists
-{
-    my ($self, $rs) = @_;
+method _source_exists($rs) {
+  my $c = eval {
+    $rs->search({ 1, 0 })->count;
+  };
+  return 0 if $@ || !defined $c;
 
-    my $c = eval {
-        $rs->search({ 1, 0 })->count;
-    };
-    return 0 if $@ || !defined $c;
-
-    return 1;
+  return 1;
 }
 
 1;
