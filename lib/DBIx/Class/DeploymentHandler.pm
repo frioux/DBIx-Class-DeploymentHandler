@@ -7,6 +7,7 @@ require DBIx::Class::Storage;   # loaded for type constraint
 require DBIx::Class::ResultSet; # loaded for type constraint
 use Carp::Clan '^DBIx::Class::DeploymentHandler';
 use SQL::Translator;
+require SQL::Translator::Diff;
 use Try::Tiny;
 
 BEGIN {
@@ -74,6 +75,11 @@ has version_rs => (
   lazy_build => 1,
   handles    => [qw( is_installed db_version )],
 );
+
+method _build_version_rs {
+   $self->schema->set_us_up_the_bomb;
+   $self->schema->resultset('__VERSION')
+}
 
 has databases => (
   coerce  => 1,
@@ -164,11 +170,6 @@ method deploy {
       $deploy->( $line );
     }
   }
-}
-
-method _build_version_rs {
-   $self->schema->set_us_up_the_bomb;
-   $self->schema->resultset('__VERSION')
 }
 
 method backup { $self->storage->backup($self->backup_directory) }
@@ -268,7 +269,7 @@ method upgrade_single_step($db_version, $target_version) {
   });
 }
 
-method create_ddl_dir($version, $preversion) {
+method create_install_ddl {
   my $schema    = $self->schema;
   my $databases = $self->databases;
   my $dir       = $self->upgrade_directory;
@@ -278,6 +279,7 @@ method create_ddl_dir($version, $preversion) {
     $dir = "./";
   }
 
+  my $version = $schema->schema_version || '1.x';
   my $schema_version = $schema->schema_version || '1.x';
   $version ||= $schema_version;
 
@@ -318,10 +320,40 @@ method create_ddl_dir($version, $preversion) {
     }
     print {$file} $output;
     close $file;
+  }
+}
 
-    next unless $preversion;
+method create_update_ddl($version, $preversion) {
+  my $schema    = $self->schema;
+  my $databases = $self->databases;
+  my $dir       = $self->upgrade_directory;
+  my $sqltargs  = $self->sqltargs;
 
-    require SQL::Translator::Diff;
+  unless( -d $dir ) {
+    carp "Upgrade directory $dir does not exist, using ./\n";
+    $dir = "./";
+  }
+
+  my $schema_version = $schema->schema_version || '1.x';
+  $version ||= $schema_version;
+
+  $sqltargs = {
+    add_drop_table => 1,
+    ignore_constraint_names => 1,
+    ignore_index_names => 1,
+    %{$sqltargs}
+  };
+
+  my $sqlt = SQL::Translator->new( $sqltargs );
+
+  $sqlt->parser('SQL::Translator::Parser::DBIx::Class');
+  my $sqlt_schema = $sqlt->translate({ data => $schema })
+    or $self->throw_exception ($sqlt->error);
+
+  foreach my $db (@$databases) {
+    $sqlt->reset;
+    $sqlt->{schema} = $sqlt_schema;
+    $sqlt->producer($db);
 
     my $prefilename = $self->ddl_filename($db, $preversion, $dir);
     unless(-e $prefilename) {
@@ -370,6 +402,7 @@ method create_ddl_dir($version, $preversion) {
       $t->parser( $db ) # could this really throw an exception?
         or $self->throw_exception ($t->error);
 
+      my $filename = $self->ddl_filename($db, $version, $dir);
       my $out = $t->translate( $filename )
         or $self->throw_exception ($t->error);
 
@@ -384,6 +417,7 @@ method create_ddl_dir($version, $preversion) {
        $dest_schema,   $db,
        $sqltargs
     );
+    my $file;
     unless(open $file, q(>), $diff_file) {
       $self->throw_exception("Can't write to $diff_file ($!)");
       next;
@@ -391,6 +425,11 @@ method create_ddl_dir($version, $preversion) {
     print {$file} $diff;
     close $file;
   }
+}
+
+method create_ddl_dir($version, $preversion) {
+  $self->create_install_ddl;
+  $self->create_update_ddl($version, $preversion) if $preversion;
 }
 
 method do_upgrade { $self->run_upgrade(qr/.*?/) }
