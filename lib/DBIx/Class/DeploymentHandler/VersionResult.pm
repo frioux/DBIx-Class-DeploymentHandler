@@ -1,4 +1,4 @@
-package DBIx::Class::DepolymentHandler::VersionResult;
+package DBIx::Class::DeploymentHandler::VersionResult;
 
 use strict;
 use warnings;
