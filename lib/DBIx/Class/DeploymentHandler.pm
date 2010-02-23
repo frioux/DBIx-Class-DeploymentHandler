@@ -11,14 +11,14 @@ has schema => (
   isa      => 'DBIx::Class::Schema',
   is       => 'ro',
   required => 1,
-  handles => [qw{schema_version}],
+  handles => [qw( schema_version )],
 );
 
 has upgrade_directory => (
   isa      => 'Str',
   is       => 'ro',
   required => 1,
-  default  => 'sql',
+  default  => 'upgrades',
 );
 
 has backup_directory => (
@@ -66,9 +66,11 @@ method _build_version_rs { $self->schema->resultset('VersionResult') }
 
 method backup { $self->storage->backup($self->backup_directory) }
 
+method create_ddl_dir { $self->storage->create_ddl_dir( $self->schema, @_ ) }
+
 method install($new_version) {
   carp 'Install not possible as versions table already exists in database'
-    unless $self->is_installed;
+    if $self->is_installed;
 
   $new_version ||= $self->schema_version;
 
@@ -177,70 +179,6 @@ method run_upgrade($stm) {
 method apply_statement($statement) {
   # croak?
   $self->storage->dbh->do($_) or carp "SQL was: $_"
-}
-
-sub _create_db_to_schema_diff {
-  my $self = shift;
-
-  my %driver_to_db_map = (
-    'mysql' => 'MySQL'
-  );
-
-  my $db = $driver_to_db_map{$self->storage->dbh->{Driver}{Name}};
-  unless ($db) {
-    # croak?
-    print "Sorry, this is an unsupported DB\n";
-    return;
-  }
-
-  $self->throw_exception($self->storage->_sqlt_version_error)
-    unless $self->storage->_sqlt_version_ok;
-
-  my $db_tr = SQL::Translator->new({
-    add_drop_table => 1,
-    parser         => 'DBI',
-    parser_args    => { dbh  => $self->storage->dbh },
-    producer       => $db,
-  });
-
-  my $dbic_tr = SQL::Translator->new({
-    parser   => 'SQL::Translator::Parser::DBIx::Class',
-    data     => $self,
-    producer => $db,
-  });
-
-  $db_tr->schema->name('db_schema');
-  $dbic_tr->schema->name('dbic_schema');
-
-  # is this really necessary?
-  foreach my $tr ($db_tr, $dbic_tr) {
-    my $data = $tr->data;
-    $tr->parser->($tr, $$data);
-  }
-
-  my $diff = SQL::Translator::Diff::schema_diff(
-    $db_tr->schema,   $db,
-    $dbic_tr->schema, $db, {
-      ignore_constraint_names => 1,
-      ignore_index_names      => 1,
-      caseopt                 => 1,
-    }
-  );
-
-  my $filename = $self->ddl_filename(
-    $db,
-    $self->schema_version,
-    $self->upgrade_directory,
-    'PRE',
-  );
-
-  open my $file, '>', $filename
-    or $self->throw_exception("Can't open $filename for writing ($!)");
-  print {$file} $diff;
-  close $file;
-
-  carp "WARNING: There may be differences between your DB and your DBIC schema.\n" .
-       "Please review and if necessary run the SQL in $filename to sync your DB.\n";
 }
 
 method _read_sql_file($file) {
