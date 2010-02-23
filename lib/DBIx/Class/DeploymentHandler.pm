@@ -11,14 +11,14 @@ has schema => (
   isa      => 'DBIx::Class::Schema',
   is       => 'ro',
   required => 1,
-  handles => [qw( schema_version )],
+  handles => [qw( ddl_filename schema_version )],
 );
 
 has upgrade_directory => (
   isa      => 'Str',
   is       => 'ro',
   required => 1,
-  default  => 'upgrades',
+  default  => 'sql',
 );
 
 has backup_directory => (
@@ -39,7 +39,7 @@ method _build_storage {
 }
 
 has _filedata => (
-  isa => 'Str',
+  isa => 'ArrayRef[Str]',
   is  => 'rw',
 );
 

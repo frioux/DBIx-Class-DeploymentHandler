@@ -6,14 +6,15 @@ use Test::Exception;
 use lib 't/lib';
 use DBICTest;
 use DBIx::Class::DeploymentHandler;
-
+my $db = 'dbi:SQLite:db.db';
 my $sql_dir = 't/sql';
 
 VERSION1: {
 	use_ok 'DBICVersion_v1';
-	my $s = DBICVersion::Schema->connect('dbi:SQLite::memory:');
+	my $s = DBICVersion::Schema->connect($db);
 	ok($s, 'DBICVersion::Schema 1.0 instantiates correctly');
 	my $handler = DBIx::Class::DeploymentHandler->new({
+		upgrade_directory => $sql_dir,
 		schema => $s,
 	});
 
@@ -38,9 +39,10 @@ VERSION1: {
 
 VERSION2: {
 	use_ok 'DBICVersion_v2';
-	my $s = DBICVersion::Schema->connect('dbi:SQLite::memory:');
+	my $s = DBICVersion::Schema->connect($db);
 	ok($s, 'DBICVersion::Schema 2.0 instantiates correctly');
 	my $handler = DBIx::Class::DeploymentHandler->new({
+		upgrade_directory => $sql_dir,
 		schema => $s,
 	});
 
@@ -57,7 +59,14 @@ VERSION2: {
 			baz => 'frew',
 		})
 	} 'schema not deployed';
-	$handler->install;
+	#$handler->install('1.0');
+	dies_ok {
+		$s->resultset('Foo')->create({
+			bar => 'frew',
+			baz => 'frew',
+		})
+	} 'schema not uppgrayyed';
+	$handler->upgrade_single_step('1.0', '2.0');
 	lives_ok {
 		$s->resultset('Foo')->create({
 			bar => 'frew',
@@ -68,9 +77,10 @@ VERSION2: {
 
 VERSION3: {
 	use_ok 'DBICVersion_v3';
-	my $s = DBICVersion::Schema->connect('dbi:SQLite::memory:');
+	my $s = DBICVersion::Schema->connect($db);
 	ok($s, 'DBICVersion::Schema 3.0 instantiates correctly');
 	my $handler = DBIx::Class::DeploymentHandler->new({
+		upgrade_directory => $sql_dir,
 		schema => $s,
 	});
 
@@ -85,12 +95,12 @@ VERSION3: {
 	ok(-e 't/sql/DBICVersion-Schema-2.0-3.0-SQLite.sql', 'DDL for migration from 2.0 to 3.0 got created successfully');
 	dies_ok {
 		$s->resultset('Foo')->create({
-			bar => 'frew',
-			baz => 'frew',
-			biff => 'frew',
-		})
+				bar => 'frew',
+				baz => 'frew',
+				biff => 'frew',
+			})
 	} 'schema not deployed';
-	$handler->install;
+	$handler->upgrade_single_step('2.0', '3.0');
 	lives_ok {
 		$s->resultset('Foo')->create({
 			bar => 'frew',
@@ -101,3 +111,6 @@ VERSION3: {
 }
 
 done_testing;
+__END__
+
+vim: ts=2,sw=2,expandtab

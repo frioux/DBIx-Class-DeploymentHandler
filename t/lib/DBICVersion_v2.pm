@@ -17,7 +17,8 @@ __PACKAGE__->add_columns(
 	},
 	baz => {
 		data_type => 'VARCHAR',
-		size => '10'
+		size => '10',
+		is_nullable => 1,
 	},
 );
 
