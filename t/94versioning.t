@@ -9,15 +9,9 @@ use Test::Exception;
 use Path::Class;
 use File::Copy;
 
-#warn "$dsn $user $pass";
-my ($dsn, $user, $pass);
+my ($dsn, $user, $pass) = ('dbi:SQLite::memory:','','');
 
 BEGIN {
-  ($dsn, $user, $pass) = @ENV{map { "DBICTEST_MYSQL_${_}" } qw/DSN USER PASS/};
-
-  plan skip_all => 'Set $ENV{DBICTEST_MYSQL_DSN}, _USER and _PASS to run this test'
-    unless ($dsn);
-
   eval { require Time::HiRes }
     || plan skip_all => 'Test needs Time::HiRes';
   Time::HiRes->import(qw/time sleep/);
