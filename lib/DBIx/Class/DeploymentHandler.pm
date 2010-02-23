@@ -62,6 +62,13 @@ has version_rs => (
   handles    => [qw( is_installed db_version )],
 );
 
+has databases => (
+  # make this coerce from Str
+  isa => 'ArrayRef[Str]',
+  is  => 'ro',
+  default => sub { [qw( MySQL SQLite PostgreSQL )] },
+);
+
 method _build_version_rs {
    $self->schema->set_us_up_the_bomb;
    $self->schema->resultset('__VERSION')
@@ -164,14 +171,14 @@ method upgrade_single_step($db_version, $target_version) {
   });
 }
 
-method create_ddl_dir($databases, $version, $dir, $preversion, $sqltargs) {
+method create_ddl_dir($version, $preversion, $sqltargs) {
   my $schema = $self->schema;
-  if(!$dir || !-d $dir) {
-    carp "No directory given, using ./\n";
+  my $databases = $self->databases;
+  my $dir = $self->upgrade_directory;
+  unless( -d $dir ) {
+    carp "Upgrade directory $dir does not exist, using ./\n";
     $dir = "./";
   }
-  $databases ||= ['MySQL', 'SQLite', 'PostgreSQL'];
-  $databases = [ $databases ] if(ref($databases) ne 'ARRAY');
 
   my $schema_version = $schema->schema_version || '1.x';
   $version ||= $schema_version;
