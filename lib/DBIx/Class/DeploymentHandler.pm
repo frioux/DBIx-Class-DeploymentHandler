@@ -87,6 +87,88 @@ has sqltargs => (
   default => sub { {} },
 );
 
+sub deployment_statements {
+  my ($self, $schema, $type, $version, $dir, $sqltargs) = @_;
+  $type ||= $self->storage->sqlt_type;
+  $version ||= $schema->schema_version || '1.x';
+  $dir ||= './';
+  my $filename = $schema->ddl_filename($type, $version, $dir);
+  if(-f $filename)
+  {
+      my $file;
+      open($file, "<$filename")
+        or $self->throw_exception("Can't open $filename ($!)");
+      my @rows = <$file>;
+      close($file);
+      return join('', @rows);
+  }
+
+  # sources needs to be a parser arg, but for simplicty allow at top level
+  # coming in
+  $sqltargs->{parser_args}{sources} = delete $sqltargs->{sources}
+      if exists $sqltargs->{sources};
+
+  my $tr = SQL::Translator->new(
+    producer => "SQL::Translator::Producer::${type}",
+    %$sqltargs,
+    parser => 'SQL::Translator::Parser::DBIx::Class',
+    data => $schema,
+  );
+
+  my @ret;
+  my $wa = wantarray;
+  if ($wa) {
+    @ret = $tr->translate;
+  }
+  else {
+    $ret[0] = $tr->translate;
+  }
+
+  $schema->throw_exception( 'Unable to produce deployment statements: ' . $tr->error)
+    unless (@ret && defined $ret[0]);
+
+  return $wa ? @ret : $ret[0];
+}
+
+method deploy {
+  my $schema = $self->schema;
+  my $type   = undef;
+  my $sqltargs = $self->sqltargs;
+  my $dir = $self->upgrade_directory;
+  my $storage = $self->storage;
+
+  my $deploy = sub {
+    my $line = shift;
+    return if($line =~ /^--/);
+    return if(!$line);
+    # next if($line =~ /^DROP/m);
+    return if($line =~ /^BEGIN TRANSACTION/m);
+    return if($line =~ /^COMMIT/m);
+    return if $line =~ /^\s+$/; # skip whitespace only
+    $storage->_query_start($line);
+    eval {
+      # do a dbh_do cycle here, as we need some error checking in
+      # place (even though we will ignore errors)
+      $storage->dbh_do (sub { $_[1]->do($line) });
+    };
+    if ($@) {
+      carp qq{$@ (running "${line}")}
+    }
+    $storage->_query_end($line);
+  };
+  my @statements = $self->deployment_statements($schema, $type, undef, $dir, { %{ $sqltargs || {} }, no_comments => 1 } );
+  if (@statements > 1) {
+    foreach my $statement (@statements) {
+      $deploy->( $statement );
+    }
+  }
+  elsif (@statements == 1) {
+    foreach my $line ( split(";\n", $statements[0])) {
+      $deploy->( $line );
+    }
+  }
+}
+
 method _build_version_rs {
    $self->schema->set_us_up_the_bomb;
    $self->schema->resultset('__VERSION')
@@ -101,7 +183,7 @@ method install($new_version) {
   $new_version ||= $self->schema_version;
 
   if ($new_version) {
-    $self->schema->deploy;
+    $self->deploy();
 
     $self->version_rs->create({
       version     => $new_version,
