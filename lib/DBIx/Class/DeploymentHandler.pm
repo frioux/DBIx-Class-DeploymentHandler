@@ -205,16 +205,15 @@ method create_ddl_dir($version, $preversion) {
     or $self->throw_exception ($sqlt->error);
 
   foreach my $db (@$databases) {
-    $sqlt->reset();
+    $sqlt->reset;
     $sqlt->{schema} = $sqlt_schema;
     $sqlt->producer($db);
 
-    my $file;
-    my $filename = $schema->ddl_filename($db, $version, $dir);
+    my $filename = $self->ddl_filename($db, $version, $dir);
     if (-e $filename && ($version eq $schema_version )) {
       # if we are dumping the current version, overwrite the DDL
       carp "Overwriting existing DDL file - $filename";
-      unlink($filename);
+      unlink $filename;
     }
 
     my $output = $sqlt->translate;
@@ -222,36 +221,39 @@ method create_ddl_dir($version, $preversion) {
       carp("Failed to translate to $db, skipping. (" . $sqlt->error . ")");
       next;
     }
-    if(!open($file, ">$filename")) {
+    my $file;
+    unless( open $file, q(>), $filename ) {
       $self->throw_exception("Can't open $filename for writing ($!)");
       next;
     }
-    print $file $output;
-    close($file);
+    print {$file} $output;
+    close $file;
 
-    next unless ($preversion);
+    next unless $preversion;
 
     require SQL::Translator::Diff;
 
-    my $prefilename = $schema->ddl_filename($db, $preversion, $dir);
-    if(!-e $prefilename) {
+    my $prefilename = $self->ddl_filename($db, $preversion, $dir);
+    unless(-e $prefilename) {
       carp("No previous schema file found ($prefilename)");
       next;
     }
 
-    my $difffile = $schema->ddl_filename($db, $version, $dir, $preversion);
-    if(-e $difffile) {
-      carp("Overwriting existing diff file - $difffile");
-      unlink($difffile);
+    my $diff_file = $self->ddl_filename($db, $version, $dir, $preversion);
+    if(-e $diff_file) {
+      carp("Overwriting existing diff file - $diff_file");
+      unlink $diff_file;
     }
 
     my $source_schema;
     {
-      my $t = SQL::Translator->new($sqltargs);
-      $t->debug( 0 );
-      $t->trace( 0 );
+      my $t = SQL::Translator->new({
+         %{$sqltargs},
+         debug => 0,
+         trace => 0,
+      });
 
-      $t->parser( $db )
+      $t->parser( $db ) # could this really throw an exception?
         or $self->throw_exception ($t->error);
 
       my $out = $t->translate( $prefilename )
@@ -260,7 +262,7 @@ method create_ddl_dir($version, $preversion) {
       $source_schema = $t->schema;
 
       $source_schema->name( $prefilename )
-        unless ( $source_schema->name );
+        unless  $source_schema->name;
     }
 
     # The "new" style of producers have sane normalization and can support
@@ -269,11 +271,13 @@ method create_ddl_dir($version, $preversion) {
     my $dest_schema = $sqlt_schema;
 
     unless ( "SQL::Translator::Producer::$db"->can('preprocess_schema') ) {
-      my $t = SQL::Translator->new($sqltargs);
-      $t->debug( 0 );
-      $t->trace( 0 );
+      my $t = SQL::Translator->new({
+         %{$sqltargs},
+         debug => 0,
+         trace => 0,
+      });
 
-      $t->parser( $db )
+      $t->parser( $db ) # could this really throw an exception?
         or $self->throw_exception ($t->error);
 
       my $out = $t->translate( $filename )
@@ -285,16 +289,17 @@ method create_ddl_dir($version, $preversion) {
         unless $dest_schema->name;
     }
 
-    my $diff = SQL::Translator::Diff::schema_diff($source_schema, $db,
-                                                  $dest_schema,   $db,
-                                                  $sqltargs
-                                                 );
-    if(!open $file, ">$difffile") {
-      $self->throw_exception("Can't write to $difffile ($!)");
+    my $diff = SQL::Translator::Diff::schema_diff(
+       $source_schema, $db,
+       $dest_schema,   $db,
+       $sqltargs
+    );
+    unless(open $file, q(>), $diff_file) {
+      $self->throw_exception("Can't write to $diff_file ($!)");
       next;
     }
-    print $file $diff;
-    close($file);
+    print {$file} $diff;
+    close $file;
   }
 }
 
