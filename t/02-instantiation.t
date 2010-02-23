@@ -100,7 +100,7 @@ VERSION3: {
 				biff => 'frew',
 			})
 	} 'schema not deployed';
-	$handler->upgrade_single_step('2.0', '3.0');
+	$handler->upgrade;
 	lives_ok {
 		$s->resultset('Foo')->create({
 			bar => 'frew',

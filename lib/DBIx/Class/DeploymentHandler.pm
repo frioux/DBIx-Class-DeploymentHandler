@@ -90,7 +90,7 @@ method install($new_version) {
 
 method create_upgrade_path { }
 
-method ordered_schema_versions { }
+method ordered_schema_versions { undef }
 
 method upgrade {
   my $db_version     = $self->db_version;
