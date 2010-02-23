@@ -69,8 +69,6 @@ method _build_version_rs {
 
 method backup { $self->storage->backup($self->backup_directory) }
 
-method create_ddl_dir { $self->storage->create_ddl_dir( $self->schema, @_ ) }
-
 method install($new_version) {
   carp 'Install not possible as versions table already exists in database'
     if $self->is_installed;
@@ -164,6 +162,129 @@ method upgrade_single_step($db_version, $target_version) {
     # ddl         => $ddl,
     # upgrade_sql => $upgrade_sql,
   });
+}
+
+method create_ddl_dir($databases, $version, $dir, $preversion, $sqltargs) {
+  my $schema = $self->schema;
+  if(!$dir || !-d $dir) {
+    carp "No directory given, using ./\n";
+    $dir = "./";
+  }
+  $databases ||= ['MySQL', 'SQLite', 'PostgreSQL'];
+  $databases = [ $databases ] if(ref($databases) ne 'ARRAY');
+
+  my $schema_version = $schema->schema_version || '1.x';
+  $version ||= $schema_version;
+
+  $sqltargs = {
+    add_drop_table => 1,
+    ignore_constraint_names => 1,
+    ignore_index_names => 1,
+    %{$sqltargs || {}}
+  };
+
+  unless (DBIx::Class::Optional::Dependencies->req_ok_for ('deploy')) {
+    $self->throw_exception("Can't create a ddl file without " . DBIx::Class::Optional::Dependencies->req_missing_for ('deploy') );
+  }
+
+  my $sqlt = SQL::Translator->new( $sqltargs );
+
+  $sqlt->parser('SQL::Translator::Parser::DBIx::Class');
+  my $sqlt_schema = $sqlt->translate({ data => $schema })
+    or $self->throw_exception ($sqlt->error);
+
+  foreach my $db (@$databases) {
+    $sqlt->reset();
+    $sqlt->{schema} = $sqlt_schema;
+    $sqlt->producer($db);
+
+    my $file;
+    my $filename = $schema->ddl_filename($db, $version, $dir);
+    if (-e $filename && ($version eq $schema_version )) {
+      # if we are dumping the current version, overwrite the DDL
+      carp "Overwriting existing DDL file - $filename";
+      unlink($filename);
+    }
+
+    my $output = $sqlt->translate;
+    if(!$output) {
+      carp("Failed to translate to $db, skipping. (" . $sqlt->error . ")");
+      next;
+    }
+    if(!open($file, ">$filename")) {
+      $self->throw_exception("Can't open $filename for writing ($!)");
+      next;
+    }
+    print $file $output;
+    close($file);
+
+    next unless ($preversion);
+
+    require SQL::Translator::Diff;
+
+    my $prefilename = $schema->ddl_filename($db, $preversion, $dir);
+    if(!-e $prefilename) {
+      carp("No previous schema file found ($prefilename)");
+      next;
+    }
+
+    my $difffile = $schema->ddl_filename($db, $version, $dir, $preversion);
+    if(-e $difffile) {
+      carp("Overwriting existing diff file - $difffile");
+      unlink($difffile);
+    }
+
+    my $source_schema;
+    {
+      my $t = SQL::Translator->new($sqltargs);
+      $t->debug( 0 );
+      $t->trace( 0 );
+
+      $t->parser( $db )
+        or $self->throw_exception ($t->error);
+
+      my $out = $t->translate( $prefilename )
+        or $self->throw_exception ($t->error);
+
+      $source_schema = $t->schema;
+
+      $source_schema->name( $prefilename )
+        unless ( $source_schema->name );
+    }
+
+    # The "new" style of producers have sane normalization and can support
+    # diffing a SQL file against a DBIC->SQLT schema. Old style ones don't
+    # And we have to diff parsed SQL against parsed SQL.
+    my $dest_schema = $sqlt_schema;
+
+    unless ( "SQL::Translator::Producer::$db"->can('preprocess_schema') ) {
+      my $t = SQL::Translator->new($sqltargs);
+      $t->debug( 0 );
+      $t->trace( 0 );
+
+      $t->parser( $db )
+        or $self->throw_exception ($t->error);
+
+      my $out = $t->translate( $filename )
+        or $self->throw_exception ($t->error);
+
+      $dest_schema = $t->schema;
+
+      $dest_schema->name( $filename )
+        unless $dest_schema->name;
+    }
+
+    my $diff = SQL::Translator::Diff::schema_diff($source_schema, $db,
+                                                  $dest_schema,   $db,
+                                                  $sqltargs
+                                                 );
+    if(!open $file, ">$difffile") {
+      $self->throw_exception("Can't write to $difffile ($!)");
+      next;
+    }
+    print $file $diff;
+    close($file);
+  }
 }
 
 method do_upgrade { $self->run_upgrade(qr/.*?/) }
