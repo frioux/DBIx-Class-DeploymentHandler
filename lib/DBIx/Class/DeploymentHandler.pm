@@ -7,6 +7,7 @@ require DBIx::Class::Storage;   # loaded for type constraint
 require DBIx::Class::ResultSet; # loaded for type constraint
 use Carp::Clan '^DBIx::Class::DeploymentHandler';
 use SQL::Translator;
+use Try::Tiny;
 
 BEGIN {
   use Moose::Util::TypeConstraints;
@@ -92,17 +93,16 @@ method deployment_statements {
   my $schema   = $self->schema;
   my $type     = $self->storage->sqlt_type;
   my $sqltargs = $self->sqltargs;
-  my $version  = $schema->schema_version || '1.x';
+  my $version  = $self->schema_version || '1.x';
 
-  my $filename = $schema->ddl_filename($type, $version, $dir);
-  if(-f $filename)
-  {
+  my $filename = $self->ddl_filename($type, $version, $dir);
+  if(-f $filename) {
       my $file;
-      open($file, "<$filename")
-        or $self->throw_exception("Can't open $filename ($!)");
+      open $file, q(<), $filename
+        or carp "Can't open $filename ($!)";
       my @rows = <$file>;
-      close($file);
-      return join('', @rows);
+      close $file;
+      return join '', @rows;
   }
 
   # sources needs to be a parser arg, but for simplicty allow at top level
@@ -141,24 +141,19 @@ method deploy {
 
   my $deploy = sub {
     my $line = shift;
-    return if($line =~ /^--/);
-    return if(!$line);
-    # next if($line =~ /^DROP/m);
-    return if($line =~ /^BEGIN TRANSACTION/m);
-    return if($line =~ /^COMMIT/m);
-    return if $line =~ /^\s+$/; # skip whitespace only
+    return if(!$line || $line =~ /^--|^BEGIN TRANSACTION|^COMMIT|^\s+$/);
     $storage->_query_start($line);
-    eval {
+    try {
       # do a dbh_do cycle here, as we need some error checking in
       # place (even though we will ignore errors)
       $storage->dbh_do (sub { $_[1]->do($line) });
-    };
-    if ($@) {
-      carp "$@ (running '${line}')"
+    }
+    catch {
+      carp "$_ (running '${line}')"
     }
     $storage->_query_end($line);
   };
-  my @statements = $self->deployment_statements($schema, $type, undef, $dir, { %{ $sqltargs || {} }, no_comments => 1 } );
+  my @statements = $self->deployment_statements();
   if (@statements > 1) {
     foreach my $statement (@statements) {
       $deploy->( $statement );
