@@ -1,6 +1,7 @@
 #!perl
 
 use Test::More;
+use Test::Exception;
 
 use lib 't/lib';
 use DBICTest;
@@ -21,6 +22,18 @@ VERSION1: {
 	my $version = $s->schema_version();
 	$handler->create_ddl_dir( 'SQLite', $version, $sql_dir, 0);
 	ok(-e 't/sql/DBICVersion-Schema-1.0-SQLite.sql', 'DDL for 1.0 got created successfully');
+
+	dies_ok {
+		$s->resultset('Foo')->create({
+			bar => 'frew',
+		})
+	} 'schema not deployed';
+	$handler->install;
+	lives_ok {
+		$s->resultset('Foo')->create({
+			bar => 'frew',
+		})
+	} 'schema is deployed';
 }
 
 VERSION2: {
@@ -38,6 +51,19 @@ VERSION2: {
 	$handler->create_ddl_dir( 'SQLite', $version, $sql_dir, '1.0');
 	ok(-e 't/sql/DBICVersion-Schema-2.0-SQLite.sql', 'DDL for 2.0 got created successfully');
 	ok(-e 't/sql/DBICVersion-Schema-1.0-2.0-SQLite.sql', 'DDL for migration from 1.0 to 2.0 got created successfully');
+	dies_ok {
+		$s->resultset('Foo')->create({
+			bar => 'frew',
+			baz => 'frew',
+		})
+	} 'schema not deployed';
+	$handler->install;
+	lives_ok {
+		$s->resultset('Foo')->create({
+			bar => 'frew',
+			baz => 'frew',
+		})
+	} 'schema is deployed';
 }
 
 VERSION3: {
@@ -57,6 +83,21 @@ VERSION3: {
 	ok(-e 't/sql/DBICVersion-Schema-3.0-SQLite.sql', 'DDL for 3.0 got created successfully');
 	ok(-e 't/sql/DBICVersion-Schema-1.0-3.0-SQLite.sql', 'DDL for migration from 1.0 to 3.0 got created successfully');
 	ok(-e 't/sql/DBICVersion-Schema-2.0-3.0-SQLite.sql', 'DDL for migration from 2.0 to 3.0 got created successfully');
+	dies_ok {
+		$s->resultset('Foo')->create({
+			bar => 'frew',
+			baz => 'frew',
+			biff => 'frew',
+		})
+	} 'schema not deployed';
+	$handler->install;
+	lives_ok {
+		$s->resultset('Foo')->create({
+			bar => 'frew',
+			baz => 'frew',
+			biff => 'frew',
+		})
+	} 'schema is deployed';
 }
 
 done_testing;
