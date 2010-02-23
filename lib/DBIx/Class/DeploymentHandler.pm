@@ -8,6 +8,17 @@ require DBIx::Class::ResultSet; # loaded for type constraint
 use Carp::Clan '^DBIx::Class::DeploymentHandler';
 use SQL::Translator;
 
+BEGIN {
+  use Moose::Util::TypeConstraints;
+  subtype 'DBIx::Class::DeploymentHandler::Databases'
+    => as 'ArrayRef[Str]';
+
+  coerce 'DBIx::Class::DeploymentHandler::Databases'
+    => from 'Str'
+    => via { [$_] };
+  no Moose::Util::TypeConstraints;
+}
+
 has schema => (
   isa      => 'DBIx::Class::Schema',
   is       => 'ro',
@@ -64,9 +75,9 @@ has version_rs => (
 );
 
 has databases => (
-  # make this coerce from Str
-  isa => 'ArrayRef[Str]',
-  is  => 'ro',
+  coerce  => 1,
+  isa     => 'DBIx::Class::DeploymentHandler::Databases',
+  is      => 'ro',
   default => sub { [qw( MySQL SQLite PostgreSQL )] },
 );
 

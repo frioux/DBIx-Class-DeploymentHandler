@@ -19,7 +19,7 @@ VERSION1: {
    my $handler = DBIx::Class::DeploymentHandler->new({
       upgrade_directory => $sql_dir,
       schema => $s,
-      databases => ['SQLite'],
+      databases => 'SQLite',
    });
 
    ok($handler, 'DBIx::Class::DeploymentHandler w/1.0 instantiates correctly');
@@ -48,7 +48,7 @@ VERSION2: {
    my $handler = DBIx::Class::DeploymentHandler->new({
       upgrade_directory => $sql_dir,
       schema => $s,
-      databases => ['SQLite'],
+      databases => 'SQLite',
    });
 
    ok($handler, 'DBIx::Class::DeploymentHandler w/2.0 instantiates correctly');
@@ -87,7 +87,7 @@ VERSION3: {
    my $handler = DBIx::Class::DeploymentHandler->new({
       upgrade_directory => $sql_dir,
       schema => $s,
-      databases => ['SQLite'],
+      databases => 'SQLite',
    });
 
    ok($handler, 'DBIx::Class::DeploymentHandler w/3.0 instantiates correctly');
