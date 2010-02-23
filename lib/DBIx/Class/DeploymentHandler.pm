@@ -87,11 +87,13 @@ has sqltargs => (
   default => sub { {} },
 );
 
-sub deployment_statements {
-  my ($self, $schema, $type, $version, $dir, $sqltargs) = @_;
-  $type ||= $self->storage->sqlt_type;
-  $version ||= $schema->schema_version || '1.x';
-  $dir ||= './';
+method deployment_statements {
+  my $dir      = $self->upgrade_directory;
+  my $schema   = $self->schema;
+  my $type     = $self->storage->sqlt_type;
+  my $sqltargs = $self->sqltargs;
+  my $version  = $schema->schema_version || '1.x';
+
   my $filename = $schema->ddl_filename($type, $version, $dir);
   if(-f $filename)
   {
@@ -131,11 +133,11 @@ sub deployment_statements {
 }
 
 method deploy {
-  my $schema = $self->schema;
-  my $type   = undef;
+  my $schema   = $self->schema;
+  my $type     = undef;
   my $sqltargs = $self->sqltargs;
-  my $dir = $self->upgrade_directory;
-  my $storage = $self->storage;
+  my $dir      = $self->upgrade_directory;
+  my $storage  = $self->storage;
 
   my $deploy = sub {
     my $line = shift;
@@ -152,7 +154,7 @@ method deploy {
       $storage->dbh_do (sub { $_[1]->do($line) });
     };
     if ($@) {
-      carp qq{$@ (running "${line}")}
+      carp "$@ (running '${line}')"
     }
     $storage->_query_end($line);
   };
