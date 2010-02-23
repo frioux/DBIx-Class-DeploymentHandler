@@ -22,22 +22,16 @@ sub connection  {
 
   my $args = $_[3] || {};
 
-  return if $args->{ignore_version} || $ENV{DBIC_NO_VERSION_CHECK};
+  unless ( $args->{ignore_version} || $ENV{DBIC_NO_VERSION_CHECK}) {
+	 my $versions = $self->resultset('__VERSION');
 
-  my $versions = $self->resultset('__VERSION');
-
-  unless($versions->is_installed) {
-	  carp "Your DB is currently unversioned. Please call upgrade on your schema to sync the DB.\n";
-	  return $self;
+	 if (!$versions->is_installed) {
+		 carp "Your DB is currently unversioned. Please call upgrade on your schema to sync the DB.\n";
+	 } elsif ($versions->db_version ne $self->schema_version) {
+		carp 'Versions out of sync. This is ' . $self->schema_version .
+		  ', your database contains version ' . $versions->db_version . ", please call upgrade on your Schema.\n";
+	 }
   }
-
-  my $pversion = $versions->db_version;
-
-  return $self if $pversion eq $self->schema_version;
-
-  carp "Versions out of sync. This is " . $self->schema_version .
-    ", your database contains version $pversion, please call upgrade on your Schema.\n";
-
   return $self;
 }
 
