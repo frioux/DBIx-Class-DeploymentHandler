@@ -10,6 +10,8 @@ use SQL::Translator;
 require SQL::Translator::Diff;
 use Try::Tiny;
 
+with 'DBIx::Class::DeploymentHandler::SqltDeployMethod';
+
 BEGIN {
   use Moose::Util::TypeConstraints;
   subtype 'DBIx::Class::DeploymentHandler::Databases'
@@ -93,50 +95,6 @@ has sqltargs => (
   is  => 'ro',
   default => sub { {} },
 );
-
-method deployment_statements {
-  my $dir      = $self->upgrade_directory;
-  my $schema   = $self->schema;
-  my $type     = $self->storage->sqlt_type;
-  my $sqltargs = $self->sqltargs;
-  my $version  = $self->schema_version || '1.x';
-
-  my $filename = $self->ddl_filename($type, $version, $dir);
-  if(-f $filename) {
-      my $file;
-      open $file, q(<), $filename
-        or carp "Can't open $filename ($!)";
-      my @rows = <$file>;
-      close $file;
-      return join '', @rows;
-  }
-
-  # sources needs to be a parser arg, but for simplicty allow at top level
-  # coming in
-  $sqltargs->{parser_args}{sources} = delete $sqltargs->{sources}
-      if exists $sqltargs->{sources};
-
-  my $tr = SQL::Translator->new(
-    producer => "SQL::Translator::Producer::${type}",
-    %$sqltargs,
-    parser => 'SQL::Translator::Parser::DBIx::Class',
-    data => $schema,
-  );
-
-  my @ret;
-  my $wa = wantarray;
-  if ($wa) {
-    @ret = $tr->translate;
-  }
-  else {
-    $ret[0] = $tr->translate;
-  }
-
-  $schema->throw_exception( 'Unable to produce deployment statements: ' . $tr->error)
-    unless (@ret && defined $ret[0]);
-
-  return $wa ? @ret : $ret[0];
-}
 
 method deploy {
   my $schema   = $self->schema;
@@ -269,169 +227,6 @@ method upgrade_single_step($db_version, $target_version) {
   });
 }
 
-method create_install_ddl {
-  my $schema    = $self->schema;
-  my $databases = $self->databases;
-  my $dir       = $self->upgrade_directory;
-  my $sqltargs  = $self->sqltargs;
-  unless( -d $dir ) {
-    carp "Upgrade directory $dir does not exist, using ./\n";
-    $dir = "./";
-  }
-
-  my $version = $schema->schema_version || '1.x';
-  my $schema_version = $schema->schema_version || '1.x';
-  $version ||= $schema_version;
-
-  $sqltargs = {
-    add_drop_table => 1,
-    ignore_constraint_names => 1,
-    ignore_index_names => 1,
-    %{$sqltargs || {}}
-  };
-
-  my $sqlt = SQL::Translator->new( $sqltargs );
-
-  $sqlt->parser('SQL::Translator::Parser::DBIx::Class');
-  my $sqlt_schema = $sqlt->translate({ data => $schema })
-    or $self->throw_exception ($sqlt->error);
-
-  foreach my $db (@$databases) {
-    $sqlt->reset;
-    $sqlt->{schema} = $sqlt_schema;
-    $sqlt->producer($db);
-
-    my $filename = $self->ddl_filename($db, $version, $dir);
-    if (-e $filename && ($version eq $schema_version )) {
-      # if we are dumping the current version, overwrite the DDL
-      carp "Overwriting existing DDL file - $filename";
-      unlink $filename;
-    }
-
-    my $output = $sqlt->translate;
-    if(!$output) {
-      carp("Failed to translate to $db, skipping. (" . $sqlt->error . ")");
-      next;
-    }
-    my $file;
-    unless( open $file, q(>), $filename ) {
-      $self->throw_exception("Can't open $filename for writing ($!)");
-      next;
-    }
-    print {$file} $output;
-    close $file;
-  }
-}
-
-method create_update_ddl($version, $preversion) {
-  my $schema    = $self->schema;
-  my $databases = $self->databases;
-  my $dir       = $self->upgrade_directory;
-  my $sqltargs  = $self->sqltargs;
-
-  unless( -d $dir ) {
-    carp "Upgrade directory $dir does not exist, using ./\n";
-    $dir = "./";
-  }
-
-  my $schema_version = $schema->schema_version || '1.x';
-  $version ||= $schema_version;
-
-  $sqltargs = {
-    add_drop_table => 1,
-    ignore_constraint_names => 1,
-    ignore_index_names => 1,
-    %{$sqltargs}
-  };
-
-  my $sqlt = SQL::Translator->new( $sqltargs );
-
-  $sqlt->parser('SQL::Translator::Parser::DBIx::Class');
-  my $sqlt_schema = $sqlt->translate({ data => $schema })
-    or $self->throw_exception ($sqlt->error);
-
-  foreach my $db (@$databases) {
-    $sqlt->reset;
-    $sqlt->{schema} = $sqlt_schema;
-    $sqlt->producer($db);
-
-    my $prefilename = $self->ddl_filename($db, $preversion, $dir);
-    unless(-e $prefilename) {
-      carp("No previous schema file found ($prefilename)");
-      next;
-    }
-
-    my $diff_file = $self->ddl_filename($db, $version, $dir, $preversion);
-    if(-e $diff_file) {
-      carp("Overwriting existing diff file - $diff_file");
-      unlink $diff_file;
-    }
-
-    my $source_schema;
-    {
-      my $t = SQL::Translator->new({
-         %{$sqltargs},
-         debug => 0,
-         trace => 0,
-      });
-
-      $t->parser( $db ) # could this really throw an exception?
-        or $self->throw_exception ($t->error);
-
-      my $out = $t->translate( $prefilename )
-        or $self->throw_exception ($t->error);
-
-      $source_schema = $t->schema;
-
-      $source_schema->name( $prefilename )
-        unless  $source_schema->name;
-    }
-
-    # The "new" style of producers have sane normalization and can support
-    # diffing a SQL file against a DBIC->SQLT schema. Old style ones don't
-    # And we have to diff parsed SQL against parsed SQL.
-    my $dest_schema = $sqlt_schema;
-
-    unless ( "SQL::Translator::Producer::$db"->can('preprocess_schema') ) {
-      my $t = SQL::Translator->new({
-         %{$sqltargs},
-         debug => 0,
-         trace => 0,
-      });
-
-      $t->parser( $db ) # could this really throw an exception?
-        or $self->throw_exception ($t->error);
-
-      my $filename = $self->ddl_filename($db, $version, $dir);
-      my $out = $t->translate( $filename )
-        or $self->throw_exception ($t->error);
-
-      $dest_schema = $t->schema;
-
-      $dest_schema->name( $filename )
-        unless $dest_schema->name;
-    }
-
-    my $diff = SQL::Translator::Diff::schema_diff(
-       $source_schema, $db,
-       $dest_schema,   $db,
-       $sqltargs
-    );
-    my $file;
-    unless(open $file, q(>), $diff_file) {
-      $self->throw_exception("Can't write to $diff_file ($!)");
-      next;
-    }
-    print {$file} $diff;
-    close $file;
-  }
-}
-
-method create_ddl_dir($version, $preversion) {
-  $self->create_install_ddl;
-  $self->create_update_ddl($version, $preversion) if $preversion;
-}
-
 method do_upgrade { $self->run_upgrade(qr/.*?/) }
 
 method run_upgrade($stm) {
@@ -466,6 +261,8 @@ method _read_sql_file($file) {
 
   return \@data;
 }
+
+__PACKAGE__->meta->make_immutable;
 
 1;
 
