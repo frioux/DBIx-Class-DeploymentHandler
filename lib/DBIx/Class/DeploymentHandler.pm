@@ -62,7 +62,10 @@ has version_rs => (
   handles    => [qw( is_installed db_version )],
 );
 
-method _build_version_rs { $self->schema->resultset('VersionResult') }
+method _build_version_rs {
+   $self->schema->set_us_up_the_bomb;
+   $self->schema->resultset('__VERSION')
+}
 
 method backup { $self->storage->backup($self->backup_directory) }
 
