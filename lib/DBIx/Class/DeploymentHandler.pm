@@ -6,6 +6,7 @@ require DBIx::Class::Schema;    # loaded for type constraint
 require DBIx::Class::Storage;   # loaded for type constraint
 require DBIx::Class::ResultSet; # loaded for type constraint
 use Carp::Clan '^DBIx::Class::DeploymentHandler';
+use SQL::Translator;
 
 has schema => (
   isa      => 'DBIx::Class::Schema',
@@ -67,6 +68,12 @@ has databases => (
   isa => 'ArrayRef[Str]',
   is  => 'ro',
   default => sub { [qw( MySQL SQLite PostgreSQL )] },
+);
+
+has sqltargs => (
+  isa => 'HashRef',
+  is  => 'ro',
+  default => sub { {} },
 );
 
 method _build_version_rs {
@@ -171,10 +178,11 @@ method upgrade_single_step($db_version, $target_version) {
   });
 }
 
-method create_ddl_dir($version, $preversion, $sqltargs) {
-  my $schema = $self->schema;
+method create_ddl_dir($version, $preversion) {
+  my $schema    = $self->schema;
   my $databases = $self->databases;
-  my $dir = $self->upgrade_directory;
+  my $dir       = $self->upgrade_directory;
+  my $sqltargs  = $self->sqltargs;
   unless( -d $dir ) {
     carp "Upgrade directory $dir does not exist, using ./\n";
     $dir = "./";
@@ -189,10 +197,6 @@ method create_ddl_dir($version, $preversion, $sqltargs) {
     ignore_index_names => 1,
     %{$sqltargs || {}}
   };
-
-  unless (DBIx::Class::Optional::Dependencies->req_ok_for ('deploy')) {
-    $self->throw_exception("Can't create a ddl file without " . DBIx::Class::Optional::Dependencies->req_missing_for ('deploy') );
-  }
 
   my $sqlt = SQL::Translator->new( $sqltargs );
 
