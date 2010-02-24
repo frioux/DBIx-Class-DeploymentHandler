@@ -30,14 +30,14 @@ has schema => (
   handles => [qw( ddl_filename schema_version )],
 );
 
-has upgrade_directory => (
+has upgrade_directory => ( # configuration
   isa      => 'Str',
   is       => 'ro',
   required => 1,
   default  => 'sql',
 );
 
-has backup_directory => (
+has backup_directory => ( # configuration
   isa => 'Str',
   is  => 'ro',
   predicate  => 'has_backup_directory',
@@ -55,13 +55,7 @@ method _build_storage {
   $s
 }
 
-has do_backup => (
-  isa     => 'Bool',
-  is      => 'ro',
-  default => undef,
-);
-
-has do_diff_on_init => (
+has do_backup => ( # configuration
   isa     => 'Bool',
   is      => 'ro',
   default => undef,
@@ -79,14 +73,14 @@ method _build_version_rs {
    $self->schema->resultset('__VERSION')
 }
 
-has databases => (
+has databases => ( # configuration
   coerce  => 1,
   isa     => 'DBIx::Class::DeploymentHandler::Databases',
   is      => 'ro',
   default => sub { [qw( MySQL SQLite PostgreSQL )] },
 );
 
-has sqltargs => (
+has sqltargs => ( # configuration
   isa => 'HashRef',
   is  => 'ro',
   default => sub { {} },
@@ -109,7 +103,7 @@ method deploy {
     }
     $storage->_query_end($line);
   };
-  my @statements = $self->deployment_statements();
+  my @statements = $self->deployment_statements;
   if (@statements > 1) {
     foreach my $statement (@statements) {
       $deploy->( $statement );
@@ -129,7 +123,7 @@ method install($new_version) {
   $new_version ||= $self->schema_version;
 
   if ($new_version) {
-    $self->deploy();
+    $self->deploy;
 
     $self->version_rs->create({
       version     => $new_version,
