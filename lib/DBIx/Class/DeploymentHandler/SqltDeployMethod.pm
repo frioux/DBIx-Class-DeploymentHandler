@@ -1,8 +1,68 @@
 package DBIx::Class::DeploymentHandler::SqltDeployMethod;
-use Moose::Role;
+use Moose;
 use Method::Signatures::Simple;
 
 use Carp 'carp';
+
+has storage => (
+  isa        => 'DBIx::Class::Storage',
+  is         => 'ro',
+  lazy_build => 1,
+);
+
+has backup_directory => (
+  isa => 'Str',
+  is  => 'ro',
+);
+
+has do_backup => (
+  isa     => 'Bool',
+  is      => 'ro',
+  default => undef,
+);
+
+has sqltargs => (
+  isa => 'HashRef',
+  is  => 'ro',
+  default => sub { {} },
+);
+has upgrade_directory => (
+  isa      => 'Str',
+  is       => 'ro',
+  required => 1,
+  default  => 'sql',
+);
+
+has version_rs => (
+  isa        => 'DBIx::Class::ResultSet',
+  is         => 'ro',
+  lazy_build => 1,
+  handles    => [qw( is_installed db_version )],
+);
+
+method _build_version_rs {
+   $self->schema->set_us_up_the_bomb;
+   $self->schema->resultset('__VERSION')
+}
+
+has databases => (
+  coerce  => 1,
+  isa     => 'DBIx::Class::DeploymentHandler::Databases',
+  is      => 'ro',
+  default => sub { [qw( MySQL SQLite PostgreSQL )] },
+);
+
+has schema => (
+  isa      => 'DBIx::Class::Schema',
+  is       => 'ro',
+  required => 1,
+  handles => [qw( ddl_filename schema_version )],
+);
+
+has _filedata => (
+  isa => 'ArrayRef[Str]',
+  is  => 'rw',
+);
 
 method deployment_statements {
   my $dir      = $self->upgrade_directory;
@@ -245,4 +305,79 @@ method create_ddl_dir($version, $preversion) {
   $self->create_update_ddl($version, $preversion) if $preversion;
 }
 
+method _read_sql_file($file) {
+  return unless $file;
+
+  open my $fh, '<', $file or carp("Can't open upgrade file, $file ($!)");
+  my @data = split /\n/, join '', <$fh>;
+  close $fh;
+
+  @data = grep {
+    $_ &&
+    !/^--/ &&
+    !/^(BEGIN|BEGIN TRANSACTION|COMMIT)/m
+  } split /;/,
+    join '', @data;
+
+  return \@data;
+}
+
+method create_upgrade_path { }
+
+method upgrade_single_step($db_version, $target_version) {
+  if ($db_version eq $target_version) {
+    # croak?
+    carp "Upgrade not necessary\n";
+    return;
+  }
+
+  my $upgrade_file = $self->ddl_filename(
+    $self->storage->sqlt_type,
+    $target_version,
+    $self->upgrade_directory,
+    $db_version,
+  );
+
+  $self->create_upgrade_path({ upgrade_file => $upgrade_file });
+
+  unless (-f $upgrade_file) {
+    # croak?
+    carp "Upgrade not possible, no upgrade file found ($upgrade_file), please create one\n";
+    return;
+  }
+
+  carp "DB version ($db_version) is lower than the schema version (".$self->schema_version."). Attempting upgrade.\n";
+
+  $self->_filedata($self->_read_sql_file($upgrade_file)); # I don't like this --fREW 2010-02-22
+  $self->backup if $self->do_backup;
+  $self->schema->txn_do(sub { $self->do_upgrade });
+
+  $self->version_rs->create({
+    version     => $target_version,
+    # ddl         => $ddl,
+    # upgrade_sql => $upgrade_sql,
+  });
+}
+
+method do_upgrade { $self->run_upgrade(qr/.*?/) }
+
+method run_upgrade($stm) {
+  return unless $self->_filedata;
+  my @statements = grep { $_ =~ $stm } @{$self->_filedata};
+
+  for (@statements) {
+    $self->storage->debugobj->query_start($_) if $self->storage->debug;
+    $self->apply_statement($_);
+    $self->storage->debugobj->query_end($_) if $self->storage->debug;
+  }
+}
+
+method apply_statement($statement) {
+  # croak?
+  $self->storage->dbh->do($_) or carp "SQL was: $_"
+}
+
+method backup { $self->storage->backup($self->backup_directory) }
+
+__PACKAGE__->meta->make_immutable;
 1;
