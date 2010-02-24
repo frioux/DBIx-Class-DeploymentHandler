@@ -35,3 +35,7 @@ sub _build_deploy_method {
 }
 
 1;
+
+__END__
+
+vim: ts=2,sw=2,expandtab
