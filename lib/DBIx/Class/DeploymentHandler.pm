@@ -40,6 +40,7 @@ has upgrade_directory => (
 has backup_directory => (
   isa => 'Str',
   is  => 'ro',
+  predicate  => 'has_backup_directory',
 );
 
 has storage => (
