@@ -93,10 +93,6 @@ has sqltargs => (
 );
 
 method deploy {
-  my $schema   = $self->schema;
-  my $type     = undef;
-  my $sqltargs = $self->sqltargs;
-  my $dir      = $self->upgrade_directory;
   my $storage  = $self->storage;
 
   my $deploy = sub {
