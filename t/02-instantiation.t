@@ -10,7 +10,11 @@ my $db = 'dbi:SQLite:db.db';
 my $sql_dir = 't/sql';
 
 unlink 'db.db' if -e 'db.db';
-mkdir 't/sql' unless -d 't/sql';
+if (-d 't/sql') {
+	unlink $_ for glob('t/sql/*');
+} else {
+	mkdir 't/sql';
+}
 
 VERSION1: {
    use_ok 'DBICVersion_v1';
@@ -25,7 +29,7 @@ VERSION1: {
    ok($handler, 'DBIx::Class::DeploymentHandler w/1.0 instantiates correctly');
 
    my $version = $s->schema_version();
-   $handler->create_ddl_dir( $version, 0);
+   $handler->create_install_ddl();
    ok(-e 't/sql/DBICVersion-Schema-1.0-SQLite.sql', 'DDL for 1.0 got created successfully');
 
    dies_ok {
@@ -54,8 +58,8 @@ VERSION2: {
    ok($handler, 'DBIx::Class::DeploymentHandler w/2.0 instantiates correctly');
 
    $version = $s->schema_version();
-   $handler->create_ddl_dir($version, 0);
-   $handler->create_ddl_dir($version, '1.0');
+   $handler->create_install_ddl();
+   $handler->create_update_ddl($version, '1.0');
    ok(-e 't/sql/DBICVersion-Schema-2.0-SQLite.sql', 'DDL for 2.0 got created successfully');
    ok(-e 't/sql/DBICVersion-Schema-1.0-2.0-SQLite.sql', 'DDL for migration from 1.0 to 2.0 got created successfully');
    dies_ok {
@@ -93,9 +97,9 @@ VERSION3: {
    ok($handler, 'DBIx::Class::DeploymentHandler w/3.0 instantiates correctly');
 
    $version = $s->schema_version();
-   $handler->create_ddl_dir( $version, 0);
-   $handler->create_ddl_dir( $version, '1.0');
-   $handler->create_ddl_dir( $version, '2.0');
+   $handler->create_install_ddl;
+   $handler->create_update_ddl( $version, '1.0');
+   $handler->create_update_ddl( $version, '2.0');
    ok(-e 't/sql/DBICVersion-Schema-3.0-SQLite.sql', 'DDL for 3.0 got created successfully');
    ok(-e 't/sql/DBICVersion-Schema-1.0-3.0-SQLite.sql', 'DDL for migration from 1.0 to 3.0 got created successfully');
    ok(-e 't/sql/DBICVersion-Schema-2.0-3.0-SQLite.sql', 'DDL for migration from 2.0 to 3.0 got created successfully');

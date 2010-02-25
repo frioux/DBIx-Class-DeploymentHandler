@@ -11,7 +11,6 @@ has deploy_method => (
   lazy_build => 1,
   handles => [qw{
     deployment_statements
-	 deploy
 	 create_install_ddl
 	 create_update_ddl
 	 create_ddl_dir
