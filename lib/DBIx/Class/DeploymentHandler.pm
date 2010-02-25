@@ -86,38 +86,6 @@ has sqltargs => ( # configuration
   default => sub { {} },
 );
 
-method deploy {
-  my $storage  = $self->storage;
-
-  my $deploy = sub {
-    my $line = shift;
-    # the \nCOMMIT below is entirely to make the tests quieter,
-    # there is surely a better way to fix it (/m breaks everything)
-    return if(!$line || $line =~ /^(--|BEGIN TRANSACTION|\nCOMMIT|\s+$)/);
-    $storage->_query_start($line);
-    try {
-      # do a dbh_do cycle here, as we need some error checking in
-      # place (even though we will ignore errors)
-      $storage->dbh_do (sub { $_[1]->do($line) });
-    }
-    catch {
-      carp "$_ (running '${line}')"
-    }
-    $storage->_query_end($line);
-  };
-  my @statements = $self->deployment_statements;
-  if (@statements > 1) {
-    foreach my $statement (@statements) {
-      $deploy->( $statement );
-    }
-  }
-  elsif (@statements == 1) {
-    foreach my $line ( split(";\n", $statements[0])) {
-      $deploy->( $line );
-    }
-  }
-}
-
 method install($new_version) {
   carp 'Install not possible as versions table already exists in database'
     if $self->is_installed;

@@ -1,6 +1,7 @@
 package DBIx::Class::DeploymentHandler::SqltDeployMethod;
 use Moose;
 use Method::Signatures::Simple;
+use Try::Tiny;
 
 use Carp 'carp';
 
@@ -115,10 +116,6 @@ method deployment_statements {
 }
 
 method deploy {
-  my $schema   = $self->schema;
-  my $type     = undef;
-  my $sqltargs = $self->sqltargs;
-  my $dir      = $self->upgrade_directory;
   my $storage  = $self->storage;
 
   my $deploy = sub {
