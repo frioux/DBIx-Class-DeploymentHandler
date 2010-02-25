@@ -7,6 +7,7 @@ require DBIx::Class::ResultSet; # loaded for type constraint
 use Carp::Clan '^DBIx::Class::DeploymentHandler';
 
 with 'DBIx::Class::DeploymentHandler::WithSqltDeployMethod';
+with 'DBIx::Class::DeploymentHandler::WithDatabaseToSchemaVersions';
 
 BEGIN {
   use Moose::Util::TypeConstraints;
@@ -87,8 +88,6 @@ method install($new_version) {
   }
 }
 
-method ordered_schema_versions { undef }
-
 method upgrade {
   my $db_version     = $self->db_version;
   my $schema_version = $self->schema_version;
@@ -105,8 +104,7 @@ method upgrade {
     return;
   }
 
-  my @version_list = $self->ordered_schema_versions ||
-    ( $db_version, $schema_version );
+  my @version_list = $self->ordered_schema_versions;
 
   # remove all versions in list above the required version
   while ( @version_list && ( $version_list[-1] ne $schema_version ) ) {
