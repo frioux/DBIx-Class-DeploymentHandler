@@ -44,4 +44,4 @@ sub _build_deploy_method {
 
 __END__
 
-vim: ts=2,sw=2,expandtab
+vim: ts=2 sw=2 expandtab
