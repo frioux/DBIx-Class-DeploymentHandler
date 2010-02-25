@@ -6,6 +6,13 @@ use DBIx::Class::DeploymentHandler::SqltDeployMethod;
 use Carp 'carp';
 
 has deploy_method => (
+
+# < mst> isa => 'DBIx::Class::DeploymentHandler::SqltDeployMethod',
+# < mst> should be
+# < mst> does => <some role>
+# < mst> and that role should supply those methods
+# < mst> then you can pass handles => <some role> as well
+
   isa => 'DBIx::Class::DeploymentHandler::SqltDeployMethod',
   is  => 'ro',
   lazy_build => 1,
