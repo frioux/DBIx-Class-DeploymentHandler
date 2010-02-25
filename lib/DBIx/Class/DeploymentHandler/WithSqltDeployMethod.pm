@@ -25,7 +25,6 @@ sub _build_deploy_method {
 		databases         => $self->databases,
 		upgrade_directory => $self->upgrade_directory,
 		sqltargs          => $self->sqltargs,
-		storage           => $self->storage,
 		do_backup         => $self->do_backup,
 	};
 	$args->{backup_directory} = $self->backup_directory

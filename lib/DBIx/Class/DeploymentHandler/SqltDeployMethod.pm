@@ -10,6 +10,12 @@ has storage => (
   lazy_build => 1,
 );
 
+method _build_storage {
+  my $s = $self->schema->storage;
+  $s->_determine_driver;
+  $s
+}
+
 has backup_directory => (
   isa => 'Str',
   is  => 'ro',
@@ -385,4 +391,4 @@ __PACKAGE__->meta->make_immutable;
 
 __END__
 
-vim: ts=2,sw=2,expandtab
+vim: ts=2 sw=2 expandtab

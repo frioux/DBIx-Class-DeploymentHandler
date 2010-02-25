@@ -7,6 +7,7 @@ use lib 't/lib';
 use DBICTest;
 use DBIx::Class::DeploymentHandler;
 my $db = 'dbi:SQLite:db.db';
+my @connection = ($db, '', '', { ignore_version => 1 });
 my $sql_dir = 't/sql';
 
 unlink 'db.db' if -e 'db.db';
@@ -18,12 +19,13 @@ if (-d 't/sql') {
 
 VERSION1: {
    use_ok 'DBICVersion_v1';
-   my $s = DBICVersion::Schema->connect($db);
+   my $s = DBICVersion::Schema->connect(@connection);
    ok($s, 'DBICVersion::Schema 1.0 instantiates correctly');
    my $handler = DBIx::Class::DeploymentHandler->new({
       upgrade_directory => $sql_dir,
       schema => $s,
       databases => 'SQLite',
+		sqltargs => { add_drop_table => 0 },
    });
 
    ok($handler, 'DBIx::Class::DeploymentHandler w/1.0 instantiates correctly');
@@ -47,7 +49,7 @@ VERSION1: {
 
 VERSION2: {
    use_ok 'DBICVersion_v2';
-   my $s = DBICVersion::Schema->connect($db);
+   my $s = DBICVersion::Schema->connect(@connection);
    ok($s, 'DBICVersion::Schema 2.0 instantiates correctly');
    my $handler = DBIx::Class::DeploymentHandler->new({
       upgrade_directory => $sql_dir,
@@ -86,7 +88,7 @@ VERSION2: {
 
 VERSION3: {
    use_ok 'DBICVersion_v3';
-   my $s = DBICVersion::Schema->connect($db);
+   my $s = DBICVersion::Schema->connect(@connection);
    ok($s, 'DBICVersion::Schema 3.0 instantiates correctly');
    my $handler = DBIx::Class::DeploymentHandler->new({
       upgrade_directory => $sql_dir,
@@ -123,4 +125,4 @@ VERSION3: {
 done_testing;
 __END__
 
-vim: ts=2,sw=2,expandtab
+vim: ts=2 sw=2 expandtab

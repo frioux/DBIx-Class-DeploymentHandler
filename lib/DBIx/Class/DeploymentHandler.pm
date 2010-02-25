@@ -91,7 +91,9 @@ method deploy {
 
   my $deploy = sub {
     my $line = shift;
-    return if(!$line || $line =~ /^--|^BEGIN TRANSACTION|^COMMIT|^\s+$/);
+    # the \nCOMMIT below is entirely to make the tests quieter,
+    # there is surely a better way to fix it (/m breaks everything)
+    return if(!$line || $line =~ /^(--|BEGIN TRANSACTION|\nCOMMIT|\s+$)/);
     $storage->_query_start($line);
     try {
       # do a dbh_do cycle here, as we need some error checking in
@@ -180,4 +182,4 @@ __PACKAGE__->meta->make_immutable;
 
 __END__
 
-vim: ts=2,sw=2,expandtab
+vim: ts=2 sw=2 expandtab
