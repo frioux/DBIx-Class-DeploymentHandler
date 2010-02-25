@@ -3,12 +3,8 @@ package DBIx::Class::DeploymentHandler;
 use Moose;
 use Method::Signatures::Simple;
 require DBIx::Class::Schema;    # loaded for type constraint
-require DBIx::Class::Storage;   # loaded for type constraint
 require DBIx::Class::ResultSet; # loaded for type constraint
 use Carp::Clan '^DBIx::Class::DeploymentHandler';
-use SQL::Translator;
-require SQL::Translator::Diff;
-use Try::Tiny;
 
 with 'DBIx::Class::DeploymentHandler::WithSqltDeployMethod';
 
@@ -42,18 +38,6 @@ has backup_directory => ( # configuration
   is  => 'ro',
   predicate  => 'has_backup_directory',
 );
-
-has storage => (
-  isa        => 'DBIx::Class::Storage',
-  is         => 'ro',
-  lazy_build => 1,
-);
-
-method _build_storage {
-  my $s = $self->schema->storage;
-  $s->_determine_driver;
-  $s
-}
 
 has do_backup => ( # configuration
   isa     => 'Bool',

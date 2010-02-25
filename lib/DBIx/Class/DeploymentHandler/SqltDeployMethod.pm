@@ -2,6 +2,9 @@ package DBIx::Class::DeploymentHandler::SqltDeployMethod;
 use Moose;
 use Method::Signatures::Simple;
 use Try::Tiny;
+use SQL::Translator;
+require SQL::Translator::Diff;
+require DBIx::Class::Storage;   # loaded for type constraint
 
 use Carp 'carp';
 
