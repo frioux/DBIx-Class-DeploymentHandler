@@ -14,7 +14,9 @@ __PACKAGE__->add_columns (
   },
   version => {
     data_type         => 'varchar',
-    size              => '20'
+    # size needs to be at least
+    # 40 to support SHA1 versions
+    size              => '50'
   },
   ddl => {
     data_type         => 'text',
