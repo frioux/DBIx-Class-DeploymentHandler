@@ -77,7 +77,7 @@ VERSION2: {
          baz => 'frew',
       })
    } 'schema not uppgrayyed';
-   $handler->upgrade_single_step(['1.0', '2.0']);
+   $handler->upgrade;
    lives_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',

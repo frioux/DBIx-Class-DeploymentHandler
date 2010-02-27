@@ -17,11 +17,10 @@ has deploy_method => (
   is  => 'ro',
   lazy_build => 1,
   handles => [qw{
-    deployment_statements
-    deploy
+    _deploy
    prepare_install
    prepare_update
-   upgrade_single_step
+   _upgrade_single_step
   }],
 );
 

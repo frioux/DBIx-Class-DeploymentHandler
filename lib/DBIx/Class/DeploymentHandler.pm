@@ -78,7 +78,7 @@ method install {
   my $new_version = $self->to_version;
 
   if ($new_version) {
-    $self->deploy;
+    $self->_deploy;
 
     $self->version_rs->create({
       version     => $new_version,
@@ -90,7 +90,7 @@ method install {
 
 method upgrade {
   while ( my $version_list = $self->next_version_set ) {
-    $self->upgrade_single_step($version_list);
+    $self->_upgrade_single_step($version_list);
   }
 }
 

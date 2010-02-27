@@ -74,7 +74,7 @@ has _filedata => (
   is  => 'rw',
 );
 
-method ddl_filename($type, $versions, $dir) {
+method _ddl_filename($type, $versions, $dir) {
   my $filename = ref $self->schema;
   $filename =~ s/::/-/g;
 
@@ -85,14 +85,14 @@ method ddl_filename($type, $versions, $dir) {
   return $filename;
 }
 
-method deployment_statements {
+method _deployment_statements {
   my $dir      = $self->upgrade_directory;
   my $schema   = $self->schema;
   my $type     = $self->storage->sqlt_type;
   my $sqltargs = $self->sqltargs;
   my $version  = $self->schema_version || '1.x';
 
-  my $filename = $self->ddl_filename($type, [ $version ], $dir);
+  my $filename = $self->_ddl_filename($type, [ $version ], $dir);
   if(-f $filename) {
       my $file;
       open $file, q(<), $filename
@@ -129,7 +129,7 @@ method deployment_statements {
   return $wa ? @ret : $ret[0];
 }
 
-method deploy {
+method _deploy {
   my $storage  = $self->storage;
 
   my $deploy = sub {
@@ -146,7 +146,7 @@ method deploy {
     }
     $storage->_query_end($line);
   };
-  my @statements = $self->deployment_statements();
+  my @statements = $self->_deployment_statements();
   if (@statements > 1) {
     foreach my $statement (@statements) {
       $deploy->( $statement );
@@ -191,7 +191,7 @@ method prepare_install {
     $sqlt->{schema} = $sqlt_schema;
     $sqlt->producer($db);
 
-    my $filename = $self->ddl_filename($db, [ $version ], $dir);
+    my $filename = $self->_ddl_filename($db, [ $version ], $dir);
     if (-e $filename && ($version eq $schema_version )) {
       # if we are dumping the current version, overwrite the DDL
       carp "Overwriting existing DDL file - $filename";
@@ -245,13 +245,13 @@ method prepare_update($version, $preversion) {
     $sqlt->{schema} = $sqlt_schema;
     $sqlt->producer($db);
 
-    my $prefilename = $self->ddl_filename($db, [ $preversion ], $dir);
+    my $prefilename = $self->_ddl_filename($db, [ $preversion ], $dir);
     unless(-e $prefilename) {
       carp("No previous schema file found ($prefilename)");
       next;
     }
 
-    my $diff_file = $self->ddl_filename($db, [ $preversion, $version ], $dir );
+    my $diff_file = $self->_ddl_filename($db, [ $preversion, $version ], $dir );
     if(-e $diff_file) {
       carp("Overwriting existing diff file - $diff_file");
       unlink $diff_file;
@@ -292,7 +292,7 @@ method prepare_update($version, $preversion) {
       $t->parser( $db ) # could this really throw an exception?
         or $self->throw_exception ($t->error);
 
-      my $filename = $self->ddl_filename($db, [ $version ], $dir);
+      my $filename = $self->_ddl_filename($db, [ $version ], $dir);
       my $out = $t->translate( $filename )
         or $self->throw_exception ($t->error);
 
@@ -334,10 +334,10 @@ method _read_sql_file($file) {
   return \@data;
 }
 
-method upgrade_single_step {
+method _upgrade_single_step {
   my @version_set = @{ shift @_ };
   my $db_version = $self->db_version;
-  my $upgrade_file = $self->ddl_filename(
+  my $upgrade_file = $self->_ddl_filename(
     $self->storage->sqlt_type,
     \@version_set,
     $self->upgrade_directory,
@@ -353,7 +353,7 @@ method upgrade_single_step {
 
   $self->_filedata($self->_read_sql_file($upgrade_file)); # I don't like this --fREW 2010-02-22
   $self->backup if $self->do_backup;
-  $self->schema->txn_do(sub { $self->do_upgrade });
+  $self->schema->txn_do(sub { $self->_do_upgrade });
 
   $self->version_rs->create({
     version     => $version_set[-1],
@@ -362,20 +362,20 @@ method upgrade_single_step {
   });
 }
 
-method do_upgrade { $self->run_upgrade(qr/.*?/) }
+method _do_upgrade { $self->_run_upgrade(qr/.*?/) }
 
-method run_upgrade($stm) {
+method _run_upgrade($stm) {
   return unless $self->_filedata;
   my @statements = grep { $_ =~ $stm } @{$self->_filedata};
 
   for (@statements) {
     $self->storage->debugobj->query_start($_) if $self->storage->debug;
-    $self->apply_statement($_);
+    $self->_apply_statement($_);
     $self->storage->debugobj->query_end($_) if $self->storage->debug;
   }
 }
 
-method apply_statement($statement) {
+method _apply_statement($statement) {
   # croak?
   $self->storage->dbh->do($_) or carp "SQL was: $_"
 }
