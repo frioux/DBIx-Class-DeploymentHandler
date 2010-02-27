@@ -317,11 +317,6 @@ method prepare_update($version, $preversion) {
   }
 }
 
-method create_ddl_dir($version, $preversion) {
-  $self->prepare_install;
-  $self->prepare_update($version, $preversion) if $preversion;
-}
-
 method _read_sql_file($file) {
   return unless $file;
 

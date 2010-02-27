@@ -21,7 +21,6 @@ has deploy_method => (
     deploy
    prepare_install
    prepare_update
-   create_ddl_dir
    upgrade_single_step
   }],
 );
