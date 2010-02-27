@@ -53,6 +53,11 @@ has version_rs => (
   handles    => [qw( is_installed db_version )],
 );
 
+has to_version => (
+  is         => 'ro',
+  lazy_build => 1,
+);
+
 method _build_version_rs {
    $self->schema->set_us_up_the_bomb;
    $self->schema->resultset('__VERSION')
@@ -98,31 +103,8 @@ method upgrade {
     return;
   }
 
-  if ( $db_version eq $schema_version ) {
-    # croak?
-    carp "Upgrade not necessary\n";
-    return;
-  }
-
-  my @version_list = $self->ordered_schema_versions;
-
-  # remove all versions in list above the required version
-  while ( @version_list && ( $version_list[-1] ne $schema_version ) ) {
-    pop @version_list;
-  }
-
-  # remove all versions in list below the current version
-  while ( @version_list && ( $version_list[0] ne $db_version ) ) {
-    shift @version_list;
-  }
-
-  # check we have an appropriate list of versions
-  die if @version_list < 2;
-
-  # do sets of upgrade
-  while ( @version_list >= 2 ) {
-    $self->upgrade_single_step( $version_list[0], $version_list[1] );
-    shift @version_list;
+  while ( my $version_list = $self->next_version_set ) {
+    $self->upgrade_single_step( $version_list->[0], $version_list->[1] );
   }
 }
 

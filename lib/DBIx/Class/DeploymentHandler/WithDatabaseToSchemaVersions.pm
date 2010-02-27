@@ -13,17 +13,21 @@ has version_handler => (
 # < mst> and that role should supply those methods
 # < mst> then you can pass handles => <some role> as well
 
-  isa => 'DBIx::Class::DeploymentHandler::DatabaseToSchemaVersions',
+  does => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
   is  => 'ro',
   lazy_build => 1,
-  handles => [qw{ ordered_schema_versions }],
+  handles => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
 );
 
 sub _build_version_handler {
   my $self = shift;
-  DBIx::Class::DeploymentHandler::DatabaseToSchemaVersions->new({
+
+  my $args = {
     schema => $self->schema,
-  });
+  };
+
+  $args->{to_version} = $self->to_version if $self->has_to_version;
+  DBIx::Class::DeploymentHandler::DatabaseToSchemaVersions->new($args);
 }
 
 1;
