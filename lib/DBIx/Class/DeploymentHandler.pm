@@ -76,11 +76,11 @@ has sqltargs => ( # configuration
   default => sub { {} },
 );
 
-method install($new_version) {
+method install {
   carp 'Install not possible as versions table already exists in database'
     if $self->is_installed;
 
-  $new_version ||= $self->schema_version;
+  my $new_version = $self->to_version;
 
   if ($new_version) {
     $self->deploy;
@@ -94,17 +94,8 @@ method install($new_version) {
 }
 
 method upgrade {
-  my $db_version     = $self->db_version;
-  my $schema_version = $self->schema_version;
-
-  unless ($db_version) {
-    # croak?
-    carp 'Upgrade not possible as database is unversioned. Please call install first.';
-    return;
-  }
-
   while ( my $version_list = $self->next_version_set ) {
-    $self->upgrade_single_step( $version_list->[0], $version_list->[1] );
+    $self->upgrade_single_step($version_list);
   }
 }
 

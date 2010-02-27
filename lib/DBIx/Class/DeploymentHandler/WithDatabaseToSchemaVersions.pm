@@ -6,17 +6,10 @@ use DBIx::Class::DeploymentHandler::DatabaseToSchemaVersions;
 use Carp 'carp';
 
 has version_handler => (
-
-# < mst> isa => 'DBIx::Class::DeploymentHandler::SqltDeployMethod',
-# < mst> should be
-# < mst> does => <some role>
-# < mst> and that role should supply those methods
-# < mst> then you can pass handles => <some role> as well
-
-  does => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
-  is  => 'ro',
+  is         => 'ro',
   lazy_build => 1,
-  handles => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
+  does       => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
+  handles    => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
 );
 
 sub _build_version_handler {

@@ -7,7 +7,7 @@ has schema => (
   isa      => 'DBIx::Class::Schema',
   is       => 'ro',
   required => 1,
-  handles => [qw( ddl_filename schema_version )],
+  handles => [qw( schema_version )],
 );
 
 has version_rs => (

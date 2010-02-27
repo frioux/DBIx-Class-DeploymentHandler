@@ -12,9 +12,9 @@ my $sql_dir = 't/sql';
 
 unlink 'db.db' if -e 'db.db';
 if (-d 't/sql') {
-	unlink $_ for glob('t/sql/*');
+  unlink $_ for glob('t/sql/*');
 } else {
-	mkdir 't/sql';
+  mkdir 't/sql';
 }
 
 VERSION1: {
@@ -25,7 +25,7 @@ VERSION1: {
       upgrade_directory => $sql_dir,
       schema => $s,
       databases => 'SQLite',
-		sqltargs => { add_drop_table => 0 },
+    sqltargs => { add_drop_table => 0 },
    });
 
    ok($handler, 'DBIx::Class::DeploymentHandler w/1.0 instantiates correctly');
@@ -77,7 +77,7 @@ VERSION2: {
          baz => 'frew',
       })
    } 'schema not uppgrayyed';
-   $handler->upgrade_single_step('1.0', '2.0');
+   $handler->upgrade_single_step(['1.0', '2.0']);
    lives_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',

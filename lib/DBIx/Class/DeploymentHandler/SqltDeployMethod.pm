@@ -66,13 +66,24 @@ has schema => (
   isa      => 'DBIx::Class::Schema',
   is       => 'ro',
   required => 1,
-  handles => [qw( ddl_filename schema_version )],
+  handles => [qw( schema_version )],
 );
 
 has _filedata => (
   isa => 'ArrayRef[Str]',
   is  => 'rw',
 );
+
+method ddl_filename($type, $versions, $dir) {
+  my $filename = ref($self->schema);
+  $filename =~ s/::/-/g;
+
+  $filename = File::Spec->catfile(
+    $dir, "$filename-" . join( q(-), @{$versions} ) . "-$type.sql"
+  );
+
+  return $filename;
+}
 
 method deployment_statements {
   my $dir      = $self->upgrade_directory;
@@ -81,7 +92,7 @@ method deployment_statements {
   my $sqltargs = $self->sqltargs;
   my $version  = $self->schema_version || '1.x';
 
-  my $filename = $self->ddl_filename($type, $version, $dir);
+  my $filename = $self->ddl_filename($type, [ $version ], $dir);
   if(-f $filename) {
       my $file;
       open $file, q(<), $filename
@@ -180,7 +191,7 @@ method create_install_ddl {
     $sqlt->{schema} = $sqlt_schema;
     $sqlt->producer($db);
 
-    my $filename = $self->ddl_filename($db, $version, $dir);
+    my $filename = $self->ddl_filename($db, [ $version ], $dir);
     if (-e $filename && ($version eq $schema_version )) {
       # if we are dumping the current version, overwrite the DDL
       carp "Overwriting existing DDL file - $filename";
@@ -234,13 +245,13 @@ method create_update_ddl($version, $preversion) {
     $sqlt->{schema} = $sqlt_schema;
     $sqlt->producer($db);
 
-    my $prefilename = $self->ddl_filename($db, $preversion, $dir);
+    my $prefilename = $self->ddl_filename($db, [ $preversion ], $dir);
     unless(-e $prefilename) {
       carp("No previous schema file found ($prefilename)");
       next;
     }
 
-    my $diff_file = $self->ddl_filename($db, $version, $dir, $preversion);
+    my $diff_file = $self->ddl_filename($db, [ $preversion, $version ], $dir );
     if(-e $diff_file) {
       carp("Overwriting existing diff file - $diff_file");
       unlink $diff_file;
@@ -281,7 +292,7 @@ method create_update_ddl($version, $preversion) {
       $t->parser( $db ) # could this really throw an exception?
         or $self->throw_exception ($t->error);
 
-      my $filename = $self->ddl_filename($db, $version, $dir);
+      my $filename = $self->ddl_filename($db, [ $version ], $dir);
       my $out = $t->translate( $filename )
         or $self->throw_exception ($t->error);
 
@@ -328,23 +339,14 @@ method _read_sql_file($file) {
   return \@data;
 }
 
-method create_upgrade_path { }
-
-method upgrade_single_step($db_version, $target_version) {
-  if ($db_version eq $target_version) {
-    # croak?
-    carp "Upgrade not necessary\n";
-    return;
-  }
-
+method upgrade_single_step {
+  my @version_set = @{ shift @_ };
+  my $db_version = $self->db_version;
   my $upgrade_file = $self->ddl_filename(
     $self->storage->sqlt_type,
-    $target_version,
+    \@version_set,
     $self->upgrade_directory,
-    $db_version,
   );
-
-  $self->create_upgrade_path({ upgrade_file => $upgrade_file });
 
   unless (-f $upgrade_file) {
     # croak?
@@ -359,7 +361,7 @@ method upgrade_single_step($db_version, $target_version) {
   $self->schema->txn_do(sub { $self->do_upgrade });
 
   $self->version_rs->create({
-    version     => $target_version,
+    version     => $version_set[-1],
     # ddl         => $ddl,
     # upgrade_sql => $upgrade_sql,
   });
