@@ -12,16 +12,12 @@ has deploy_method => (
 
 sub _build_deploy_method {
   my $self = shift;
-  my $args = {
+  DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator->new({
     schema            => $self->schema,
     databases         => $self->databases,
     upgrade_directory => $self->upgrade_directory,
     sqltargs          => $self->sqltargs,
-    do_backup         => $self->do_backup,
-  };
-  $args->{backup_directory} = $self->backup_directory
-    if $self->has_backup_directory;
-  DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator->new($args);
+  });
 }
 
 1;

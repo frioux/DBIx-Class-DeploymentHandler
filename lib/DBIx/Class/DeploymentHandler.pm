@@ -39,12 +39,6 @@ has backup_directory => ( # configuration
   predicate  => 'has_backup_directory',
 );
 
-has do_backup => ( # configuration
-  isa     => 'Bool',
-  is      => 'ro',
-  default => undef,
-);
-
 has version_rs => (
   isa        => 'DBIx::Class::ResultSet',
   is         => 'ro',
