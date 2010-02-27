@@ -4,22 +4,10 @@ use Moose::Role;
 use DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator;
 
 has deploy_method => (
-
-# < mst> isa => 'DBIx::Class::DeploymentHandler::SqltDeployMethod',
-# < mst> should be
-# < mst> does => <some role>
-# < mst> and that role should supply those methods
-# < mst> then you can pass handles => <some role> as well
-
-  isa => 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator',
+  does => 'DBIx::Class::DeploymentHandler::HandlesDeploy',
   is  => 'ro',
   lazy_build => 1,
-  handles => [qw{
-    _deploy
-   prepare_install
-   prepare_update
-   _upgrade_single_step
-  }],
+  handles =>  'DBIx::Class::DeploymentHandler::HandlesDeploy',
 );
 
 sub _build_deploy_method {

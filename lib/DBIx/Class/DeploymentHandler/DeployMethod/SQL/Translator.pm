@@ -6,6 +6,7 @@ use SQL::Translator;
 require SQL::Translator::Diff;
 require DBIx::Class::Storage;   # loaded for type constraint
 
+with 'DBIx::Class::DeploymentHandler::HandlesDeploy';
 use Carp 'carp';
 
 has storage => (
@@ -129,7 +130,8 @@ method _deployment_statements {
   return $wa ? @ret : $ret[0];
 }
 
-method _deploy {
+sub _deploy {
+  my $self = shift;
   my $storage  = $self->storage;
 
   my $deploy = sub {
@@ -159,7 +161,8 @@ method _deploy {
   }
 }
 
-method prepare_install {
+sub prepare_install {
+  my $self = shift;
   my $schema    = $self->schema;
   my $databases = $self->databases;
   my $dir       = $self->upgrade_directory;
@@ -213,7 +216,8 @@ method prepare_install {
   }
 }
 
-method prepare_update($version, $preversion) {
+sub prepare_update {
+  my ($self, $version, $preversion) = @_;
   my $schema    = $self->schema;
   my $databases = $self->databases;
   my $dir       = $self->upgrade_directory;
@@ -334,7 +338,8 @@ method _read_sql_file($file) {
   return \@data;
 }
 
-method _upgrade_single_step {
+sub _upgrade_single_step {
+  my $self = shift;
   my @version_set = @{ shift @_ };
   my $db_version = $self->db_version;
   my $upgrade_file = $self->_ddl_filename(

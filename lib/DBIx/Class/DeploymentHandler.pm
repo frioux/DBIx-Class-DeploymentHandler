@@ -88,9 +88,9 @@ method install {
   }
 }
 
-method upgrade {
-  while ( my $version_list = $self->next_version_set ) {
-    $self->_upgrade_single_step($version_list);
+sub upgrade {
+  while ( my $version_list = $_[0]->next_version_set ) {
+    $_[0]->_upgrade_single_step($version_list);
   }
 }
 
