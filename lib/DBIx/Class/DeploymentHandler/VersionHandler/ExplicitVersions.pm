@@ -1,4 +1,4 @@
-package DBIx::Class::DeploymentHandler::ExplicitVersions;
+package DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions;
 use Moose;
 use Method::Signatures::Simple;
 use Carp 'croak';

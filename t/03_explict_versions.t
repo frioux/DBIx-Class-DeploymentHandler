@@ -6,7 +6,7 @@ use Test::Exception;
 use lib 't/lib';
 use DBICTest;
 use DBIx::Class::DeploymentHandler;
-use DBIx::Class::DeploymentHandler::ExplicitVersions;
+use DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions;
 my $db = 'dbi:SQLite:db.db';
 my @connection = ($db, '', '', { ignore_version => 1 });
 my $sql_dir = 't/sql';
@@ -36,7 +36,7 @@ $handler->install;
 my $versions = [map "$_.0", 0..100];
 
 {
-  my $vh = DBIx::Class::DeploymentHandler::ExplicitVersions->new({
+  my $vh = DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions->new({
     schema => $s,
     ordered_versions => $versions,
     to_version => '1.0',
@@ -48,7 +48,7 @@ my $versions = [map "$_.0", 0..100];
 }
 
 {
-  my $vh = DBIx::Class::DeploymentHandler::ExplicitVersions->new({
+  my $vh = DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions->new({
     schema => $s,
     ordered_versions => $versions,
     to_version => '5.0',
@@ -64,7 +64,7 @@ my $versions = [map "$_.0", 0..100];
 }
 
 dies_ok {
-  my $vh = DBIx::Class::DeploymentHandler::ExplicitVersions->new({
+  my $vh = DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions->new({
     schema => $s,
     ordered_versions => $versions,
     to_version => '0.0',

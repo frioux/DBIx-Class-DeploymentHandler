@@ -1,7 +1,7 @@
 package DBIx::Class::DeploymentHandler::WithDatabaseToSchemaVersions;
 use Moose::Role;
 
-use DBIx::Class::DeploymentHandler::DatabaseToSchemaVersions;
+use DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions;
 
 use Carp 'carp';
 
@@ -20,7 +20,7 @@ sub _build_version_handler {
   };
 
   $args->{to_version} = $self->to_version if $self->has_to_version;
-  DBIx::Class::DeploymentHandler::DatabaseToSchemaVersions->new($args);
+  DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions->new($args);
 }
 
 1;

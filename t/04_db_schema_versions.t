@@ -6,7 +6,7 @@ use Test::Exception;
 use lib 't/lib';
 use DBICTest;
 use DBIx::Class::DeploymentHandler;
-use DBIx::Class::DeploymentHandler::ExplicitVersions;
+use DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions;
 my $db = 'dbi:SQLite:db.db';
 my @connection = ($db, '', '', { ignore_version => 1 });
 my $sql_dir = 't/sql';
@@ -33,7 +33,7 @@ $handler->prepare_install();
 
 $handler->install;
 {
-  my $vh = DBIx::Class::DeploymentHandler::DatabaseToSchemaVersions->new({
+  my $vh = DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions->new({
     schema => $s,
     ordered_versions => $versions,
     to_version => '5.0',
@@ -46,7 +46,7 @@ $handler->install;
 }
 
 {
-  my $vh = DBIx::Class::DeploymentHandler::DatabaseToSchemaVersions->new({
+  my $vh = DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions->new({
     schema => $s,
     ordered_versions => $versions,
   });
@@ -56,7 +56,7 @@ $handler->install;
 }
 
 {
-  my $vh = DBIx::Class::DeploymentHandler::DatabaseToSchemaVersions->new({
+  my $vh = DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions->new({
     schema => $s,
     ordered_versions => $versions,
   });
@@ -68,7 +68,7 @@ $handler->install;
 {
   $DBICVersion::Schema::VERSION = '10.0';
 
-  my $vh = DBIx::Class::DeploymentHandler::DatabaseToSchemaVersions->new({
+  my $vh = DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions->new({
     schema => $s,
     ordered_versions => $versions,
   });

@@ -1,4 +1,4 @@
-package DBIx::Class::DeploymentHandler::DatabaseToSchemaVersions;
+package DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions;
 use Moose;
 use Method::Signatures::Simple;
 
