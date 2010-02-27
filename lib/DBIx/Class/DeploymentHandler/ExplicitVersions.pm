@@ -3,29 +3,7 @@ use Moose;
 use Method::Signatures::Simple;
 use Carp 'croak';
 
-has schema => (
-  isa      => 'DBIx::Class::Schema',
-  is       => 'ro',
-  required => 1,
-  handles => [qw( ddl_filename schema_version )],
-);
-
-has version_rs => (
-  isa        => 'DBIx::Class::ResultSet',
-  is         => 'ro',
-  lazy_build => 1,
-  handles    => [qw( is_installed db_version )],
-);
-
-method _build_version_rs {
-   $self->schema->set_us_up_the_bomb;
-   $self->schema->resultset('__VERSION')
-}
-
-has to_version => (
-  is       => 'ro',
-  required => 1,
-);
+with 'DBIx::Class::DeploymentHandler::HandlesVersioning';
 
 has ordered_versions => (
   is       => 'ro',
@@ -65,7 +43,8 @@ method _build__version_idx {
   croak 'database version not found in ordered_versions!';
 }
 
-method next_version_set {
+sub next_version_set { # sub instead of method because of when roles get composed
+  my $self = shift;
   return undef
     if $self->ordered_versions->[$self->_version_idx] eq $self->to_version;
   my $next_idx = $self->_inc_version_idx;
