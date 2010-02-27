@@ -20,7 +20,7 @@ has deploy_method => (
     deployment_statements
     deploy
    prepare_install
-   create_update_ddl
+   prepare_update
    create_ddl_dir
    upgrade_single_step
   }],

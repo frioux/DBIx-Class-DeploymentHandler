@@ -213,7 +213,7 @@ method prepare_install {
   }
 }
 
-method create_update_ddl($version, $preversion) {
+method prepare_update($version, $preversion) {
   my $schema    = $self->schema;
   my $databases = $self->databases;
   my $dir       = $self->upgrade_directory;
@@ -319,7 +319,7 @@ method create_update_ddl($version, $preversion) {
 
 method create_ddl_dir($version, $preversion) {
   $self->prepare_install;
-  $self->create_update_ddl($version, $preversion) if $preversion;
+  $self->prepare_update($version, $preversion) if $preversion;
 }
 
 method _read_sql_file($file) {

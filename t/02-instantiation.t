@@ -61,7 +61,7 @@ VERSION2: {
 
    $version = $s->schema_version();
    $handler->prepare_install();
-   $handler->create_update_ddl($version, '1.0');
+   $handler->prepare_update($version, '1.0');
    ok(-e 't/sql/DBICVersion-Schema-2.0-SQLite.sql', 'DDL for 2.0 got created successfully');
    ok(-e 't/sql/DBICVersion-Schema-1.0-2.0-SQLite.sql', 'DDL for migration from 1.0 to 2.0 got created successfully');
    dies_ok {
@@ -100,8 +100,8 @@ VERSION3: {
 
    $version = $s->schema_version();
    $handler->prepare_install;
-   $handler->create_update_ddl( $version, '1.0');
-   $handler->create_update_ddl( $version, '2.0');
+   $handler->prepare_update( $version, '1.0');
+   $handler->prepare_update( $version, '2.0');
    ok(-e 't/sql/DBICVersion-Schema-3.0-SQLite.sql', 'DDL for 3.0 got created successfully');
    ok(-e 't/sql/DBICVersion-Schema-1.0-3.0-SQLite.sql', 'DDL for migration from 1.0 to 3.0 got created successfully');
    ok(-e 't/sql/DBICVersion-Schema-2.0-3.0-SQLite.sql', 'DDL for migration from 2.0 to 3.0 got created successfully');
