@@ -1,9 +1,7 @@
 package DBIx::Class::DeploymentHandler::WithSqltDeployMethod;
 use Moose::Role;
 
-use DBIx::Class::DeploymentHandler::SqltDeployMethod;
-
-use Carp 'carp';
+use DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator;
 
 has deploy_method => (
 
@@ -13,7 +11,7 @@ has deploy_method => (
 # < mst> and that role should supply those methods
 # < mst> then you can pass handles => <some role> as well
 
-  isa => 'DBIx::Class::DeploymentHandler::SqltDeployMethod',
+  isa => 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator',
   is  => 'ro',
   lazy_build => 1,
   handles => [qw{
@@ -35,7 +33,7 @@ sub _build_deploy_method {
   };
   $args->{backup_directory} = $self->backup_directory
     if $self->has_backup_directory;
-  DBIx::Class::DeploymentHandler::SqltDeployMethod->new($args);
+  DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator->new($args);
 }
 
 1;

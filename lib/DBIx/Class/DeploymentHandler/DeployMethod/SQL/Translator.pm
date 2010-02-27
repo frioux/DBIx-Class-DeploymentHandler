@@ -1,4 +1,4 @@
-package DBIx::Class::DeploymentHandler::SqltDeployMethod;
+package DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator;
 use Moose;
 use Method::Signatures::Simple;
 use Try::Tiny;
