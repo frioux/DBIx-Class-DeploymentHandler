@@ -33,18 +33,6 @@ has upgrade_directory => (
   default  => 'sql',
 );
 
-has version_rs => (
-  isa        => 'DBIx::Class::ResultSet',
-  is         => 'ro',
-  lazy_build => 1,
-  handles    => [qw( is_installed db_version )],
-);
-
-method _build_version_rs {
-   $self->schema->set_us_up_the_bomb;
-   $self->schema->resultset('__VERSION')
-}
-
 has databases => (
   coerce  => 1,
   isa     => 'DBIx::Class::DeploymentHandler::Databases',
@@ -330,7 +318,6 @@ method _read_sql_file($file) {
 sub _upgrade_single_step {
   my $self = shift;
   my @version_set = @{ shift @_ };
-  my $db_version = $self->db_version;
   my $upgrade_file = $self->_ddl_filename(
     $self->storage->sqlt_type,
     \@version_set,
@@ -343,16 +330,8 @@ sub _upgrade_single_step {
     return;
   }
 
-  carp "DB version ($db_version) is lower than the schema version (".$self->schema_version."). Attempting upgrade.\n";
-
   $self->_filedata($self->_read_sql_file($upgrade_file)); # I don't like this --fREW 2010-02-22
   $self->schema->txn_do(sub { $self->_do_upgrade });
-
-  $self->version_rs->create({
-    version     => $version_set[-1],
-    # ddl         => $ddl,
-    # upgrade_sql => $upgrade_sql,
-  });
 }
 
 method _do_upgrade { $self->_run_upgrade(qr/.*?/) }

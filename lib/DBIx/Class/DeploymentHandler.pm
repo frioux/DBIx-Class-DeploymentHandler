@@ -84,8 +84,15 @@ method install {
 }
 
 sub upgrade {
-  while ( my $version_list = $_[0]->next_version_set ) {
-    $_[0]->_upgrade_single_step($version_list);
+  my $self = shift;
+  while ( my $version_list = $self->next_version_set ) {
+    $self->_upgrade_single_step($version_list);
+
+    $self->version_rs->create({
+      version     => $version_list->[-1],
+      # ddl         => $ddl,
+      # upgrade_sql => $upgrade_sql,
+    });
   }
 }
 
