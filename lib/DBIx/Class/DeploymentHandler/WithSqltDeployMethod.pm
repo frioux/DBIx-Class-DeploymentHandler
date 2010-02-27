@@ -19,25 +19,25 @@ has deploy_method => (
   handles => [qw{
     deployment_statements
     deploy
-	 create_install_ddl
-	 create_update_ddl
-	 create_ddl_dir
-	 upgrade_single_step
+   prepare_install
+   create_update_ddl
+   create_ddl_dir
+   upgrade_single_step
   }],
 );
 
 sub _build_deploy_method {
-	my $self = shift;
-	my $args = {
-		schema            => $self->schema,
-		databases         => $self->databases,
-		upgrade_directory => $self->upgrade_directory,
-		sqltargs          => $self->sqltargs,
-		do_backup         => $self->do_backup,
-	};
-	$args->{backup_directory} = $self->backup_directory
-		if $self->has_backup_directory;
-	DBIx::Class::DeploymentHandler::SqltDeployMethod->new($args);
+  my $self = shift;
+  my $args = {
+    schema            => $self->schema,
+    databases         => $self->databases,
+    upgrade_directory => $self->upgrade_directory,
+    sqltargs          => $self->sqltargs,
+    do_backup         => $self->do_backup,
+  };
+  $args->{backup_directory} = $self->backup_directory
+    if $self->has_backup_directory;
+  DBIx::Class::DeploymentHandler::SqltDeployMethod->new($args);
 }
 
 1;

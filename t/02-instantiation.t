@@ -31,7 +31,7 @@ VERSION1: {
    ok($handler, 'DBIx::Class::DeploymentHandler w/1.0 instantiates correctly');
 
    my $version = $s->schema_version();
-   $handler->create_install_ddl();
+   $handler->prepare_install();
    ok(-e 't/sql/DBICVersion-Schema-1.0-SQLite.sql', 'DDL for 1.0 got created successfully');
 
    dies_ok {
@@ -60,7 +60,7 @@ VERSION2: {
    ok($handler, 'DBIx::Class::DeploymentHandler w/2.0 instantiates correctly');
 
    $version = $s->schema_version();
-   $handler->create_install_ddl();
+   $handler->prepare_install();
    $handler->create_update_ddl($version, '1.0');
    ok(-e 't/sql/DBICVersion-Schema-2.0-SQLite.sql', 'DDL for 2.0 got created successfully');
    ok(-e 't/sql/DBICVersion-Schema-1.0-2.0-SQLite.sql', 'DDL for migration from 1.0 to 2.0 got created successfully');
@@ -99,7 +99,7 @@ VERSION3: {
    ok($handler, 'DBIx::Class::DeploymentHandler w/3.0 instantiates correctly');
 
    $version = $s->schema_version();
-   $handler->create_install_ddl;
+   $handler->prepare_install;
    $handler->create_update_ddl( $version, '1.0');
    $handler->create_update_ddl( $version, '2.0');
    ok(-e 't/sql/DBICVersion-Schema-3.0-SQLite.sql', 'DDL for 3.0 got created successfully');

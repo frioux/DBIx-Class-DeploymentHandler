@@ -58,11 +58,6 @@ has to_version => (
   lazy_build => 1,
 );
 
-method _build_version_rs {
-   $self->schema->set_us_up_the_bomb;
-   $self->schema->resultset('__VERSION')
-}
-
 has databases => ( # configuration
   coerce  => 1,
   isa     => 'DBIx::Class::DeploymentHandler::Databases',

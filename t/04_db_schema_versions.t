@@ -29,7 +29,7 @@ my $handler = DBIx::Class::DeploymentHandler->new({
 });
 
 my $version = $s->schema_version();
-$handler->create_install_ddl();
+$handler->prepare_install();
 
 $handler->install;
 {

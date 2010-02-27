@@ -75,7 +75,7 @@ has _filedata => (
 );
 
 method ddl_filename($type, $versions, $dir) {
-  my $filename = ref($self->schema);
+  my $filename = ref $self->schema;
   $filename =~ s/::/-/g;
 
   $filename = File::Spec->catfile(
@@ -159,7 +159,7 @@ method deploy {
   }
 }
 
-method create_install_ddl {
+method prepare_install {
   my $schema    = $self->schema;
   my $databases = $self->databases;
   my $dir       = $self->upgrade_directory;
@@ -318,7 +318,7 @@ method create_update_ddl($version, $preversion) {
 }
 
 method create_ddl_dir($version, $preversion) {
-  $self->create_install_ddl;
+  $self->prepare_install;
   $self->create_update_ddl($version, $preversion) if $preversion;
 }
 
