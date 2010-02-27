@@ -24,7 +24,6 @@ has schema => (
   isa      => 'DBIx::Class::Schema',
   is       => 'ro',
   required => 1,
-  handles => [qw( ddl_filename schema_version )],
 );
 
 has upgrade_directory => ( # configuration
@@ -49,13 +48,15 @@ has do_backup => ( # configuration
 has version_rs => (
   isa        => 'DBIx::Class::ResultSet',
   is         => 'ro',
-  lazy_build => 1,
-  handles    => [qw( is_installed db_version )],
+  lazy_build => 1, # builder comes from another role...
+                   # which is... probably not how we want it
+  handles    => [qw( is_installed )],
 );
 
-has to_version => (
+has to_version => ( # configuration
   is         => 'ro',
-  lazy_build => 1,
+  lazy_build => 1, # builder comes from another role...
+                   # which is... probably not how we want it
 );
 
 has databases => ( # configuration
@@ -93,6 +94,8 @@ sub upgrade {
     $_[0]->_upgrade_single_step($version_list);
   }
 }
+
+method backup { $self->storage->backup($self->backup_directory) }
 
 __PACKAGE__->meta->make_immutable;
 

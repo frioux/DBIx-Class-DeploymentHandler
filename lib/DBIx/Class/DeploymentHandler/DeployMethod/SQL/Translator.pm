@@ -21,17 +21,6 @@ method _build_storage {
   $s
 }
 
-has backup_directory => (
-  isa => 'Str',
-  is  => 'ro',
-);
-
-has do_backup => (
-  isa     => 'Bool',
-  is      => 'ro',
-  default => undef,
-);
-
 has sqltargs => (
   isa => 'HashRef',
   is  => 'ro',
@@ -357,7 +346,6 @@ sub _upgrade_single_step {
   carp "DB version ($db_version) is lower than the schema version (".$self->schema_version."). Attempting upgrade.\n";
 
   $self->_filedata($self->_read_sql_file($upgrade_file)); # I don't like this --fREW 2010-02-22
-  $self->backup if $self->do_backup;
   $self->schema->txn_do(sub { $self->_do_upgrade });
 
   $self->version_rs->create({
@@ -384,8 +372,6 @@ method _apply_statement($statement) {
   # croak?
   $self->storage->dbh->do($_) or carp "SQL was: $_"
 }
-
-method backup { $self->storage->backup($self->backup_directory) }
 
 __PACKAGE__->meta->make_immutable;
 
