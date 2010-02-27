@@ -195,6 +195,15 @@ sub prepare_install {
 
 sub prepare_update {
   my ($self, $version, $preversion) = @_;
+  # this should be:
+  #
+  # $from_version ||= $db_version
+  # $to_version   ||= $schema_version
+  # $version_set  ||= [$from_version, $to_version];
+  #
+  # for updates prepared automatically (rob's stuff)
+  # one would want to explicitly set $version_set to
+  # [$to_version]
   my $schema    = $self->schema;
   my $databases = $self->databases;
   my $dir       = $self->upgrade_directory;
