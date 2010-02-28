@@ -68,7 +68,7 @@ method _deployment_statements {
   my $schema   = $self->schema;
   my $type     = $self->storage->sqlt_type;
   my $sqltargs = $self->sqltargs;
-  my $version  = $self->schema_version || '1.x';
+  my $version  = $self->schema_version;
 
   my $filename = $self->_ddl_filename($type, [ $version ], $dir);
   if(-f $filename) {
@@ -149,20 +149,16 @@ sub prepare_install {
     $dir = "./";
   }
 
-  my $version = $schema->schema_version || '1.x';
-  my $schema_version = $schema->schema_version || '1.x';
-  $version ||= $schema_version;
+  my $version = $schema->schema_version;
 
-  $sqltargs = {
+  my $sqlt = SQL::Translator->new({
     add_drop_table => 1,
     ignore_constraint_names => 1,
     ignore_index_names => 1,
+    parser => 'SQL::Translator::Parser::DBIx::Class',
     %{$sqltargs || {}}
-  };
+  });
 
-  my $sqlt = SQL::Translator->new( $sqltargs );
-
-  $sqlt->parser('SQL::Translator::Parser::DBIx::Class');
   my $sqlt_schema = $sqlt->translate({ data => $schema })
     or $self->throw_exception ($sqlt->error);
 
@@ -172,8 +168,7 @@ sub prepare_install {
     $sqlt->producer($db);
 
     my $filename = $self->_ddl_filename($db, [ $version ], $dir);
-    if (-e $filename && ($version eq $schema_version )) {
-      # if we are dumping the current version, overwrite the DDL
+    if (-e $filename ) {
       carp "Overwriting existing DDL file - $filename";
       unlink $filename;
     }
@@ -194,16 +189,15 @@ sub prepare_install {
 }
 
 sub prepare_update {
-  my ($self, $version, $preversion) = @_;
-  # this should be:
-  #
-  # $from_version ||= $db_version
-  # $to_version   ||= $schema_version
-  # $version_set  ||= [$from_version, $to_version];
-  #
+  my ($self, $from_version, $to_version, $version_set) = @_;
+
+  $from_version ||= $self->db_version;
+  $to_version   ||= $self->schema_version;
+
   # for updates prepared automatically (rob's stuff)
   # one would want to explicitly set $version_set to
   # [$to_version]
+  $version_set  ||= [$from_version, $to_version];
   my $schema    = $self->schema;
   my $databases = $self->databases;
   my $dir       = $self->upgrade_directory;
@@ -214,8 +208,7 @@ sub prepare_update {
     $dir = "./";
   }
 
-  my $schema_version = $schema->schema_version || '1.x';
-  $version ||= $schema_version;
+  my $schema_version = $schema->schema_version;
 
   $sqltargs = {
     add_drop_table => 1,
@@ -235,13 +228,13 @@ sub prepare_update {
     $sqlt->{schema} = $sqlt_schema;
     $sqlt->producer($db);
 
-    my $prefilename = $self->_ddl_filename($db, [ $preversion ], $dir);
+    my $prefilename = $self->_ddl_filename($db, [ $from_version ], $dir);
     unless(-e $prefilename) {
       carp("No previous schema file found ($prefilename)");
       next;
     }
 
-    my $diff_file = $self->_ddl_filename($db, [ $preversion, $version ], $dir );
+    my $diff_file = $self->_ddl_filename($db, $version_set, $dir );
     if(-e $diff_file) {
       carp("Overwriting existing diff file - $diff_file");
       unlink $diff_file;
@@ -282,7 +275,7 @@ sub prepare_update {
       $t->parser( $db ) # could this really throw an exception?
         or $self->throw_exception ($t->error);
 
-      my $filename = $self->_ddl_filename($db, [ $version ], $dir);
+      my $filename = $self->_ddl_filename($db, [ $to_version ], $dir);
       my $out = $t->translate( $filename )
         or $self->throw_exception ($t->error);
 
