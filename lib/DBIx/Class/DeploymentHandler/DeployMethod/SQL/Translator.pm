@@ -9,6 +9,13 @@ require DBIx::Class::Storage;   # loaded for type constraint
 with 'DBIx::Class::DeploymentHandler::HandlesDeploy';
 use Carp 'carp';
 
+has schema => (
+  isa      => 'DBIx::Class::Schema',
+  is       => 'ro',
+  required => 1,
+  handles => [qw( schema_version )],
+);
+
 has storage => (
   isa        => 'DBIx::Class::Storage',
   is         => 'ro',
@@ -40,24 +47,30 @@ has databases => (
   default => sub { [qw( MySQL SQLite PostgreSQL )] },
 );
 
-has schema => (
-  isa      => 'DBIx::Class::Schema',
-  is       => 'ro',
-  required => 1,
-  handles => [qw( schema_version )],
-);
-
 has _filedata => (
   isa => 'ArrayRef[Str]',
   is  => 'rw',
 );
 
-method _ddl_filename($type, $versions, $dir) {
+# these two methods should go away once we switch to
+# DBIx::Migration::Directories
+method _ddl_schema_filename($type, $version, $dir) {
   my $filename = ref $self->schema;
   $filename =~ s/::/-/g;
 
   $filename = File::Spec->catfile(
-    $dir, "$filename-" . join( q(-), @{$versions} ) . "-$type.sql"
+    $dir, "$filename-schema-$version-$type.sql"
+  );
+
+  return $filename;
+}
+
+method _ddl_schema_diff_filename($type, $versions, $dir) {
+  my $filename = ref $self->schema;
+  $filename =~ s/::/-/g;
+
+  $filename = File::Spec->catfile(
+    $dir, "$filename-diff-" . join( q(-), @{$versions} ) . "-$type.sql"
   );
 
   return $filename;
@@ -70,7 +83,7 @@ method _deployment_statements {
   my $sqltargs = $self->sqltargs;
   my $version  = $self->schema_version;
 
-  my $filename = $self->_ddl_filename($type, [ $version ], $dir);
+  my $filename = $self->_ddl_schema_filename($type, $version, $dir);
   if(-f $filename) {
       my $file;
       open $file, q(<), $filename
@@ -144,18 +157,19 @@ sub prepare_install {
   my $databases = $self->databases;
   my $dir       = $self->upgrade_directory;
   my $sqltargs  = $self->sqltargs;
-  unless( -d $dir ) {
-    carp "Upgrade directory $dir does not exist, using ./\n";
-    $dir = "./";
-  }
-
   my $version = $schema->schema_version;
 
+  unless( -d $dir ) {
+    carp "Upgrade directory $dir does not exist, using ./\n";
+    $dir = './';
+  }
+
+
   my $sqlt = SQL::Translator->new({
-    add_drop_table => 1,
+    add_drop_table          => 1,
     ignore_constraint_names => 1,
-    ignore_index_names => 1,
-    parser => 'SQL::Translator::Parser::DBIx::Class',
+    ignore_index_names      => 1,
+    parser                  => 'SQL::Translator::Parser::DBIx::Class',
     %{$sqltargs || {}}
   });
 
@@ -167,7 +181,7 @@ sub prepare_install {
     $sqlt->{schema} = $sqlt_schema;
     $sqlt->producer($db);
 
-    my $filename = $self->_ddl_filename($db, [ $version ], $dir);
+    my $filename = $self->_ddl_schema_filename($db, $version, $dir);
     if (-e $filename ) {
       carp "Overwriting existing DDL file - $filename";
       unlink $filename;
@@ -228,13 +242,13 @@ sub prepare_update {
     $sqlt->{schema} = $sqlt_schema;
     $sqlt->producer($db);
 
-    my $prefilename = $self->_ddl_filename($db, [ $from_version ], $dir);
+    my $prefilename = $self->_ddl_schema_filename($db, $from_version, $dir);
     unless(-e $prefilename) {
       carp("No previous schema file found ($prefilename)");
       next;
     }
 
-    my $diff_file = $self->_ddl_filename($db, $version_set, $dir );
+    my $diff_file = $self->_ddl_schema_diff_filename($db, $version_set, $dir );
     if(-e $diff_file) {
       carp("Overwriting existing diff file - $diff_file");
       unlink $diff_file;
@@ -275,7 +289,7 @@ sub prepare_update {
       $t->parser( $db ) # could this really throw an exception?
         or $self->throw_exception ($t->error);
 
-      my $filename = $self->_ddl_filename($db, [ $to_version ], $dir);
+      my $filename = $self->_ddl_schema_filename($db, $to_version, $dir);
       my $out = $t->translate( $filename )
         or $self->throw_exception ($t->error);
 
@@ -320,7 +334,7 @@ method _read_sql_file($file) {
 sub _upgrade_single_step {
   my $self = shift;
   my @version_set = @{ shift @_ };
-  my $upgrade_file = $self->_ddl_filename(
+  my $upgrade_file = $self->_ddl_schema_diff_filename(
     $self->storage->sqlt_type,
     \@version_set,
     $self->upgrade_directory,
