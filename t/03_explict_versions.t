@@ -25,8 +25,10 @@ my $handler = DBIx::Class::DeploymentHandler->new({
    upgrade_directory => $sql_dir,
    schema => $s,
    databases => 'SQLite',
- sqltargs => { add_drop_table => 0 },
+   sqltargs => { add_drop_table => 0 },
 });
+
+my $v_storage = $handler->version_storage;
 
 my $version = $s->schema_version();
 $handler->prepare_install();
@@ -40,6 +42,7 @@ my $versions = [map "$_.0", 0..100];
     schema => $s,
     ordered_versions => $versions,
     to_version => '1.0',
+    version_storage => $v_storage,
   });
 
   ok $vh, 'VersionHandler gets instantiated';
@@ -52,6 +55,7 @@ my $versions = [map "$_.0", 0..100];
     schema => $s,
     ordered_versions => $versions,
     to_version => '5.0',
+    version_storage => $v_storage,
   });
 
   ok $vh, 'VersionHandler gets instantiated';
@@ -68,6 +72,7 @@ dies_ok {
     schema => $s,
     ordered_versions => $versions,
     to_version => '0.0',
+    version_storage => $v_storage,
   });
 } 'cannot request a version before the current version';
 

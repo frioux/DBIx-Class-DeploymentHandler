@@ -11,7 +11,7 @@ has ordered_versions => (
   required => 1,
   trigger  => sub {
     my $to_version = $_[0]->to_version;
-    my $db_version = $_[0]->db_version;
+    my $db_version = $_[0]->database_version;
 
     croak 'to_version not in ordered_versions'
       unless grep { $to_version eq $_ } @{ $_[1] };
@@ -33,11 +33,11 @@ has _version_idx => (
 method _inc_version_idx { $self->_version_idx($self->_version_idx + 1 ) }
 
 method _build__version_idx {
-  my $start = $self->version_rs->db_version;
+  my $start = $self->database_version;
   my $idx = 0;
   for (@{$self->ordered_versions}) {
     return $idx
-      if $_ eq $self->db_version;
+      if $_ eq $self->database_version;
     $idx++;
   }
   croak 'database version not found in ordered_versions!';

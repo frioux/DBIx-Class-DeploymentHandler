@@ -27,7 +27,7 @@ my $handler = DBIx::Class::DeploymentHandler->new({
    databases => 'SQLite',
  sqltargs => { add_drop_table => 0 },
 });
-
+my $v_storage = $handler->version_storage;
 my $version = $s->schema_version();
 $handler->prepare_install();
 
@@ -37,6 +37,7 @@ $handler->install;
     schema => $s,
     ordered_versions => $versions,
     to_version => '5.0',
+    version_storage => $v_storage,
   });
 
   ok( $vh, 'VersionHandler gets instantiated' );
@@ -49,6 +50,7 @@ $handler->install;
   my $vh = DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions->new({
     schema => $s,
     ordered_versions => $versions,
+    version_storage => $v_storage,
   });
 
   ok( $vh, 'VersionHandler gets instantiated' );
@@ -59,6 +61,7 @@ $handler->install;
   my $vh = DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions->new({
     schema => $s,
     ordered_versions => $versions,
+    version_storage => $v_storage,
   });
 
   ok( $vh, 'VersionHandler gets instantiated' );
@@ -71,6 +74,7 @@ $handler->install;
   my $vh = DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions->new({
     schema => $s,
     ordered_versions => $versions,
+    version_storage => $v_storage,
   });
 
   ok( $vh, 'VersionHandler gets instantiated' );

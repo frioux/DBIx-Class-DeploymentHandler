@@ -10,17 +10,12 @@ has schema => (
   handles => [qw( schema_version )],
 );
 
-has version_rs => (
-  isa        => 'DBIx::Class::ResultSet',
+has version_storage => (
+  does       => 'DBIx::Class::DeploymentHandler::HandlesVersionStorage',
   is         => 'ro',
-  lazy_build => 1,
-  handles    => [qw( is_installed db_version )],
+  required   => 1,
+  handles    => 'DBIx::Class::DeploymentHandler::HandlesVersionStorage',
 );
-
-sub _build_version_rs {
-   $_[0]->schema->set_us_up_the_bomb;
-   $_[0]->schema->resultset('__VERSION')
-}
 
 has to_version => (
   is         => 'ro',

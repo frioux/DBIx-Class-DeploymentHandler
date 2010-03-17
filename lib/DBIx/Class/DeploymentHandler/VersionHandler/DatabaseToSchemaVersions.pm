@@ -17,8 +17,8 @@ sub next_version_set {
 
   $self->once(!$self->once);
   return undef
-    if $self->db_version eq $self->to_version;
-  return [$self->db_version, $self->to_version];
+    if $self->database_version eq $self->to_version;
+  return [$self->database_version, $self->to_version];
 }
 
 
