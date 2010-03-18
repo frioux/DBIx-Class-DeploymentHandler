@@ -5,8 +5,10 @@ use Try::Tiny;
 use SQL::Translator;
 require SQL::Translator::Diff;
 require DBIx::Class::Storage;   # loaded for type constraint
+use autodie;
 
 with 'DBIx::Class::DeploymentHandler::HandlesDeploy';
+
 use Carp 'carp';
 
 has schema => (
@@ -52,25 +54,62 @@ has _filedata => (
   is  => 'rw',
 );
 
-# these two methods should go away once we switch to
-# DBIx::Migration::Directories
-method _ddl_schema_filename($type, $version, $dir) {
+method _ddl_schema_in_filenames($type, $version, $dir) {
+  my $filename = ref $self->schema;
+  $filename =~ s/::/-/g;
+
+  my %files;
+
+  if (-d "$dir/$type") {
+    my $dirname = File::Spec->catfile(
+      $dir, $type, 'schema', $version, '001-auto.sql'
+    );
+    opendir my $dh, $dirname;
+    %files = map { $_ => "$dirname/$_" } grep { -f "$dirname/$_" } readdir($dh);
+    closedir $dh;
+
+  } elsif (-d "$dir/_generic") {
+    $filename = File::Spec->catfile(
+      $dir, '_generic', 'schema', $version, '001-auto.sql'
+    );
+  } else {
+    $filename = File::Spec->catfile(
+      $dir, '_common', 'schema', $version, '001-auto.sql'
+    );
+  }
+
+  return [$filename];
+}
+
+method _ddl_schema_out_filename($type, $version, $dir) {
   my $filename = ref $self->schema;
   $filename =~ s/::/-/g;
 
   $filename = File::Spec->catfile(
-    $dir, "$filename-schema-$version-$type.sql"
+    $dir, $type, 'schema', $version, '001-auto.sql'
+  );
   );
 
   return $filename;
 }
 
-method _ddl_schema_diff_filename($type, $versions, $dir) {
+method _ddl_schema_diff_in_filenames($type, $versions, $dir) {
   my $filename = ref $self->schema;
   $filename =~ s/::/-/g;
 
   $filename = File::Spec->catfile(
-    $dir, "$filename-diff-" . join( q(-), @{$versions} ) . "-$type.sql"
+    $dir, $type, 'diff', join( q(-), @{$versions} ), '001-auto.sql'
+  );
+
+  return [ $filename ];
+}
+
+method _ddl_schema_diff_out_filename($type, $versions, $dir) {
+  my $filename = ref $self->schema;
+  $filename =~ s/::/-/g;
+
+  $filename = File::Spec->catfile(
+    $dir, $type, 'diff', join( q(-), @{$versions} ), '001-auto.sql'
   );
 
   return $filename;
@@ -83,14 +122,17 @@ method _deployment_statements {
   my $sqltargs = $self->sqltargs;
   my $version  = $self->schema_version;
 
-  my $filename = $self->_ddl_schema_filename($type, $version, $dir);
-  if(-f $filename) {
-      my $file;
-      open $file, q(<), $filename
-        or carp "Can't open $filename ($!)";
-      my @rows = <$file>;
-      close $file;
-      return join '', @rows;
+  my @filenames = @{$self->_ddl_schema_in_filenames($type, $version, $dir)};
+
+  for my $filename (@filenames) {
+    if(-f $filename) {
+        my $file;
+        open $file, q(<), $filename
+          or carp "Can't open $filename ($!)";
+        my @rows = <$file>;
+        close $file;
+        return join '', @rows;
+    }
   }
 
   # sources needs to be a parser arg, but for simplicty allow at top level
@@ -181,7 +223,7 @@ sub prepare_install {
     $sqlt->{schema} = $sqlt_schema;
     $sqlt->producer($db);
 
-    my $filename = $self->_ddl_schema_filename($db, $version, $dir);
+    my $filename = $self->_ddl_schema_out_filename($db, $version, $dir);
     if (-e $filename ) {
       carp "Overwriting existing DDL file - $filename";
       unlink $filename;
@@ -242,13 +284,13 @@ sub prepare_update {
     $sqlt->{schema} = $sqlt_schema;
     $sqlt->producer($db);
 
-    my $prefilename = $self->_ddl_schema_filename($db, $from_version, $dir);
+    my $prefilename = $self->_ddl_schema_out_filename($db, $from_version, $dir);
     unless(-e $prefilename) {
       carp("No previous schema file found ($prefilename)");
       next;
     }
 
-    my $diff_file = $self->_ddl_schema_diff_filename($db, $version_set, $dir );
+    my $diff_file = $self->_ddl_schema_diff_out_filename($db, $version_set, $dir );
     if(-e $diff_file) {
       carp("Overwriting existing diff file - $diff_file");
       unlink $diff_file;
@@ -289,7 +331,7 @@ sub prepare_update {
       $t->parser( $db ) # could this really throw an exception?
         or $self->throw_exception ($t->error);
 
-      my $filename = $self->_ddl_schema_filename($db, $to_version, $dir);
+      my $filename = $self->_ddl_schema_out_filename($db, $to_version, $dir);
       my $out = $t->translate( $filename )
         or $self->throw_exception ($t->error);
 
@@ -334,20 +376,22 @@ method _read_sql_file($file) {
 sub _upgrade_single_step {
   my $self = shift;
   my @version_set = @{ shift @_ };
-  my $upgrade_file = $self->_ddl_schema_diff_filename(
+  my @upgrade_files = @{$self->_ddl_schema_diff_in_filenames(
     $self->storage->sqlt_type,
     \@version_set,
     $self->upgrade_directory,
-  );
+  )};
 
-  unless (-f $upgrade_file) {
-    # croak?
-    carp "Upgrade not possible, no upgrade file found ($upgrade_file), please create one\n";
-    return;
+  for my $upgrade_file (@upgrade_files) {
+    unless (-f $upgrade_file) {
+      # croak?
+      carp "Upgrade not possible, no upgrade file found ($upgrade_file), please create one\n";
+      return;
+    }
+
+    $self->_filedata($self->_read_sql_file($upgrade_file)); # I don't like this --fREW 2010-02-22
+    $self->schema->txn_do(sub { $self->_do_upgrade });
   }
-
-  $self->_filedata($self->_read_sql_file($upgrade_file)); # I don't like this --fREW 2010-02-22
-  $self->schema->txn_do(sub { $self->_do_upgrade });
 }
 
 method _do_upgrade { $self->_run_upgrade(qr/.*?/) }
@@ -367,8 +411,6 @@ method _apply_statement($statement) {
   # croak?
   $self->storage->dbh->do($_) or carp "SQL was: $_"
 }
-
-__PACKAGE__->meta->make_immutable;
 
 1;
 
