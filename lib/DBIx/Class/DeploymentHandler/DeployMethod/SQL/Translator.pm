@@ -55,12 +55,41 @@ has _filedata => (
   is  => 'rw',
 );
 
-method _ddl_schema_in_filenames($type, $version, $dir) {
-  my $filename = File::Spec->catfile(
-    $dir, $type, 'schema', $version, '001-auto.sql'
-  );
+method __ddl_in_with_prefix($type, $versions, $prefix) {
+  my $base_dir = $self->upgrade_directory;
 
-  return [ $filename ];
+  my $main    = File::Spec->catfile( $base_dir, $type                         );
+  my $generic = File::Spec->catfile( $base_dir, '_generic'                    );
+  my $common =  File::Spec->catfile( $base_dir, '_common', $prefix, join q(-), @{$versions} );
+
+  my $dir;
+  if (-d $main) {
+    $dir = File::Spec->catfile($main, $prefix, join q(-), @{$versions})
+  } elsif (-d $generic) {
+    $dir = File::Spec->catfile($main, $prefix, join q(-), @{$versions})
+  } else {
+    die 'PREPARE TO SQL'
+  }
+
+  opendir my($dh), $dir;
+  my %files = map { $_ => "$dir/$_" } grep { /\.sql$/ && -f "$dir/$_" } readdir($dh);
+  closedir $dh;
+
+  if (-d $common) {
+    opendir my($dh), $common;
+    for my $filename (grep { /\.sql$/ && -f "$common/$_" } readdir($dh)) {
+      unless ($files{$filename}) {
+        $files{$filename} = "$common/$_";
+      }
+    }
+    closedir $dh;
+  }
+
+  return [@files{sort keys %files}]
+}
+
+method _ddl_schema_in_filenames($type, $version) {
+  $self->__ddl_in_with_prefix($type, [ $version ], 'schema')
 }
 
 method _ddl_schema_out_filename($type, $version, $dir) {
@@ -75,11 +104,7 @@ method _ddl_schema_out_filename($type, $version, $dir) {
 }
 
 method _ddl_schema_diff_in_filenames($type, $versions, $dir) {
-  my $filename = File::Spec->catfile(
-    $dir, $type, 'diff', join( q(-), @{$versions} ), '001-auto.sql'
-  );
-
-  return [ $filename ];
+  $self->__ddl_in_with_prefix($type, $versions, 'diff')
 }
 
 method _ddl_schema_diff_out_filename($type, $versions, $dir) {
@@ -100,7 +125,7 @@ method _deployment_statements {
   my $sqltargs = $self->sqltargs;
   my $version  = $self->schema_version;
 
-  my @filenames = @{$self->_ddl_schema_in_filenames($type, $version, $dir)};
+  my @filenames = @{$self->_ddl_schema_in_filenames($type, $version)};
 
   for my $filename (@filenames) {
     if(-f $filename) {
@@ -357,7 +382,6 @@ sub _upgrade_single_step {
   my @upgrade_files = @{$self->_ddl_schema_diff_in_filenames(
     $self->storage->sqlt_type,
     \@version_set,
-    $self->upgrade_directory,
   )};
 
   for my $upgrade_file (@upgrade_files) {
