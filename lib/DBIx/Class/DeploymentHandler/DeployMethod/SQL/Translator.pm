@@ -6,6 +6,7 @@ use SQL::Translator;
 require SQL::Translator::Diff;
 require DBIx::Class::Storage;   # loaded for type constraint
 use autodie;
+use File::Path;
 
 with 'DBIx::Class::DeploymentHandler::HandlesDeploy';
 
@@ -55,49 +56,26 @@ has _filedata => (
 );
 
 method _ddl_schema_in_filenames($type, $version, $dir) {
-  my $filename = ref $self->schema;
-  $filename =~ s/::/-/g;
+  my $filename = File::Spec->catfile(
+    $dir, $type, 'schema', $version, '001-auto.sql'
+  );
 
-  my %files;
-
-  if (-d "$dir/$type") {
-    my $dirname = File::Spec->catfile(
-      $dir, $type, 'schema', $version, '001-auto.sql'
-    );
-    opendir my $dh, $dirname;
-    %files = map { $_ => "$dirname/$_" } grep { -f "$dirname/$_" } readdir($dh);
-    closedir $dh;
-
-  } elsif (-d "$dir/_generic") {
-    $filename = File::Spec->catfile(
-      $dir, '_generic', 'schema', $version, '001-auto.sql'
-    );
-  } else {
-    $filename = File::Spec->catfile(
-      $dir, '_common', 'schema', $version, '001-auto.sql'
-    );
-  }
-
-  return [$filename];
+  return [ $filename ];
 }
 
 method _ddl_schema_out_filename($type, $version, $dir) {
-  my $filename = ref $self->schema;
-  $filename =~ s/::/-/g;
-
-  $filename = File::Spec->catfile(
-    $dir, $type, 'schema', $version, '001-auto.sql'
+  my $dirname = File::Spec->catfile(
+    $dir, $type, 'schema', $version
   );
-  );
+  File::Path::mkpath($dirname) unless -d $dirname;
 
-  return $filename;
+  return File::Spec->catfile(
+    $dirname, '001-auto.sql'
+  );
 }
 
 method _ddl_schema_diff_in_filenames($type, $versions, $dir) {
-  my $filename = ref $self->schema;
-  $filename =~ s/::/-/g;
-
-  $filename = File::Spec->catfile(
+  my $filename = File::Spec->catfile(
     $dir, $type, 'diff', join( q(-), @{$versions} ), '001-auto.sql'
   );
 
@@ -105,14 +83,14 @@ method _ddl_schema_diff_in_filenames($type, $versions, $dir) {
 }
 
 method _ddl_schema_diff_out_filename($type, $versions, $dir) {
-  my $filename = ref $self->schema;
-  $filename =~ s/::/-/g;
-
-  $filename = File::Spec->catfile(
-    $dir, $type, 'diff', join( q(-), @{$versions} ), '001-auto.sql'
+  my $dirname = File::Spec->catfile(
+    $dir, $type, 'diff', join( q(-), @{$versions} )
   );
+  File::Path::mkpath($dirname) unless -d $dirname;
 
-  return $filename;
+  return File::Spec->catfile(
+    $dirname, '001-auto.sql'
+  );
 }
 
 method _deployment_statements {
