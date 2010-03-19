@@ -103,13 +103,28 @@ method _ddl_schema_out_filename($type, $version, $dir) {
   );
 }
 
-method _ddl_schema_diff_in_filenames($type, $versions, $dir) {
-  $self->__ddl_in_with_prefix($type, $versions, 'diff')
+method _ddl_schema_up_in_filenames($type, $versions, $dir) {
+  $self->__ddl_in_with_prefix($type, $versions, 'up')
 }
 
-method _ddl_schema_diff_out_filename($type, $versions, $dir) {
+method _ddl_schema_down_in_filenames($type, $versions, $dir) {
+  $self->__ddl_in_with_prefix($type, $versions, 'down')
+}
+
+method _ddl_schema_up_out_filename($type, $versions, $dir) {
   my $dirname = File::Spec->catfile(
-    $dir, $type, 'diff', join( q(-), @{$versions} )
+    $dir, $type, 'up', join( q(-), @{$versions} )
+  );
+  File::Path::mkpath($dirname) unless -d $dirname;
+
+  return File::Spec->catfile(
+    $dirname, '001-auto.sql'
+  );
+}
+
+method _ddl_schema_down_out_filename($type, $versions, $dir) {
+  my $dirname = File::Spec->catfile(
+    $dir, $type, 'down', join( q(-), @{$versions} )
   );
   File::Path::mkpath($dirname) unless -d $dirname;
 
@@ -247,7 +262,7 @@ sub prepare_install {
   }
 }
 
-sub prepare_update {
+sub prepare_upgrade {
   my ($self, $from_version, $to_version, $version_set) = @_;
 
   $from_version ||= $self->db_version;
@@ -293,9 +308,9 @@ sub prepare_update {
       next;
     }
 
-    my $diff_file = $self->_ddl_schema_diff_out_filename($db, $version_set, $dir );
+    my $diff_file = $self->_ddl_schema_up_out_filename($db, $version_set, $dir );
     if(-e $diff_file) {
-      carp("Overwriting existing diff file - $diff_file");
+      carp("Overwriting existing up-diff file - $diff_file");
       unlink $diff_file;
     }
 
@@ -379,7 +394,7 @@ method _read_sql_file($file) {
 sub _upgrade_single_step {
   my $self = shift;
   my @version_set = @{ shift @_ };
-  my @upgrade_files = @{$self->_ddl_schema_diff_in_filenames(
+  my @upgrade_files = @{$self->_ddl_schema_up_in_filenames(
     $self->storage->sqlt_type,
     \@version_set,
   )};

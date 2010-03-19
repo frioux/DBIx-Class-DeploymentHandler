@@ -2,7 +2,7 @@ package DBIx::Class::DeploymentHandler::HandlesDeploy;
 use Moose::Role;
 
 requires 'prepare_install';
-requires 'prepare_update';
+requires 'prepare_upgrade';
 requires '_upgrade_single_step';
 requires '_deploy';
 
