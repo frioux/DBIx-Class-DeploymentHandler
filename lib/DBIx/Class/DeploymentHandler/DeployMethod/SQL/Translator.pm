@@ -165,6 +165,19 @@ method _deployment_statements {
     data => $schema,
   );
 
+#< frew> now note that deploy in the same file calls deployment_statements
+#< ribasushi> right
+#< frew> ALWAYS in array context
+#< ribasushi> right, that's the only way
+#< ribasushi> but create_ddl_dir
+#< ribasushi> calls in scalar
+#< ribasushi> because this is how you get stuff writable to a file
+#< ribasushi> in list you get individual statements for dbh->do
+#< frew> right
+#< frew> ok...
+#< frew> so for *me* I need it *always* in scalar
+#< frew> because I *only* use it to generate the file
+#< ribasushi> correct
   my @ret;
   my $wa = wantarray;
   if ($wa) {
@@ -186,6 +199,31 @@ sub _deploy {
 
   my $deploy = sub {
     my $line = shift;
+#< frew> k, also, we filter out comments and transaction stuff and blank lines
+#< frew> is that really necesary?
+#< frew> and what if I want to run my upgrade in a txn?  seems like something you'd
+#        always want to do really
+#< ribasushi> again - some stuff chokes
+#< frew> ok, so I see filtering out -- and \s*
+#< frew> but I think the txn filtering should be optional and default to NOT filter it
+#        out
+#< ribasushi> then you have a problem
+#< frew> tell me
+#< ribasushi> someone runs a deploy in txn_do
+#< ribasushi> the inner begin will blow up
+#< frew> because it's a nested TXN?
+#< ribasushi> (you an't begin twice on most dbs)
+#< ribasushi> right
+#< ribasushi> on sqlite - for sure
+#< frew> so...read the docs and set txn_filter to true?
+#< ribasushi> more like wrap deploy in a txn
+#< frew> I like that better
+#< ribasushi> and make sure the ddl has no literal txns in them
+#< frew> sure
+#< ribasushi> this way you have stuff under control
+#< frew> so we have txn_wrap default to true
+#< frew> and if people wanna do that by hand they can
+
     return if(!$line || $line =~ /^--|^BEGIN TRANSACTION|^COMMIT|^\s+$/);
     $storage->_query_start($line);
     try {
