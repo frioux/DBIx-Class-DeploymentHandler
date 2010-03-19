@@ -5,17 +5,14 @@ use Test::Exception;
 use File::Path 'remove_tree';
 
 use lib 't/lib';
+use DBICDHTest;
 use DBICTest;
 use DBIx::Class::DeploymentHandler;
 my $db = 'dbi:SQLite:db.db';
 my @connection = ($db, '', '', { ignore_version => 1 });
 my $sql_dir = 't/sql';
 
-unlink 'db.db' if -e 'db.db';
-if (-d 't/sql') {
-  remove_tree('t/sql');
-  mkdir 't/sql';
-}
+DBICDHTest::ready;
 
 VERSION1: {
    use_ok 'DBICVersion_v1';

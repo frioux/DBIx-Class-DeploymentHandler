@@ -4,6 +4,7 @@ use Test::More;
 use Test::Exception;
 
 use lib 't/lib';
+use DBICDHTest;
 use DBICTest;
 use DBIx::Class::DeploymentHandler;
 use DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions;
@@ -11,12 +12,7 @@ my $db = 'dbi:SQLite:db.db';
 my @connection = ($db, '', '', { ignore_version => 1 });
 my $sql_dir = 't/sql';
 
-unlink 'db.db' if -e 'db.db';
-if (-d 't/sql') {
-  unlink $_ for glob('t/sql/*');
-} else {
-  mkdir 't/sql';
-}
+DBICDHTest::ready;
 
 use DBICVersion_v1;
 my $s = DBICVersion::Schema->connect(@connection);
