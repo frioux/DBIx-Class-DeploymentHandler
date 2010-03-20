@@ -76,7 +76,7 @@ my $versions = [map "$_.0", 0..100];
 dies_ok {
   my $vh = ExplicitVersions->new({
     ordered_versions => $versions,
-    schema_version => '1.0',
+    schema_version => '2.0',
     database_version => '1.1',
   });
   $vh->next_vesion_set

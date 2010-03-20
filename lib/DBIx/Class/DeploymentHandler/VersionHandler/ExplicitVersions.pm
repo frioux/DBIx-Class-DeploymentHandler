@@ -1,6 +1,5 @@
 package DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions;
 use Moose;
-use Method::Signatures::Simple;
 use Carp 'croak';
 
 with 'DBIx::Class::DeploymentHandler::HandlesVersioning';
@@ -36,6 +35,9 @@ has ordered_versions => (
     croak 'to_version not in ordered_versions'
       unless grep { $to_version eq $_ } @{ $_[1] };
 
+    croak 'database_version not in ordered_versions'
+      unless grep { $db_version eq $_ } @{ $_[1] };
+
     for (@{ $_[1] }) {
       return if $_ eq $db_version;
       croak 'to_version is before database version in ordered_versions'
@@ -50,9 +52,10 @@ has _version_idx => (
   lazy_build => 1,
 );
 
-method _inc_version_idx { $self->_version_idx($self->_version_idx + 1 ) }
+sub _inc_version_idx { $_[0]->_version_idx($_[0]->_version_idx + 1 ) }
 
-method _build__version_idx {
+sub _build__version_idx {
+  my $self = shift;
   my $start = $self->database_version;
   my $idx = 0;
   for (@{$self->ordered_versions}) {
@@ -60,21 +63,21 @@ method _build__version_idx {
       if $_ eq $self->database_version;
     $idx++;
   }
-  croak 'database version not found in ordered_versions!';
 }
 
-sub next_version_set { # sub instead of method because of when roles get composed
+sub next_version_set {
   my $self = shift;
   return undef
     if $self->ordered_versions->[$self->_version_idx] eq $self->to_version;
 
+  # this should never get in infinite loops because we ensure
+  # that the database version is in the list in the version_idx
+  # builder
   my $next_idx = $self->_inc_version_idx;
   return [
     $self->ordered_versions->[$next_idx - 1],
     $self->ordered_versions->[$next_idx    ],
-  ] if $next_idx <= $#{ $self->ordered_versions };
-
-  croak 'this should never happen';
+  ];
 }
 
 __PACKAGE__->meta->make_immutable;
