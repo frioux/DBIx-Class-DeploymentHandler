@@ -187,22 +187,16 @@ sub prepare_install {
   my $sqltargs  = $self->sqltargs;
   my $version = $schema->schema_version;
 
-  unless( -d $dir ) {
-    carp "Upgrade directory $dir does not exist, using ./\n";
-    $dir = './';
-  }
-
-
   my $sqlt = SQL::Translator->new({
     add_drop_table          => 1,
     ignore_constraint_names => 1,
     ignore_index_names      => 1,
     parser                  => 'SQL::Translator::Parser::DBIx::Class',
-    %{$sqltargs || {}}
+    %{$sqltargs}
   });
 
   my $sqlt_schema = $sqlt->translate({ data => $schema })
-    or $self->throw_exception ($sqlt->error);
+    or $self->throw_exception($sqlt->error);
 
   foreach my $db (@$databases) {
     $sqlt->reset;
