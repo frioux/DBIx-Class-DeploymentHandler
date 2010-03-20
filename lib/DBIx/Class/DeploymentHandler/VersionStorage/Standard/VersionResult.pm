@@ -8,7 +8,7 @@ use parent 'DBIx::Class::Core';
 __PACKAGE__->table('dbix_class_deploymenthandler_versions');
 
 __PACKAGE__->add_columns (
-  installed => {
+  id => {
     data_type         => 'int',
     is_auto_increment => 1,
   },
@@ -28,7 +28,7 @@ __PACKAGE__->add_columns (
   },
 );
 
-__PACKAGE__->set_primary_key('installed');
+__PACKAGE__->set_primary_key('id');
 __PACKAGE__->add_unique_constraint(['version']);
 __PACKAGE__->resultset_class('DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResultSet');
 
