@@ -205,8 +205,9 @@ sub _deploy {
 #< frew> so we have txn_wrap default to true
 #< frew> and if people wanna do that by hand they can
   my $sql = $self->_deployment_statements();
-  foreach my $line ( split(";\n", $sql)) {
-    next if !$line || $line =~ /^--|^BEGIN TRANSACTION|^COMMIT|^\s+$/;
+  foreach my $line ( split(/;\n/, $sql)) {
+    $line = join '', grep { !/^--/ } split /\n/, $line;
+    next if !$line || $line =~ /^BEGIN TRANSACTION|^COMMIT|^\s+$/;
     $storage->_query_start($line);
     try {
       # do a dbh_do cycle here, as we need some error checking in
