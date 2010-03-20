@@ -143,43 +143,16 @@ method _ddl_schema_down_produce_filename($type, $versions, $dir) {
 }
 
 method _deployment_statements {
-  my $dir      = $self->upgrade_directory;
-  my $schema   = $self->schema;
   my $type     = $self->storage->sqlt_type;
-  my $sqltargs = $self->sqltargs;
   my $version  = $self->schema_version;
 
-  my @filenames = @{$self->_ddl_schema_consume_filenames($type, $version)};
-
-  for my $filename (@filenames) {
-    if(-f $filename) {
-        my $file;
-        open $file, q(<), $filename
-          or carp "Can't open $filename ($!)";
-        my @rows = <$file>;
-        close $file;
-        return join '', @rows;
-    }
+  for my $filename (@{$self->_ddl_schema_consume_filenames($type, $version)}) {
+      open my $file, q(<), $filename
+        or carp "Can't open $filename ($!)";
+      my @rows = <$file>;
+      close $file;
+      return join '', @rows;
   }
-
-  # sources needs to be a parser arg, but for simplicty allow at top level
-  # coming in
-  $sqltargs->{parser_args}{sources} = delete $sqltargs->{sources}
-      if exists $sqltargs->{sources};
-
-  my $tr = SQL::Translator->new(
-    producer => "SQL::Translator::Producer::${type}",
-    %$sqltargs,
-    parser => 'SQL::Translator::Parser::DBIx::Class',
-    data => $schema,
-  );
-
-  my $ret = $tr->translate;
-
-  $schema->throw_exception( 'Unable to produce deployment statements: ' . $tr->error)
-    unless defined $ret;
-
-  return $ret;
 }
 
 sub _deploy {
