@@ -25,8 +25,6 @@ sub _build_version_rs {
 
 sub add_database_version { $_[0]->version_rs->create($_[1]) }
 
-sub install_version_storage { die }
-
 1;
 
 __END__
