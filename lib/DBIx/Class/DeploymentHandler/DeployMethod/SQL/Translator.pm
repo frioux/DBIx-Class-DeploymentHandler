@@ -55,6 +55,12 @@ has _filedata => (
   is  => 'rw',
 );
 
+has txn_wrap => (
+  is => 'ro',
+  isa => 'Bool',
+  default => 1,
+);
+
 method __ddl_consume_with_prefix($type, $versions, $prefix) {
   my $base_dir = $self->upgrade_directory;
 
@@ -180,32 +186,9 @@ sub _deploy {
   my $self = shift;
   my $storage  = $self->storage;
 
-#< frew> k, also, we filter out comments and transaction stuff and blank lines
-#< frew> is that really necesary?
-#< frew> and what if I want to run my upgrade in a txn?  seems like something you'd
-#        always want to do really
-#< ribasushi> again - some stuff chokes
-#< frew> ok, so I see filtering out -- and \s*
-#< frew> but I think the txn filtering should be optional and default to NOT filter it
-#        out
-#< ribasushi> then you have a problem
-#< frew> tell me
-#< ribasushi> someone runs a deploy in txn_do
-#< ribasushi> the inner begin will blow up
-#< frew> because it's a nested TXN?
-#< ribasushi> (you an't begin twice on most dbs)
-#< ribasushi> right
-#< ribasushi> on sqlite - for sure
-#< frew> so...read the docs and set txn_filter to true?
-#< ribasushi> more like wrap deploy in a txn
-#< frew> I like that better
-#< ribasushi> and make sure the ddl has no literal txns in them
-#< frew> sure
-#< ribasushi> this way you have stuff under control
-#< frew> so we have txn_wrap default to true
-#< frew> and if people wanna do that by hand they can
-  my $sql = $self->_deployment_statements();
-  foreach my $line ( split(/;\n/, $sql)) {
+  my $guard = $self->schema->txn_scope_guard if $self->txn_wrap;
+
+  foreach my $line ( split /;\n/, $self->_deployment_statements ) {
     $line = join '', grep { !/^--/ } split /\n/, $line;
     next if !$line || $line =~ /^BEGIN TRANSACTION|^COMMIT|^\s+$/;
     $storage->_query_start($line);
@@ -219,6 +202,8 @@ sub _deploy {
     }
     $storage->_query_end($line);
   }
+
+  $guard->commit if $self->txn_wrap;
 }
 
 sub prepare_install {
