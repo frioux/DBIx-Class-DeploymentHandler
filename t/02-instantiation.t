@@ -22,7 +22,7 @@ VERSION1: {
       upgrade_directory => $sql_dir,
       schema => $s,
       databases => 'SQLite',
-    sqltargs => { add_drop_table => 0 },
+      sqltargs => { add_drop_table => 0 },
    });
 
    ok($handler, 'DBIx::Class::DeploymentHandler w/1.0 instantiates correctly');
@@ -37,6 +37,9 @@ VERSION1: {
       })
    } 'schema not deployed';
    $handler->install;
+   dies_ok {
+     $handler->install;
+   } 'cannot install twice';
    lives_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',

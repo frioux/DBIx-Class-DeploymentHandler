@@ -62,7 +62,7 @@ has sqltargs => ( # configuration
 );
 
 method install {
-  carp 'Install not possible as versions table already exists in database'
+  croak 'Install not possible as versions table already exists in database'
     if $self->version_storage_is_installed;
 
   my $ddl = $self->_deploy;
