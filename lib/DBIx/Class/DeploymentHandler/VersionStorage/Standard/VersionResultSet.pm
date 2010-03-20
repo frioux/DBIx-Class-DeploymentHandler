@@ -17,7 +17,7 @@ sub database_version {
   $self->search(undef, {
     order_by => { -desc => 'installed' },
     rows => 1
-  })->get_column('version')->next || 0;
+  })->get_column('version')->next;
 }
 
 1;
