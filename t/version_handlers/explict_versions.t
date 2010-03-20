@@ -12,6 +12,25 @@ my $versions = [map "$_.0", 0..100];
 {
   my $vh = ExplicitVersions->new({
     ordered_versions => $versions,
+    schema_version => '2.0',
+    database_version => '1.0',
+  });
+
+  ok $vh, 'VersionHandler gets instantiated';
+
+  ok(
+    eq_array($vh->next_version_set, [qw( 1.0 2.0 )]),
+    'first version pair works'
+  );
+  ok(
+    !$vh->next_version_set,
+    'next version set returns undef when we are done'
+  );
+}
+
+{
+  my $vh = ExplicitVersions->new({
+    ordered_versions => $versions,
     to_version => '1.0',
     schema_version => '1.0',
     database_version => '1.0',
@@ -53,6 +72,15 @@ my $versions = [map "$_.0", 0..100];
   ok( !$vh->next_version_set, 'no more versions after final pair' );
   ok( !$vh->next_version_set, 'still no more versions after final pair' );
 }
+
+dies_ok {
+  my $vh = ExplicitVersions->new({
+    ordered_versions => $versions,
+    schema_version => '1.0',
+    database_version => '1.1',
+  });
+  $vh->next_vesion_set
+} 'dies if database version not found in ordered_versions';
 
 dies_ok {
   my $vh = ExplicitVersions->new({
