@@ -65,17 +65,12 @@ method install {
   carp 'Install not possible as versions table already exists in database'
     if $self->version_storage_is_installed;
 
-  my $new_version = $self->to_version;
+  my $ddl = $self->_deploy;
 
-  if ($new_version) {
-    $self->_deploy;
-
-    $self->version_storage->add_database_version({
-      version     => $new_version,
-      # ddl         => $ddl,
-      # upgrade_sql => $upgrade_sql,
-    });
-  }
+  $self->version_storage->add_database_version({
+    version     => $self->to_version,
+    ddl         => $ddl,
+  });
 }
 
 sub upgrade {

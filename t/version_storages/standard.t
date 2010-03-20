@@ -45,17 +45,11 @@ $handler->install();
 ok( $vs->version_storage_is_installed, 'VersionStorage is now installed' );
 
 
-cmp_deeply(
-	[ map +{
-		version     => $_->version,
-		ddl         => $_->ddl,
-		upgrade_sql => $_->upgrade_sql,
-	}, $vs->version_rs->search(undef, {order_by => 'id'})->all],
-	[{
-		version     => '1.0',
-		ddl         => undef,
-		upgrade_sql => undef
-	}],
+ok(
+	eq_array(
+		[ $vs->version_rs->search(undef, {order_by => 'id'})->get_column('version')->all],
+		[ '1.0' ],
+	),
 	'initial version works correctly'
 );
 
@@ -65,21 +59,11 @@ $vs->add_database_version({
 });
 is( $vs->database_version, '2.0', 'database version is 2.0');
 
-cmp_deeply(
-	[ map +{
-		version     => $_->version,
-		ddl         => $_->ddl,
-		upgrade_sql => $_->upgrade_sql,
-	}, $vs->version_rs->search(undef, {order_by => 'id'})->all],
-	[{
-		version     => '1.0',
-		ddl         => undef,
-		upgrade_sql => undef
-	},{
-		version     => '2.0',
-		ddl         => undef,
-		upgrade_sql => undef
-	}],
+ok(
+	eq_array(
+		[ $vs->version_rs->search(undef, {order_by => 'id'})->get_column('version')->all],
+		[ '1.0', '2.0', ],
+	),
 	'adding another version works correctly'
 );
 

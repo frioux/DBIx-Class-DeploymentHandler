@@ -148,12 +148,12 @@ sub _deploy {
 
   my $guard = $self->schema->txn_scope_guard if $self->txn_wrap;
 
-  foreach my $line (
-    map @{$self->_read_sql_file($_)}, @{$self->_ddl_schema_consume_filenames(
+  my @sql = map @{$self->_read_sql_file($_)}, @{$self->_ddl_schema_consume_filenames(
       $self->storage->sqlt_type,
       $self->schema_version
-    )}
-  ) {
+    )};
+
+  foreach my $line (@sql) {
     $storage->_query_start($line);
     try {
       # do a dbh_do cycle here, as we need some error checking in
@@ -167,6 +167,7 @@ sub _deploy {
   }
 
   $guard->commit if $self->txn_wrap;
+  return join "\n", @sql;
 }
 
 sub prepare_install {
