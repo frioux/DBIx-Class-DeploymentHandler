@@ -59,6 +59,7 @@ VERSION2: {
    $version = $s->schema_version();
    $handler->prepare_install();
    $handler->prepare_upgrade('1.0', $version);
+   $handler->prepare_upgrade($version, '1.0');
    #ok(-e 't/sql/DBICVersion-Schema-schema-2.0-SQLite.sql', 'DDL for 2.0 got created successfully');
    #ok(-e 't/sql/DBICVersion-Schema-diff-1.0-2.0-SQLite.sql', 'DDL for migration from 1.0 to 2.0 got created successfully');
    dies_ok {

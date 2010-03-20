@@ -55,7 +55,7 @@ has _filedata => (
   is  => 'rw',
 );
 
-method __ddl_in_with_prefix($type, $versions, $prefix) {
+method __ddl_consume_with_prefix($type, $versions, $prefix) {
   my $base_dir = $self->upgrade_directory;
 
   my $main    = File::Spec->catfile( $base_dir, $type                         );
@@ -88,13 +88,14 @@ method __ddl_in_with_prefix($type, $versions, $prefix) {
   return [@files{sort keys %files}]
 }
 
-method _ddl_schema_in_filenames($type, $version) {
-  $self->__ddl_in_with_prefix($type, [ $version ], 'schema')
+method _ddl_schema_consume_filenames($type, $version) {
+  $self->__ddl_consume_with_prefix($type, [ $version ], 'schema')
 }
 
-method _ddl_schema_out_filename($type, $version, $dir) {
+method _ddl_schema_produce_filename($type, $version) {
+  my $base_dir = $self->upgrade_directory;
   my $dirname = File::Spec->catfile(
-    $dir, $type, 'schema', $version
+    $base_dir, $type, 'schema', $version
   );
   File::Path::mkpath($dirname) unless -d $dirname;
 
@@ -103,15 +104,17 @@ method _ddl_schema_out_filename($type, $version, $dir) {
   );
 }
 
-method _ddl_schema_up_in_filenames($type, $versions, $dir) {
-  $self->__ddl_in_with_prefix($type, $versions, 'up')
+method _ddl_schema_up_consume_filenames($type, $versions) {
+  $self->__ddl_consume_with_prefix($type, $versions, 'up')
 }
 
-method _ddl_schema_down_in_filenames($type, $versions, $dir) {
-  $self->__ddl_in_with_prefix($type, $versions, 'down')
+method _ddl_schema_down_consume_filenames($type, $versions) {
+  $self->__ddl_consume_with_prefix($type, $versions, 'down')
 }
 
-method _ddl_schema_up_out_filename($type, $versions, $dir) {
+method _ddl_schema_up_produce_filename($type, $versions) {
+  my $dir = $self->upgrade_directory;
+
   my $dirname = File::Spec->catfile(
     $dir, $type, 'up', join( q(-), @{$versions} )
   );
@@ -122,7 +125,7 @@ method _ddl_schema_up_out_filename($type, $versions, $dir) {
   );
 }
 
-method _ddl_schema_down_out_filename($type, $versions, $dir) {
+method _ddl_schema_down_produce_filename($type, $versions, $dir) {
   my $dirname = File::Spec->catfile(
     $dir, $type, 'down', join( q(-), @{$versions} )
   );
@@ -140,7 +143,7 @@ method _deployment_statements {
   my $sqltargs = $self->sqltargs;
   my $version  = $self->schema_version;
 
-  my @filenames = @{$self->_ddl_schema_in_filenames($type, $version)};
+  my @filenames = @{$self->_ddl_schema_consume_filenames($type, $version)};
 
   for my $filename (@filenames) {
     if(-f $filename) {
@@ -279,7 +282,7 @@ sub prepare_install {
     $sqlt->{schema} = $sqlt_schema;
     $sqlt->producer($db);
 
-    my $filename = $self->_ddl_schema_out_filename($db, $version, $dir);
+    my $filename = $self->_ddl_schema_produce_filename($db, $version, $dir);
     if (-e $filename ) {
       carp "Overwriting existing DDL file - $filename";
       unlink $filename;
@@ -310,15 +313,29 @@ sub prepare_upgrade {
   # one would want to explicitly set $version_set to
   # [$to_version]
   $version_set  ||= [$from_version, $to_version];
+
+  $self->_prepare_changegrade($from_version, $to_version, $version_set, 'up');
+}
+
+sub prepare_downgrade {
+  my ($self, $from_version, $to_version, $version_set) = @_;
+
+  $from_version ||= $self->db_version;
+  $to_version   ||= $self->schema_version;
+
+  # for updates prepared automatically (rob's stuff)
+  # one would want to explicitly set $version_set to
+  # [$to_version]
+  $version_set  ||= [$from_version, $to_version];
+
+  $self->_prepare_changegrade($from_version, $to_version, $version_set, 'down');
+}
+
+method _prepare_changegrade($from_version, $to_version, $version_set, $direction) {
   my $schema    = $self->schema;
   my $databases = $self->databases;
   my $dir       = $self->upgrade_directory;
   my $sqltargs  = $self->sqltargs;
-
-  unless( -d $dir ) {
-    carp "Upgrade directory $dir does not exist, using ./\n";
-    $dir = "./";
-  }
 
   my $schema_version = $schema->schema_version;
 
@@ -340,15 +357,15 @@ sub prepare_upgrade {
     $sqlt->{schema} = $sqlt_schema;
     $sqlt->producer($db);
 
-    my $prefilename = $self->_ddl_schema_out_filename($db, $from_version, $dir);
+    my $prefilename = $self->_ddl_schema_produce_filename($db, $from_version, $dir);
     unless(-e $prefilename) {
       carp("No previous schema file found ($prefilename)");
       next;
     }
-
-    my $diff_file = $self->_ddl_schema_up_out_filename($db, $version_set, $dir );
+    my $diff_file_method = "_ddl_schema_${direction}_produce_filename";
+    my $diff_file = $self->$diff_file_method($db, $version_set, $dir );
     if(-e $diff_file) {
-      carp("Overwriting existing up-diff file - $diff_file");
+      carp("Overwriting existing $direction-diff file - $diff_file");
       unlink $diff_file;
     }
 
@@ -387,7 +404,7 @@ sub prepare_upgrade {
       $t->parser( $db ) # could this really throw an exception?
         or $self->throw_exception ($t->error);
 
-      my $filename = $self->_ddl_schema_out_filename($db, $to_version, $dir);
+      my $filename = $self->_ddl_schema_produce_filename($db, $to_version, $dir);
       my $out = $t->translate( $filename )
         or $self->throw_exception ($t->error);
 
@@ -429,10 +446,31 @@ method _read_sql_file($file) {
   return \@data;
 }
 
+# these are exactly the same for now
+sub _downgrade_single_step {
+  my $self = shift;
+  my @version_set = @{ shift @_ };
+  my @upgrade_files = @{$self->_ddl_schema_up_consume_filenames(
+    $self->storage->sqlt_type,
+    \@version_set,
+  )};
+
+  for my $upgrade_file (@upgrade_files) {
+    unless (-f $upgrade_file) {
+      # croak?
+      carp "Upgrade not possible, no upgrade file found ($upgrade_file), please create one\n";
+      return;
+    }
+
+    $self->_filedata($self->_read_sql_file($upgrade_file)); # I don't like this --fREW 2010-02-22
+    $self->schema->txn_do(sub { $self->_do_upgrade });
+  }
+}
+
 sub _upgrade_single_step {
   my $self = shift;
   my @version_set = @{ shift @_ };
-  my @upgrade_files = @{$self->_ddl_schema_up_in_filenames(
+  my @upgrade_files = @{$self->_ddl_schema_up_consume_filenames(
     $self->storage->sqlt_type,
     \@version_set,
   )};
