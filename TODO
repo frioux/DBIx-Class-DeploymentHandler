@@ -1,0 +1,5 @@
+test VersionStorages
+test DeployMethods
+make Deprecated bundle
+make deploy_version_storage
+pod
