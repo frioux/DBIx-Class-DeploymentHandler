@@ -180,8 +180,6 @@ sub _deploy {
   my $self = shift;
   my $storage  = $self->storage;
 
-  my $deploy = sub {
-    my $line = shift;
 #< frew> k, also, we filter out comments and transaction stuff and blank lines
 #< frew> is that really necesary?
 #< frew> and what if I want to run my upgrade in a txn?  seems like something you'd
@@ -206,8 +204,9 @@ sub _deploy {
 #< ribasushi> this way you have stuff under control
 #< frew> so we have txn_wrap default to true
 #< frew> and if people wanna do that by hand they can
-
-    return if(!$line || $line =~ /^--|^BEGIN TRANSACTION|^COMMIT|^\s+$/);
+  my $sql = $self->_deployment_statements();
+  foreach my $line ( split(";\n", $sql)) {
+    next if !$line || $line =~ /^--|^BEGIN TRANSACTION|^COMMIT|^\s+$/;
     $storage->_query_start($line);
     try {
       # do a dbh_do cycle here, as we need some error checking in
@@ -218,17 +217,6 @@ sub _deploy {
       carp "$_ (running '${line}')"
     }
     $storage->_query_end($line);
-  };
-  my @statements = $self->_deployment_statements();
-  if (@statements > 1) {
-    foreach my $statement (@statements) {
-      $deploy->( $statement );
-    }
-  }
-  elsif (@statements == 1) {
-    foreach my $line ( split(";\n", $statements[0])) {
-      $deploy->( $line );
-    }
   }
 }
 
