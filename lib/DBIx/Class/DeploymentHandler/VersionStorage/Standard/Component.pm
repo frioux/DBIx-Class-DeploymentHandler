@@ -1,16 +1,16 @@
-package DBIx::Class::DeploymentHandler::Component;
+package DBIx::Class::DeploymentHandler::VersionStorage::Standard::Component;
 
 use strict;
 use warnings;
 
 use Carp 'carp';
-use DBIx::Class::DeploymentHandler::VersionResult;
+use DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResult;
 
 sub set_us_up_the_bomb {
 	my $self = shift;
 
 	$self->register_class(
-		__VERSION => 'DBIx::Class::DeploymentHandler::VersionResult'
+		__VERSION => 'DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResult'
 	);
 }
 

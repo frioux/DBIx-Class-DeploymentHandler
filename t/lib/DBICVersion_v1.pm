@@ -27,6 +27,6 @@ use warnings;
 our $VERSION = '1.0';
 
 __PACKAGE__->register_class('Foo', 'DBICVersion::Foo');
-__PACKAGE__->load_components('DeploymentHandler::Component');
+__PACKAGE__->load_components('DeploymentHandler::VersionStorage::Standard::Component');
 
 1;

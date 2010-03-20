@@ -1,4 +1,4 @@
-package DBIx::Class::DeploymentHandler::VersionResult;
+package DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResult;
 
 use strict;
 use warnings;
@@ -30,6 +30,6 @@ __PACKAGE__->add_columns (
 
 __PACKAGE__->set_primary_key('installed');
 __PACKAGE__->add_unique_constraint(['version']);
-__PACKAGE__->resultset_class('DBIx::Class::DeploymentHandler::VersionResultSet');
+__PACKAGE__->resultset_class('DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResultSet');
 
 1;
