@@ -25,6 +25,7 @@ has schema => (
   isa      => 'DBIx::Class::Schema',
   is       => 'ro',
   required => 1,
+  handles => ['schema_version'],
 );
 
 has upgrade_directory => ( # configuration
@@ -45,6 +46,8 @@ has to_version => ( # configuration
   lazy_build => 1, # builder comes from another role...
                    # which is... probably not how we want it
 );
+
+sub _build_to_version { $_[0]->schema->schema_version }
 
 has databases => ( # configuration
   coerce  => 1,

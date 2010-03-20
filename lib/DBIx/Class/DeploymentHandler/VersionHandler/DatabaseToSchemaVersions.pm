@@ -4,6 +4,26 @@ use Method::Signatures::Simple;
 
 with 'DBIx::Class::DeploymentHandler::HandlesVersioning';
 
+has schema_version => (
+  isa      => 'Str',
+  is       => 'ro',
+  required => 1,
+);
+
+has database_version => (
+  isa      => 'Str',
+  is       => 'ro',
+  required => 1,
+);
+
+has to_version => ( # configuration
+  is         => 'ro',
+  lazy_build => 1, # builder comes from another role...
+                   # which is... probably not how we want it
+);
+
+sub _build_to_version { $_[0]->schema_version }
+
 has once => (
   is      => 'rw',
   isa     => 'Bool',

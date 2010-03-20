@@ -3,27 +3,6 @@ use Moose::Role;
 
 requires 'next_version_set';
 
-has schema => (
-  isa      => 'DBIx::Class::Schema',
-  is       => 'ro',
-  required => 1,
-  handles => [qw( schema_version )],
-);
-
-has version_storage => (
-  does       => 'DBIx::Class::DeploymentHandler::HandlesVersionStorage',
-  is         => 'ro',
-  required   => 1,
-  handles    => 'DBIx::Class::DeploymentHandler::HandlesVersionStorage',
-);
-
-has to_version => (
-  is         => 'ro',
-  lazy_build => 1,
-);
-
-sub _build_to_version { $_[0]->schema->schema_version }
-
 1;
 
 __END__

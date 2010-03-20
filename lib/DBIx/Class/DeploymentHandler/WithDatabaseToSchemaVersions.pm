@@ -16,8 +16,8 @@ sub _build_version_handler {
   my $self = shift;
 
   my $args = {
-    schema          => $self->schema,
-    version_storage => $self->version_storage,
+    database_version => $self->database_version,
+    schema_version   => $self->schema_version,
   };
 
   $args->{to_version} = $self->to_version if $self->has_to_version;
