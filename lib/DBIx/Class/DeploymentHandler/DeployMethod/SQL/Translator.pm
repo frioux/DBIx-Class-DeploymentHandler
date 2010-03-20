@@ -417,7 +417,10 @@ sub _downgrade_single_step {
     }
 
     $self->_filedata($self->_read_sql_file($upgrade_file)); # I don't like this --fREW 2010-02-22
-    $self->schema->txn_do(sub { $self->_do_upgrade });
+
+    my $guard = $self->schema->txn_scope_guard if $self->txn_wrap;
+    $self->_do_upgrade;
+    $guard->commit if $self->txn_wrap;
   }
 }
 
@@ -437,7 +440,9 @@ sub _upgrade_single_step {
     }
 
     $self->_filedata($self->_read_sql_file($upgrade_file)); # I don't like this --fREW 2010-02-22
-    $self->schema->txn_do(sub { $self->_do_upgrade });
+    my $guard = $self->schema->txn_scope_guard if $self->txn_wrap;
+    $self->_do_upgrade;
+    $guard->commit if $self->txn_wrap;
   }
 }
 
