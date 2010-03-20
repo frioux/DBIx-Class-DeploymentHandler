@@ -19,8 +19,11 @@ has version_rs => (
 with 'DBIx::Class::DeploymentHandler::HandlesVersionStorage';
 
 sub _build_version_rs {
-   $_[0]->schema->set_us_up_the_bomb;
-   $_[0]->schema->resultset('__VERSION')
+  $_[0]->schema->register_class(
+    __VERSION =>
+      'DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResult'
+  );
+  $_[0]->schema->resultset('__VERSION')
 }
 
 sub add_database_version { $_[0]->version_rs->create($_[1]) }

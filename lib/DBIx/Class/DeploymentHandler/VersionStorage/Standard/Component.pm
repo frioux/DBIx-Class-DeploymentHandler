@@ -6,10 +6,8 @@ use warnings;
 use Carp 'carp';
 use DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResult;
 
-sub set_us_up_the_bomb {
-	my $self = shift;
-
-	$self->register_class(
+sub attach_version_storage {
+	$_[0]->register_class(
 		__VERSION => 'DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResult'
 	);
 }
@@ -18,7 +16,7 @@ sub connection  {
   my $self = shift;
   $self->next::method(@_);
 
-  $self->set_us_up_the_bomb;
+  $self->attach_version_storage;
 
   my $args = $_[3] || {};
 
@@ -32,6 +30,7 @@ sub connection  {
 		  ', your database contains version ' . $versions->db_version . ", please call upgrade on your Schema.\n";
 	 }
   }
+
   return $self;
 }
 

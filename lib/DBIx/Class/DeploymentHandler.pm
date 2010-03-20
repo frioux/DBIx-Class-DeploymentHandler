@@ -43,8 +43,7 @@ has backup_directory => ( # configuration
 
 has to_version => ( # configuration
   is         => 'ro',
-  lazy_build => 1, # builder comes from another role...
-                   # which is... probably not how we want it
+  lazy_build => 1,
 );
 
 sub _build_to_version { $_[0]->schema->schema_version }
@@ -71,7 +70,7 @@ method install {
   if ($new_version) {
     $self->_deploy;
 
-    $self->add_database_version({
+    $self->version_storage->add_database_version({
       version     => $new_version,
       # ddl         => $ddl,
       # upgrade_sql => $upgrade_sql,
