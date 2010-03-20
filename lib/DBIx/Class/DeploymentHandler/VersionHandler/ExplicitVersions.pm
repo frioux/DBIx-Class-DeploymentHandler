@@ -67,15 +67,14 @@ sub next_version_set { # sub instead of method because of when roles get compose
   my $self = shift;
   return undef
     if $self->ordered_versions->[$self->_version_idx] eq $self->to_version;
+
   my $next_idx = $self->_inc_version_idx;
-  if ( $next_idx <= $#{ $self->ordered_versions }) {
-    return [
-      $self->ordered_versions->[$next_idx - 1],
-      $self->ordered_versions->[$next_idx    ],
-    ]
-  } else {
-    return undef
-  }
+  return [
+    $self->ordered_versions->[$next_idx - 1],
+    $self->ordered_versions->[$next_idx    ],
+  ] if $next_idx <= $#{ $self->ordered_versions };
+
+  croak 'this should never happen';
 }
 
 __PACKAGE__->meta->make_immutable;
