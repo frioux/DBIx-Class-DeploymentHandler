@@ -168,32 +168,12 @@ method _deployment_statements {
     data => $schema,
   );
 
-#< frew> now note that deploy in the same file calls deployment_statements
-#< ribasushi> right
-#< frew> ALWAYS in array context
-#< ribasushi> right, that's the only way
-#< ribasushi> but create_ddl_dir
-#< ribasushi> calls in scalar
-#< ribasushi> because this is how you get stuff writable to a file
-#< ribasushi> in list you get individual statements for dbh->do
-#< frew> right
-#< frew> ok...
-#< frew> so for *me* I need it *always* in scalar
-#< frew> because I *only* use it to generate the file
-#< ribasushi> correct
-  my @ret;
-  my $wa = wantarray;
-  if ($wa) {
-    @ret = $tr->translate;
-  }
-  else {
-    $ret[0] = $tr->translate;
-  }
+  my $ret = $tr->translate;
 
   $schema->throw_exception( 'Unable to produce deployment statements: ' . $tr->error)
-    unless (@ret && defined $ret[0]);
+    unless defined $ret;
 
-  return $wa ? @ret : $ret[0];
+  return $ret;
 }
 
 sub _deploy {
