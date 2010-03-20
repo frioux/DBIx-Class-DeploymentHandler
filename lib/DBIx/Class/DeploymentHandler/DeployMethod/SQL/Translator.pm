@@ -185,7 +185,7 @@ sub prepare_install {
     %{$sqltargs}
   });
 
-  my $sqlt_schema = $sqlt->translate({ data => $schema })
+  my $sqlt_schema = $sqlt->translate( data => $schema )
     or $self->throw_exception($sqlt->error);
 
   foreach my $db (@$databases) {
@@ -260,7 +260,7 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
   my $sqlt = SQL::Translator->new( $sqltargs );
 
   $sqlt->parser('SQL::Translator::Parser::DBIx::Class');
-  my $sqlt_schema = $sqlt->translate({ data => $schema })
+  my $sqlt_schema = $sqlt->translate( data => $schema )
     or $self->throw_exception ($sqlt->error);
 
   foreach my $db (@$databases) {
