@@ -142,28 +142,18 @@ method _ddl_schema_down_produce_filename($type, $versions, $dir) {
   );
 }
 
-method _deployment_statements {
-  my $type     = $self->storage->sqlt_type;
-  my $version  = $self->schema_version;
-
-  for my $filename (@{$self->_ddl_schema_consume_filenames($type, $version)}) {
-      open my $file, q(<), $filename
-        or carp "Can't open $filename ($!)";
-      my @rows = <$file>;
-      close $file;
-      return join '', @rows;
-  }
-}
-
 sub _deploy {
   my $self = shift;
   my $storage  = $self->storage;
 
   my $guard = $self->schema->txn_scope_guard if $self->txn_wrap;
 
-  foreach my $line ( split /;\n/, $self->_deployment_statements ) {
-    $line = join '', grep { !/^--/ } split /\n/, $line;
-    next if !$line || $line =~ /^BEGIN TRANSACTION|^COMMIT|^\s+$/;
+  foreach my $line (
+    map @{$self->_read_sql_file($_)}, @{$self->_ddl_schema_consume_filenames(
+      $self->storage->sqlt_type,
+      $self->schema_version
+    )}
+  ) {
     $storage->_query_start($line);
     try {
       # do a dbh_do cycle here, as we need some error checking in
@@ -353,16 +343,17 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
 method _read_sql_file($file) {
   return unless $file;
 
-  open my $fh, '<', $file or carp("Can't open upgrade file, $file ($!)");
-  my @data = split /\n/, join '', <$fh>;
+  open my $fh, '<', $file or carp("Can't open sql file, $file ($!)");
+  my @data = split /;\n/, join '', <$fh>;
   close $fh;
 
   @data = grep {
-    $_ &&
-    !/^--/ &&
-    !/^(BEGIN|BEGIN TRANSACTION|COMMIT)/m
-  } split /;/,
-    join '', @data;
+    $_ && # remove blank lines
+    !/^(BEGIN|BEGIN TRANSACTION|COMMIT)/ # strip txn's
+  } map {
+    s/^\s+//; s/\s+$//; # trim whitespace
+    join '', grep { !/^--/ } split /\n/ # remove comments
+  } @data;
 
   return \@data;
 }
