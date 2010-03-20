@@ -16,6 +16,13 @@ my @connection = ($db, '', '', { ignore_version => 1 });
 my $sql_dir = 't/sql';
 
 my $s = DBICVersion::Schema->connect(@connection);
+{
+	my $warning;
+	local $SIG{__WARN__} = sub {$warning = shift};
+	my $t = DBICVersion::Schema->connect('frewfrew', '', '');
+	like( $warning, qr/Your DB is currently unversioned. Please call upgrade on your schema to sync the DB/, 'warning when database is unversioned');
+}
+
 DBICDHTest::ready;
 
 my $handler = DBIx::Class::DeploymentHandler->new({
@@ -75,6 +82,14 @@ cmp_deeply(
 	}],
 	'adding another version works correctly'
 );
+
+{
+	my $warning;
+	local $SIG{__WARN__} = sub {$warning = shift};
+	my $u = DBICVersion::Schema->connect($db, '', '');
+	like( $warning, qr/Versions out of sync. This is 1.0, your database contains version 2.0, please call upgrade on your Schema./, 'warning when database/schema mismatch');
+}
+
 
 $vs->version_rs->delete;
 
