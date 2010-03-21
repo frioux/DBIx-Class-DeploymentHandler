@@ -28,7 +28,6 @@ VERSION1: {
 
    my $version = $s->schema_version();
    $handler->prepare_install();
-   #ok(-e 't/sql/DBICVersion-Schema-schema-1.0-SQLite.sql', 'DDL for 1.0 got created successfully');
 
    dies_ok {
       $s->resultset('Foo')->create({
@@ -62,15 +61,12 @@ VERSION2: {
    $handler->prepare_install();
    $handler->prepare_upgrade('1.0', $version);
    $handler->prepare_upgrade($version, '1.0');
-   #ok(-e 't/sql/DBICVersion-Schema-schema-2.0-SQLite.sql', 'DDL for 2.0 got created successfully');
-   #ok(-e 't/sql/DBICVersion-Schema-diff-1.0-2.0-SQLite.sql', 'DDL for migration from 1.0 to 2.0 got created successfully');
    dies_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',
          baz => 'frew',
       })
    } 'schema not deployed';
-   #$handler->install('1.0');
    dies_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',
@@ -102,9 +98,6 @@ VERSION3: {
    $handler->prepare_install;
    $handler->prepare_upgrade( '1.0', $version );
    $handler->prepare_upgrade( '2.0', $version );
-   #ok(-e 't/sql/DBICVersion-Schema-schema-3.0-SQLite.sql', 'DDL for 3.0 got created successfully');
-   #ok(-e 't/sql/DBICVersion-Schema-diff-1.0-3.0-SQLite.sql', 'DDL for migration from 1.0 to 3.0 got created successfully');
-   #ok(-e 't/sql/DBICVersion-Schema-diff-2.0-3.0-SQLite.sql', 'DDL for migration from 2.0 to 3.0 got created successfully');
    dies_ok {
       $s->resultset('Foo')->create({
             bar => 'frew',
