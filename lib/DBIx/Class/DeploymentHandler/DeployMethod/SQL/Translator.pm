@@ -6,8 +6,9 @@ use SQL::Translator;
 require SQL::Translator::Diff;
 require DBIx::Class::Storage;   # loaded for type constraint
 use autodie;
-use File::Path;
+use File::Path 'mkpath';
 use DBIx::Class::DeploymentHandler::Types;
+use File::Spec::Functions;
 
 
 with 'DBIx::Class::DeploymentHandler::HandlesDeploy';
@@ -66,15 +67,16 @@ has txn_wrap => (
 method __ddl_consume_with_prefix($type, $versions, $prefix) {
   my $base_dir = $self->upgrade_directory;
 
-  my $main    = File::Spec->catfile( $base_dir, $type                         );
-  my $generic = File::Spec->catfile( $base_dir, '_generic'                    );
-  my $common =  File::Spec->catfile( $base_dir, '_common', $prefix, join q(-), @{$versions} );
+  my $main    = catfile( $base_dir, $type      );
+  my $generic = catfile( $base_dir, '_generic' );
+  my $common  =
+    catfile( $base_dir, '_common', $prefix, join q(-), @{$versions} );
 
   my $dir;
   if (-d $main) {
-    $dir = File::Spec->catfile($main, $prefix, join q(-), @{$versions})
+    $dir = catfile($main, $prefix, join q(-), @{$versions})
   } elsif (-d $generic) {
-    $dir = File::Spec->catfile($main, $prefix, join q(-), @{$versions})
+    $dir = catfile($main, $prefix, join q(-), @{$versions})
   } else {
     die 'PREPARE TO SQL'
   }
@@ -101,15 +103,10 @@ method _ddl_schema_consume_filenames($type, $version) {
 }
 
 method _ddl_schema_produce_filename($type, $version) {
-  my $base_dir = $self->upgrade_directory;
-  my $dirname = File::Spec->catfile(
-    $base_dir, $type, 'schema', $version
-  );
-  File::Path::mkpath($dirname) unless -d $dirname;
+  my $dirname = catfile( $self->upgrade_directory, $type, 'schema', $version );
+  mkpath($dirname) unless -d $dirname;
 
-  return File::Spec->catfile(
-    $dirname, '001-auto.sql'
-  );
+  return catfile( $dirname, '001-auto.sql' );
 }
 
 method _ddl_schema_up_consume_filenames($type, $versions) {
@@ -123,25 +120,18 @@ method _ddl_schema_down_consume_filenames($type, $versions) {
 method _ddl_schema_up_produce_filename($type, $versions) {
   my $dir = $self->upgrade_directory;
 
-  my $dirname = File::Spec->catfile(
-    $dir, $type, 'up', join( q(-), @{$versions} )
-  );
-  File::Path::mkpath($dirname) unless -d $dirname;
+  my $dirname = catfile( $dir, $type, 'up', join q(-), @{$versions});
+  mkpath($dirname) unless -d $dirname;
 
-  return File::Spec->catfile(
-    $dirname, '001-auto.sql'
+  return catfile( $dirname, '001-auto.sql'
   );
 }
 
 method _ddl_schema_down_produce_filename($type, $versions, $dir) {
-  my $dirname = File::Spec->catfile(
-    $dir, $type, 'down', join( q(-), @{$versions} )
-  );
-  File::Path::mkpath($dirname) unless -d $dirname;
+  my $dirname = catfile( $dir, $type, 'down', join q(-), @{$versions} );
+  mkpath($dirname) unless -d $dirname;
 
-  return File::Spec->catfile(
-    $dirname, '001-auto.sql'
-  );
+  return catfile( $dirname, '001-auto.sql');
 }
 
 sub _deploy {
