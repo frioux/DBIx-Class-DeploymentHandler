@@ -6,20 +6,11 @@ require DBIx::Class::Schema;    # loaded for type constraint
 require DBIx::Class::ResultSet; # loaded for type constraint
 use Carp::Clan '^DBIx::Class::DeploymentHandler';
 
+use DBIx::Class::DeploymentHandler::Types;
 with 'DBIx::Class::DeploymentHandler::WithSqltDeployMethod',
      'DBIx::Class::DeploymentHandler::WithDatabaseToSchemaVersions',
      'DBIx::Class::DeploymentHandler::WithStandardVersionStorage';
 
-BEGIN {
-  use Moose::Util::TypeConstraints;
-  subtype 'DBIx::Class::DeploymentHandler::Databases'
-    => as 'ArrayRef[Str]';
-
-  coerce 'DBIx::Class::DeploymentHandler::Databases'
-    => from 'Str'
-    => via { [$_] };
-  no Moose::Util::TypeConstraints;
-}
 
 has schema => (
   isa      => 'DBIx::Class::Schema',

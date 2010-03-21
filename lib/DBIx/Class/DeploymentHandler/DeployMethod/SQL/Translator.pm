@@ -7,6 +7,8 @@ require SQL::Translator::Diff;
 require DBIx::Class::Storage;   # loaded for type constraint
 use autodie;
 use File::Path;
+use DBIx::Class::DeploymentHandler::Types;
+
 
 with 'DBIx::Class::DeploymentHandler::HandlesDeploy';
 
