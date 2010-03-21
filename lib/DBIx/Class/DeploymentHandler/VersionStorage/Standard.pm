@@ -11,8 +11,7 @@ has schema => (
 has version_rs => (
   isa        => 'DBIx::Class::ResultSet',
   is         => 'ro',
-  lazy_build => 1, # builder comes from another role...
-                   # which is... probably not how we want it
+  lazy_build => 1,
   handles    => [qw( database_version version_storage_is_installed )],
 );
 

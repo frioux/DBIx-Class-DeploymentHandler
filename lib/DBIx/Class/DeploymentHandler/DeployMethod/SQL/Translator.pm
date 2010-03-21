@@ -1,19 +1,22 @@
 package DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator;
 use Moose;
+
+use autodie;
+use Carp qw( carp croak );
+
 use Method::Signatures::Simple;
 use Try::Tiny;
+
 use SQL::Translator;
 require SQL::Translator::Diff;
+
 require DBIx::Class::Storage;   # loaded for type constraint
-use autodie;
-use File::Path 'mkpath';
 use DBIx::Class::DeploymentHandler::Types;
+
+use File::Path 'mkpath';
 use File::Spec::Functions;
 
-
 with 'DBIx::Class::DeploymentHandler::HandlesDeploy';
-
-use Carp 'carp';
 
 has schema => (
   isa      => 'DBIx::Class::Schema',
@@ -76,20 +79,20 @@ method __ddl_consume_with_prefix($type, $versions, $prefix) {
   if (-d $main) {
     $dir = catfile($main, $prefix, join q(-), @{$versions})
   } elsif (-d $generic) {
-    $dir = catfile($main, $prefix, join q(-), @{$versions})
+    $dir = catfile($generic, $prefix, join q(-), @{$versions});
   } else {
-    die 'PREPARE TO SQL'
+    croak "neither $main or $generic exist; please write/generate some SQL";
   }
 
   opendir my($dh), $dir;
-  my %files = map { $_ => "$dir/$_" } grep { /\.sql$/ && -f "$dir/$_" } readdir($dh);
+  my %files = map { $_ => "$dir/$_" } grep { /\.sql$/ && -f "$dir/$_" } readdir $dh;
   closedir $dh;
 
   if (-d $common) {
     opendir my($dh), $common;
-    for my $filename (grep { /\.sql$/ && -f "$common/$_" } readdir($dh)) {
+    for my $filename (grep { /\.sql$/ && -f catfile($common,$_) } readdir $dh) {
       unless ($files{$filename}) {
-        $files{$filename} = "$common/$_";
+        $files{$filename} = catfile($common,$filename);
       }
     }
     closedir $dh;
@@ -210,7 +213,7 @@ sub prepare_install {
 sub prepare_upgrade {
   my ($self, $from_version, $to_version, $version_set) = @_;
 
-  $from_version ||= $self->db_version;
+  $from_version ||= '1.0'; #$self->database_version;
   $to_version   ||= $self->schema_version;
 
   # for updates prepared automatically (rob's stuff)
@@ -351,23 +354,22 @@ method _read_sql_file($file) {
   return \@data;
 }
 
-# these are exactly the same for now
 sub _downgrade_single_step {
   my $self = shift;
   my @version_set = @{ shift @_ };
-  my @upgrade_files = @{$self->_ddl_schema_up_consume_filenames(
+  my @downgrade_files = @{$self->_ddl_schema_down_consume_filenames(
     $self->storage->sqlt_type,
     \@version_set,
   )};
 
-  for my $upgrade_file (@upgrade_files) {
-    unless (-f $upgrade_file) {
+  for my $downgrade_file (@downgrade_files) {
+    unless (-f $downgrade_file) {
       # croak?
-      carp "Upgrade not possible, no upgrade file found ($upgrade_file), please create one\n";
+      carp "Downgrade not possible, no downgrade file found ($downgrade_file), please create one\n";
       return;
     }
 
-    $self->_filedata($self->_read_sql_file($upgrade_file)); # I don't like this --fREW 2010-02-22
+    $self->_filedata($self->_read_sql_file($downgrade_file)); # I don't like this --fREW 2010-02-22
 
     my $guard = $self->schema->txn_scope_guard if $self->txn_wrap;
     $self->_do_upgrade;
