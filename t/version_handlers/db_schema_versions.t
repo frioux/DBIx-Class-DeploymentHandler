@@ -4,8 +4,6 @@ use Test::More;
 use Test::Exception;
 
 use lib 't/lib';
-use DBICDHTest;
-use DBICTest;
 use aliased
   'DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions';
 

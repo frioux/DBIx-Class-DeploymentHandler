@@ -6,7 +6,6 @@ use File::Path 'remove_tree';
 
 use lib 't/lib';
 use DBICDHTest;
-use DBICTest;
 use DBIx::Class::DeploymentHandler;
 my $db = 'dbi:SQLite:db.db';
 my @connection = ($db, '', '', { ignore_version => 1 });

@@ -6,7 +6,6 @@ use Test::Exception;
 
 use lib 't/lib';
 use DBICDHTest;
-use DBICTest;
 use aliased 'DBIx::Class::DeploymentHandler::VersionStorage::Standard';
 
 use DBICVersion_v1;
