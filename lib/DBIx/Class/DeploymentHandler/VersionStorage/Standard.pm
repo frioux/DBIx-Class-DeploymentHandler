@@ -27,6 +27,8 @@ sub _build_version_rs {
 
 sub add_database_version { $_[0]->version_rs->create($_[1]) }
 
+__PACKAGE__->meta->make_immutable;
+
 1;
 
 __END__
