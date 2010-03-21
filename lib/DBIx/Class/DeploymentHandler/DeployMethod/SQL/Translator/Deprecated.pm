@@ -2,28 +2,40 @@ package DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::Deprecate
 use Moose;
 use Method::Signatures::Simple;
 
+use File::Spec::Functions;
+
 extends 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator',
 
-method _ddl_schema_filename($type, $version, $dir) {
+method _ddl_schema_consume_filenames($type, $version) {
+	return [$self->_ddl_schema_produce_filename($type, $version)]
+}
+
+method _ddl_schema_produce_filename($type, $version) {
   my $filename = ref $self->schema;
   $filename =~ s/::/-/g;
 
-  $filename = File::Spec->catfile(
-    $dir, "$filename-schema-$version-$type.sql"
+  $filename = catfile(
+    $self->upgrade_directory, "$filename-$version-$type.sql"
   );
 
-  return [$filename];
+  return $filename;
 }
 
-method _ddl_schema_diff_filename($type, $versions, $dir) {
+method _ddl_schema_up_produce_filename($type, $versions, $dir) {
   my $filename = ref $self->schema;
   $filename =~ s/::/-/g;
 
-  $filename = File::Spec->catfile(
-    $dir, "$filename-diff-" . join( q(-), @{$versions} ) . "-$type.sql"
+  $filename = catfile(
+    $self->upgrade_directory, "$filename-" . join( q(-), @{$versions} ) . "-$type.sql"
   );
 
-  return [$filename];
+  return $filename;
 }
+
+method _ddl_schema_up_consume_filenames($type, $versions) {
+	return [$self->_ddl_schema_up_produce_filename($type, $versions)]
+}
+
+__PACKAGE__->meta->make_immutable;
 
 1;
