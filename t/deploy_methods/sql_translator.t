@@ -7,6 +7,7 @@ use lib 't/lib';
 use DBICDHTest;
 use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
 use File::Spec::Functions;
+use File::Path qw(rmtree mkpath);
 
 my $db = 'dbi:SQLite:db.db';
 my @connection = ($db, '', '', { ignore_version => 1 });
@@ -27,6 +28,17 @@ VERSION1: {
    ok( $dm, 'DBIC::DH::DM::SQL::Translator gets instantiated correctly' );
 
    $dm->prepare_install;
+   {
+      my $warned = 0;
+      local $SIG{__WARN__} = sub{$warned = 1};
+      $dm->prepare_install;
+      ok( $warned, 'prepare_install warns if you run it twice' );
+   }
+   mkpath(catfile(qw( t sql _common schema 1.0 )));
+   open my $common, '>',
+      catfile(qw( t sql _common schema 1.0 002-error.sql ));
+   print {$common} qq<syntax fail\n\n>;
+   close $common;
 
    ok(
       -f catfile(qw( t sql SQLite schema 1.0 001-auto.sql )),
@@ -39,7 +51,17 @@ VERSION1: {
       })
    } 'schema not deployed';
 
-   $dm->_deploy;
+   mkpath catfile(qw( t sql _common schema 1.0 ));
+   open my $common, '>',
+      catfile(qw( t sql _common schema 1.0 001-auto.sql ));
+   print {$common} qq<This will never get run>;
+   close $common;
+   {
+      my $warned = 0;
+      local $SIG{__WARN__} = sub{$warned = 1};
+      $dm->_deploy;
+      ok( $warned, 'deploy warns on sql errors' );
+   }
 
    lives_ok {
       $s->resultset('Foo')->create({
@@ -66,15 +88,24 @@ VERSION2: {
       -f catfile(qw( t sql SQLite schema 2.0 001-auto.sql )),
       '2.0 schema gets generated properly'
    );
-   $dm->prepare_upgrade('1.0', $version);
+   mkpath(catfile(qw( t sql SQLite up 1.0-2.0 )));
+   $dm->prepare_upgrade;
+
+   {
+      my $warned = 0;
+      local $SIG{__WARN__} = sub{$warned = 1};
+      $dm->prepare_upgrade('0.0', '1.0');
+      ok( $warned, 'prepare_upgrade with a bogus preversion warns' );
+   }
    ok(
       -f catfile(qw( t sql SQLite up 1.0-2.0 001-auto.sql )),
-      '1.0-2.0 diff gets generated properly'
+      '1.0-2.0 diff gets generated properly and default start and end versions get set'
    );
+   mkpath(catfile(qw( t sql SQLite down 2.0-1.0 )));
    $dm->prepare_downgrade($version, '1.0');
    ok(
       -f catfile(qw( t sql SQLite down 2.0-1.0 001-auto.sql )),
-      '1.0-2.0 diff gets generated properly'
+      '2.0-1.0 diff gets generated properly'
    );
    dies_ok {
       $s->resultset('Foo')->create({
@@ -88,13 +119,32 @@ VERSION2: {
          baz => 'frew',
       })
    } 'schema not uppgrayyed';
+
+   mkpath catfile(qw( t sql _common up 1.0-2.0 ));
+   open my $common, '>',
+      catfile(qw( t sql _common up 1.0-2.0 002-semiautomatic.sql ));
+   print {$common} qq<INSERT INTO Foo (bar, baz) VALUES ("hello", "world");\n\n>;
+   close $common;
+
    $dm->_upgrade_single_step([qw( 1.0 2.0 )]);
+   is( $s->resultset('Foo')->search({
+         bar => 'hello',
+         baz => 'world',
+      })->count, 1, '_common migration got run');
    lives_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',
          baz => 'frew',
       })
    } 'schema is deployed';
+   $dm->_downgrade_single_step([qw( 2.0 1.0 )]);
+   dies_ok {
+      $s->resultset('Foo')->create({
+         bar => 'frew',
+         baz => 'frew',
+      })
+   } 'schema is downpgrayyed';
+   $dm->_upgrade_single_step([qw( 1.0 2.0 )]);
 }
 
 VERSION3: {
@@ -105,6 +155,7 @@ VERSION3: {
       upgrade_directory => $sql_dir,
       databases         => ['SQLite'],
       sqltargs          => { add_drop_table => 0 },
+      txn_wrap          => 0,
    });
 
    ok( $dm, 'DBIC::DH::SQL::Translator w/3.0 instantiates correctly');
@@ -115,16 +166,31 @@ VERSION3: {
       -f catfile(qw( t sql SQLite schema 3.0 001-auto.sql )),
       '2.0 schema gets generated properly'
    );
-   $dm->prepare_upgrade( '1.0', $version );
+   $dm->prepare_downgrade($version, '1.0');
    ok(
-      -f catfile(qw( t sql SQLite up 1.0-2.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite down 3.0-1.0 001-auto.sql )),
+      '3.0-1.0 diff gets generated properly'
+   );
+   $dm->prepare_upgrade( '1.0', $version, ['1.0', $version] );
+   ok(
+      -f catfile(qw( t sql SQLite up 1.0-3.0 001-auto.sql )),
       '1.0-3.0 diff gets generated properly'
    );
    $dm->prepare_upgrade( '2.0', $version );
+   {
+      my $warned = 0;
+      local $SIG{__WARN__} = sub{$warned = 1};
+      $dm->prepare_upgrade( '2.0', $version );
+      ok( $warned, 'prepare_upgrade warns if you clobber an existing upgrade file' );
+   }
    ok(
       -f catfile(qw( t sql SQLite up 1.0-2.0 001-auto.sql )),
       '2.0-3.0 diff gets generated properly'
    );
+   mkpath catfile(qw( t sql _generic up 2.0-3.0 ));
+   rename catfile(qw( t sql SQLite up 2.0-3.0 001-auto.sql )), catfile(qw( t sql _generic up 2.0-3.0 001-auto.sql ));
+   rmtree(catfile(qw( t sql SQLite )));
+   warn 'how can this be' if -d catfile(qw( t sql SQLite ));
    dies_ok {
       $s->resultset('Foo')->create({
             bar => 'frew',
@@ -139,6 +205,12 @@ VERSION3: {
          baz => 'frew',
          biff => 'frew',
       })
-   } 'schema is deployed';
+   } 'schema is deployed using _generic';
+   rmtree(catfile(qw( t sql SQLite )));
+   rmtree(catfile(qw( t sql _generic )));
+   dies_ok {
+      $dm->_upgrade_single_step([qw( 2.0 3.0 )]);
+   } 'dies when sql dir does not exist';
 }
 done_testing;
+#vim: ts=2 sw=2 expandtab
