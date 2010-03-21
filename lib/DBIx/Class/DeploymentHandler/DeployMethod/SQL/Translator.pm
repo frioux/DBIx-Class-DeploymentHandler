@@ -59,6 +59,7 @@ has databases => (
 has _filedata => (
   isa => 'ArrayRef[Str]',
   is  => 'rw',
+  default => sub { [] },
 );
 
 has txn_wrap => (
@@ -339,7 +340,7 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
 method _read_sql_file($file) {
   return unless $file;
 
-  open my $fh, '<', $file or carp("Can't open sql file, $file ($!)");
+  open my $fh, '<', $file;
   my @data = split /;\n/, join '', <$fh>;
   close $fh;
 
@@ -363,12 +364,6 @@ sub _downgrade_single_step {
   )};
 
   for my $downgrade_file (@downgrade_files) {
-    unless (-f $downgrade_file) {
-      # croak?
-      carp "Downgrade not possible, no downgrade file found ($downgrade_file), please create one\n";
-      return;
-    }
-
     $self->_filedata($self->_read_sql_file($downgrade_file)); # I don't like this --fREW 2010-02-22
 
     my $guard = $self->schema->txn_scope_guard if $self->txn_wrap;
@@ -386,12 +381,6 @@ sub _upgrade_single_step {
   )};
 
   for my $upgrade_file (@upgrade_files) {
-    unless (-f $upgrade_file) {
-      # croak?
-      carp "Upgrade not possible, no upgrade file found ($upgrade_file), please create one\n";
-      return;
-    }
-
     $self->_filedata($self->_read_sql_file($upgrade_file)); # I don't like this --fREW 2010-02-22
     my $guard = $self->schema->txn_scope_guard if $self->txn_wrap;
     $self->_do_upgrade;
@@ -402,7 +391,6 @@ sub _upgrade_single_step {
 method _do_upgrade { $self->_run_upgrade(qr/.*?/) }
 
 method _run_upgrade($stm) {
-  return unless $self->_filedata;
   my @statements = grep { $_ =~ $stm } @{$self->_filedata};
 
   for (@statements) {
@@ -416,6 +404,8 @@ method _apply_statement($statement) {
   # croak?
   $self->storage->dbh->do($_) or carp "SQL was: $_"
 }
+
+__PACKAGE__->meta->make_immutable;
 
 1;
 
