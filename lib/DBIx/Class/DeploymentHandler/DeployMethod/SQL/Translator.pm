@@ -183,7 +183,7 @@ sub prepare_install {
   });
 
   my $sqlt_schema = $sqlt->translate( data => $schema )
-    or $self->throw_exception($sqlt->error);
+    or croak($sqlt->error);
 
   foreach my $db (@$databases) {
     $sqlt->reset;
@@ -201,11 +201,7 @@ sub prepare_install {
       carp("Failed to translate to $db, skipping. (" . $sqlt->error . ")");
       next;
     }
-    my $file;
-    unless( open $file, q(>), $filename ) {
-      $self->throw_exception("Can't open $filename for writing ($!)");
-      next;
-    }
+    open my $file, q(>), $filename;
     print {$file} $output;
     close $file;
   }
@@ -258,7 +254,7 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
 
   $sqlt->parser('SQL::Translator::Parser::DBIx::Class');
   my $sqlt_schema = $sqlt->translate( data => $schema )
-    or $self->throw_exception ($sqlt->error);
+    or croak($sqlt->error);
 
   foreach my $db (@$databases) {
     $sqlt->reset;
@@ -286,10 +282,10 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
       });
 
       $t->parser( $db ) # could this really throw an exception?
-        or $self->throw_exception ($t->error);
+        or croak($t->error);
 
       my $out = $t->translate( $prefilename )
-        or $self->throw_exception ($t->error);
+        or croak($t->error);
 
       $source_schema = $t->schema;
 
@@ -310,11 +306,11 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
       });
 
       $t->parser( $db ) # could this really throw an exception?
-        or $self->throw_exception ($t->error);
+        or croak($t->error);
 
       my $filename = $self->_ddl_schema_produce_filename($db, $to_version, $dir);
       my $out = $t->translate( $filename )
-        or $self->throw_exception ($t->error);
+        or croak($t->error);
 
       $dest_schema = $t->schema;
 
@@ -327,11 +323,7 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
        $dest_schema,   $db,
        $sqltargs
     );
-    my $file;
-    unless(open $file, q(>), $diff_file) {
-      $self->throw_exception("Can't write to $diff_file ($!)");
-      next;
-    }
+    open my $file, q(>), $diff_file;
     print {$file} $diff;
     close $file;
   }
