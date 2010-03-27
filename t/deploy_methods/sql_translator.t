@@ -59,7 +59,7 @@ VERSION1: {
    {
       my $warned = 0;
       local $SIG{__WARN__} = sub{$warned = 1};
-      $dm->_deploy;
+      $dm->deploy;
       ok( $warned, 'deploy warns on sql errors' );
    }
 
@@ -126,7 +126,7 @@ VERSION2: {
    print {$common} qq<INSERT INTO Foo (bar, baz) VALUES ("hello", "world");\n\n>;
    close $common;
 
-   $dm->_upgrade_single_step([qw( 1.0 2.0 )]);
+   $dm->upgrade_single_step([qw( 1.0 2.0 )]);
    is( $s->resultset('Foo')->search({
          bar => 'hello',
          baz => 'world',
@@ -137,14 +137,14 @@ VERSION2: {
          baz => 'frew',
       })
    } 'schema is deployed';
-   $dm->_downgrade_single_step([qw( 2.0 1.0 )]);
+   $dm->downgrade_single_step([qw( 2.0 1.0 )]);
    dies_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',
          baz => 'frew',
       })
    } 'schema is downpgrayyed';
-   $dm->_upgrade_single_step([qw( 1.0 2.0 )]);
+   $dm->upgrade_single_step([qw( 1.0 2.0 )]);
 }
 
 VERSION3: {
@@ -198,7 +198,7 @@ VERSION3: {
             biff => 'frew',
          })
    } 'schema not deployed';
-   $dm->_upgrade_single_step([qw( 2.0 3.0 )]);
+   $dm->upgrade_single_step([qw( 2.0 3.0 )]);
    lives_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',
@@ -209,7 +209,7 @@ VERSION3: {
    rmtree(catfile(qw( t sql SQLite )));
    rmtree(catfile(qw( t sql _generic )));
    dies_ok {
-      $dm->_upgrade_single_step([qw( 2.0 3.0 )]);
+      $dm->upgrade_single_step([qw( 2.0 3.0 )]);
    } 'dies when sql dir does not exist';
 }
 done_testing;

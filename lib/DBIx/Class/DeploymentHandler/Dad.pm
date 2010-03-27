@@ -51,7 +51,7 @@ method install {
   croak 'Install not possible as versions table already exists in database'
     if $self->version_storage_is_installed;
 
-  my $ddl = $self->_deploy;
+  my $ddl = $self->deploy;
 
   $self->version_storage->add_database_version({
     version     => $self->to_version,
@@ -62,7 +62,7 @@ method install {
 sub upgrade {
   my $self = shift;
   while ( my $version_list = $self->next_version_set ) {
-    my ($ddl, $upgrade_sql) = @{$self->_upgrade_single_step($version_list)||[]};
+    my ($ddl, $upgrade_sql) = @{$self->upgrade_single_step($version_list)||[]};
 
     $self->add_database_version({
       version     => $version_list->[-1],
@@ -72,11 +72,17 @@ sub upgrade {
   }
 }
 
-method backup { $self->storage->backup($self->backup_directory) }
+sub downgrade {
+  my $self = shift;
+  while ( my $version_list = $self->previous_version_set ) {
+    $self->downgrade_single_step($version_list);
 
-method deploy_version_storage {
-  $self->
+    # do we just delete a row here?  I think so but not sure
+    $self->delete_database_version({ version => $version_list->[-1] });
+  }
 }
+
+method backup { $self->storage->backup($self->backup_directory) }
 
 __PACKAGE__->meta->make_immutable;
 

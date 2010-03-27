@@ -40,7 +40,7 @@ VERSION1: {
          bar => 'frew',
       })
    } 'schema not deployed';
-   $dm->_deploy;
+   $dm->deploy;
    lives_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',
@@ -77,7 +77,7 @@ VERSION2: {
 			baz => 'frew',
 		})
 	} 'schema not uppgrayyed';
-	$dm->_upgrade_single_step(['1.0', $version]);
+	$dm->upgrade_single_step(['1.0', $version]);
 	lives_ok {
 		$s->resultset('Foo')->create({
 			bar => 'frew',

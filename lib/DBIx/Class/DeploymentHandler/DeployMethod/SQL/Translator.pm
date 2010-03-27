@@ -138,7 +138,7 @@ method _ddl_schema_down_produce_filename($type, $versions, $dir) {
   return catfile( $dirname, '001-auto.sql');
 }
 
-sub _deploy {
+sub deploy {
   my $self = shift;
   my $storage  = $self->storage;
 
@@ -347,7 +347,7 @@ method _read_sql_file($file) {
   return \@data;
 }
 
-sub _downgrade_single_step {
+sub downgrade_single_step {
   my $self = shift;
   my @version_set = @{ shift @_ };
   my @downgrade_files = @{$self->_ddl_schema_down_consume_filenames(
@@ -364,7 +364,7 @@ sub _downgrade_single_step {
   }
 }
 
-sub _upgrade_single_step {
+sub upgrade_single_step {
   my $self = shift;
   my @version_set = @{ shift @_ };
   my @upgrade_files = @{$self->_ddl_schema_up_consume_filenames(
