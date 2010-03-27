@@ -30,12 +30,6 @@ has _version => (
   lazy_build => 1,
 );
 
-sub BUILD {
-  croak "you are trying to upgrade and your current version is greater\n".
-        "than the version you are trying to upgrade to.  Either downgrade\n".
-        "or update your schema" if $_[0]->to_version < $_[0]->_version;
-}
-
 sub _inc_version { $_[0]->_version($_[0]->_version + 1 ) }
 sub _dec_version { $_[0]->_version($_[0]->_version - 1 ) }
 
@@ -43,20 +37,30 @@ sub _build__version { $_[0]->database_version }
 
 sub previous_version_set {
   my $self = shift;
-  return undef
-    if $self->to_version == $self->_version;
-
-  $self->_dec_version;
-  return [$self->_version, $self->_version + 1];
+  if ($self->to_vesion > $self->_version) {
+    croak "you are trying to downgrade and your current version is less\n".
+          "than the version you are trying to downgrade to.  Either upgrade\n".
+          "or update your schema"
+  } elsif ( $self->to_version == $self->_version) {
+    return undef
+  } else {
+    $self->_dec_version;
+    return [$self->_version, $self->_version + 1];
+  }
 }
 
 sub next_version_set {
   my $self = shift;
-  return undef
-    if $self->to_version == $self->_version;
-
-  $self->_inc_version;
-  return [$self->_version - 1, $self->_version];
+  if ($self->to_vesion < $self->_version) {
+    croak "you are trying to upgrade and your current version is greater\n".
+          "than the version you are trying to upgrade to.  Either downgrade\n".
+          "or update your schema"
+  } elsif ( $self->to_version == $self->_version) {
+    return undef
+  } else {
+    $self->_inc_version;
+    return [$self->_version - 1, $self->_version];
+  }
 }
 
 __PACKAGE__->meta->make_immutable;
