@@ -372,12 +372,16 @@ sub _upgrade_single_step {
     \@version_set,
   )};
 
+  my $upgrade_sql;
   for my $upgrade_file (@upgrade_files) {
-    $self->_filedata($self->_read_sql_file($upgrade_file)); # I don't like this --fREW 2010-02-22
+    my $up = $self->_read_sql_file($upgrade_file);
+    $upgrade_sql .= $up;
+    $self->_filedata($up); # I don't like this --fREW 2010-02-22
     my $guard = $self->schema->txn_scope_guard if $self->txn_wrap;
     $self->_do_upgrade;
     $guard->commit if $self->txn_wrap;
   }
+  return ['', $upgrade_sql];
 }
 
 method _do_upgrade { $self->_run_upgrade(qr/.*?/) }

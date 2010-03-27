@@ -62,17 +62,21 @@ method install {
 sub upgrade {
   my $self = shift;
   while ( my $version_list = $self->next_version_set ) {
-    $self->_upgrade_single_step($version_list);
+    my ($ddl, $upgrade_sql) = @{$self->_upgrade_single_step($version_list)||[]};
 
     $self->add_database_version({
       version     => $version_list->[-1],
-      # ddl         => $ddl,
-      # upgrade_sql => $upgrade_sql,
+      ddl         => $ddl,
+      upgrade_sql => $upgrade_sql,
     });
   }
 }
 
 method backup { $self->storage->backup($self->backup_directory) }
+
+method deploy_version_storage {
+  $self->
+}
 
 __PACKAGE__->meta->make_immutable;
 
