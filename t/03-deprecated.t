@@ -1,10 +1,10 @@
 #!perl
 
+use lib 't/lib';
+use DBICDHTest;
+use DBIx::Class::DeploymentHandler::Deprecated;
 use Test::More;
 
-use_ok 'DBIx::Class::DeploymentHandler::Deprecated';
+DBICDHTest::test_bundle(DBIx::Class::DeploymentHandler::Deprecated);
 
 done_testing;
-__END__
-
-vim: ts=2 sw=2 expandtab

@@ -6,7 +6,7 @@ use DBIx::Class::DeploymentHandler::VersionStorage::Standard;
 has version_storage => (
   does => 'DBIx::Class::DeploymentHandler::HandlesVersionStorage',
   is  => 'ro',
-  lazy_build => 1,
+  builder => '_build_version_storage',
   handles =>  'DBIx::Class::DeploymentHandler::HandlesVersionStorage',
 );
 

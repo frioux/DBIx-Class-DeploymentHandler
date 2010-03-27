@@ -10,15 +10,15 @@ with 'DBIx::Class::DeploymentHandler::Deprecated::WithDeprecatedSqltDeployMethod
 sub BUILD {
   my $self = shift;
 
-  if ($self->schema->can('ordered_versions')) {
+  if ($self->schema->can('ordered_versions') && $self->schema->ordered_versions) {
     apply_all_roles(
       $self,
-      'DBIx::Class::DeploymentHandler::WithDatabaseToSchemaVersions'
+      'DBIx::Class::DeploymentHandler::WithExplicitVersions'
     );
   } else {
     apply_all_roles(
       $self,
-      'DBIx::Class::DeploymentHandler::WithExplicitVersions'
+      'DBIx::Class::DeploymentHandler::WithDatabaseToSchemaVersions'
     );
   }
 }

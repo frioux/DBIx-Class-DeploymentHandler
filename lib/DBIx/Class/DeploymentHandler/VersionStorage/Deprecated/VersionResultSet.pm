@@ -24,12 +24,13 @@ sub database_version {
 # this is why it's deprecated guys... Serially.
 sub create {
   my $self = shift;
+  my $args = shift;
 
   my @tm = gettimeofday();
   my @dt = gmtime ($tm[0]);
 
   $self->next::method({
-    version => $version,
+    %{$args},
     installed => sprintf("v%04d%02d%02d_%02d%02d%02d.%03.0f",
       $dt[5] + 1900,
       $dt[4] + 1,

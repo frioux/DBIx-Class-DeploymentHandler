@@ -1,4 +1,4 @@
-package DBIx::Class::DeploymentHandler::VersionStorage::Standard;
+package DBIx::Class::DeploymentHandler::VersionStorage::Deprecated;
 use Moose;
 use Method::Signatures::Simple;
 
@@ -11,12 +11,13 @@ has schema => (
 has version_rs => (
   isa        => 'DBIx::Class::ResultSet',
   is         => 'ro',
-  lazy_build => 1,
+  builder    => '_build_version_rs',
   handles    => [qw( database_version version_storage_is_installed )],
 );
 
 with 'DBIx::Class::DeploymentHandler::HandlesVersionStorage';
 
+use DBIx::Class::DeploymentHandler::VersionStorage::Deprecated::VersionResult;
 sub _build_version_rs {
   $_[0]->schema->register_class(
     dbix_class_schema_versions =>

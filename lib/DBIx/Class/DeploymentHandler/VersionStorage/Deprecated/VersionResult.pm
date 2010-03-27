@@ -5,7 +5,7 @@ use warnings;
 
 use parent 'DBIx::Class::Core';
 
-__PACKAGE__->table('dbix_class_deploymenthandler_versions');
+__PACKAGE__->table('dbix_class_schema_versions');
 
 __PACKAGE__->add_columns (
    version => {
