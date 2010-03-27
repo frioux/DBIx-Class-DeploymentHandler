@@ -1,4 +1,3 @@
-finish downgrade interface
 make recommended bundle (monotonic)
 run arbitrary perl from migration scripts
 make deploy_version_storage
