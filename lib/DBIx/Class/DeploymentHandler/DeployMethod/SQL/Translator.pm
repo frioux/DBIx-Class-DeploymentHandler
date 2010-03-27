@@ -86,12 +86,12 @@ method __ddl_consume_with_prefix($type, $versions, $prefix) {
   }
 
   opendir my($dh), $dir;
-  my %files = map { $_ => "$dir/$_" } grep { /\.sql$/ && -f "$dir/$_" } readdir $dh;
+  my %files = map { $_ => "$dir/$_" } grep { /\.(?:sql|pl)$/ && -f "$dir/$_" } readdir $dh;
   closedir $dh;
 
   if (-d $common) {
     opendir my($dh), $common;
-    for my $filename (grep { /\.sql$/ && -f catfile($common,$_) } readdir $dh) {
+    for my $filename (grep { /\.(?:sql|pl)$/ && -f catfile($common,$_) } readdir $dh) {
       unless ($files{$filename}) {
         $files{$filename} = catfile($common,$filename);
       }
@@ -138,32 +138,49 @@ method _ddl_schema_down_produce_filename($type, $versions, $dir) {
   return catfile( $dirname, '001-auto.sql');
 }
 
-sub deploy {
-  my $self = shift;
-  my $storage  = $self->storage;
+method _run_sql_and_perl($filenames) {
+  my @files = @{$filenames};
+  my $storage = $self->storage;
 
   my $guard = $self->schema->txn_scope_guard if $self->txn_wrap;
 
-  my @sql = map @{$self->_read_sql_file($_)}, @{$self->_ddl_schema_consume_filenames(
-      $self->storage->sqlt_type,
-      $self->schema_version
-    )};
+  my $sql;
+  for my $filename (@files) {
+    if ($filename =~ /\.sql$/) {
+      my @sql = @{$self->_read_sql_file($filename)};
+      $sql .= join "\n", @sql;
 
-  foreach my $line (@sql) {
-    $storage->_query_start($line);
-    try {
-      # do a dbh_do cycle here, as we need some error checking in
-      # place (even though we will ignore errors)
-      $storage->dbh_do (sub { $_[1]->do($line) });
+      foreach my $line (@sql) {
+        $storage->_query_start($line);
+        try {
+          # do a dbh_do cycle here, as we need some error checking in
+          # place (even though we will ignore errors)
+          $storage->dbh_do (sub { $_[1]->do($line) });
+        }
+        catch {
+          carp "$_ (running '${line}')"
+        }
+        $storage->_query_end($line);
+      }
+    } elsif ( $filename =~ /\.pl$/ ) {
+      qx( $^X $filename );
+    } else {
+      croak "A file got to deploy that wasn't sql or perl!";
     }
-    catch {
-      carp "$_ (running '${line}')"
-    }
-    $storage->_query_end($line);
   }
 
   $guard->commit if $self->txn_wrap;
-  return join "\n", @sql;
+
+  return $sql;
+}
+
+sub deploy {
+  my $self = shift;
+
+  return $self->_run_sql_and_perl($self->_ddl_schema_consume_filenames(
+    $self->storage->sqlt_type,
+    $self->schema_version
+  ));
 }
 
 sub prepare_install {
@@ -209,29 +226,18 @@ sub prepare_install {
 
 sub prepare_upgrade {
   my ($self, $from_version, $to_version, $version_set) = @_;
-
-  $from_version ||= '1.0'; #$self->database_version;
-  $to_version   ||= $self->schema_version;
-
   # for updates prepared automatically (rob's stuff)
   # one would want to explicitly set $version_set to
   # [$to_version]
-  $version_set  ||= [$from_version, $to_version];
-
   $self->_prepare_changegrade($from_version, $to_version, $version_set, 'up');
 }
 
 sub prepare_downgrade {
   my ($self, $from_version, $to_version, $version_set) = @_;
 
-  $from_version ||= $self->db_version;
-  $to_version   ||= $self->schema_version;
-
   # for updates prepared automatically (rob's stuff)
   # one would want to explicitly set $version_set to
   # [$to_version]
-  $version_set  ||= [$from_version, $to_version];
-
   $self->_prepare_changegrade($from_version, $to_version, $version_set, 'down');
 }
 
@@ -350,55 +356,24 @@ method _read_sql_file($file) {
 sub downgrade_single_step {
   my $self = shift;
   my @version_set = @{ shift @_ };
-  my @downgrade_files = @{$self->_ddl_schema_down_consume_filenames(
+
+  my $sql = $self->_run_sql_and_perl($self->_ddl_schema_down_consume_filenames(
     $self->storage->sqlt_type,
     \@version_set,
-  )};
+  ));
 
-  for my $downgrade_file (@downgrade_files) {
-    $self->_filedata($self->_read_sql_file($downgrade_file)); # I don't like this --fREW 2010-02-22
-
-    my $guard = $self->schema->txn_scope_guard if $self->txn_wrap;
-    $self->_do_upgrade;
-    $guard->commit if $self->txn_wrap;
-  }
+  return ['', $sql];
 }
 
 sub upgrade_single_step {
   my $self = shift;
   my @version_set = @{ shift @_ };
-  my @upgrade_files = @{$self->_ddl_schema_up_consume_filenames(
+
+  my $sql = $self->_run_sql_and_perl($self->_ddl_schema_up_consume_filenames(
     $self->storage->sqlt_type,
     \@version_set,
-  )};
-
-  my $upgrade_sql;
-  for my $upgrade_file (@upgrade_files) {
-    my $up = $self->_read_sql_file($upgrade_file);
-    $upgrade_sql .= $up;
-    $self->_filedata($up); # I don't like this --fREW 2010-02-22
-    my $guard = $self->schema->txn_scope_guard if $self->txn_wrap;
-    $self->_do_upgrade;
-    $guard->commit if $self->txn_wrap;
-  }
-  return ['', $upgrade_sql];
-}
-
-method _do_upgrade { $self->_run_upgrade(qr/.*?/) }
-
-method _run_upgrade($stm) {
-  my @statements = grep { $_ =~ $stm } @{$self->_filedata};
-
-  for (@statements) {
-    $self->storage->debugobj->query_start($_) if $self->storage->debug;
-    $self->_apply_statement($_);
-    $self->storage->debugobj->query_end($_) if $self->storage->debug;
-  }
-}
-
-method _apply_statement($statement) {
-  # croak?
-  $self->storage->dbh->do($_) or carp "SQL was: $_"
+  ));
+  return ['', $sql];
 }
 
 __PACKAGE__->meta->make_immutable;

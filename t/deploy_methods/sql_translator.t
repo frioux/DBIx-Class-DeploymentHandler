@@ -83,18 +83,18 @@ VERSION2: {
    ok( $dm, 'DBIC::DH::SQL::Translator w/2.0 instantiates correctly');
 
    $version = $s->schema_version();
-   $dm->prepare_install();
+   $dm->prepare_install;
    ok(
       -f catfile(qw( t sql SQLite schema 2.0 001-auto.sql )),
       '2.0 schema gets generated properly'
    );
    mkpath(catfile(qw( t sql SQLite up 1.0-2.0 )));
-   $dm->prepare_upgrade;
+   $dm->prepare_upgrade(qw(1.0 2.0), [qw(1.0 2.0)]);
 
    {
       my $warned = 0;
       local $SIG{__WARN__} = sub{$warned = 1};
-      $dm->prepare_upgrade('0.0', '1.0');
+      $dm->prepare_upgrade(qw(0.0 1.0), [qw(0.0 1.0)]);
       ok( $warned, 'prepare_upgrade with a bogus preversion warns' );
    }
    ok(
@@ -102,7 +102,7 @@ VERSION2: {
       '1.0-2.0 diff gets generated properly and default start and end versions get set'
    );
    mkpath(catfile(qw( t sql SQLite down 2.0-1.0 )));
-   $dm->prepare_downgrade($version, '1.0');
+   $dm->prepare_downgrade($version, '1.0', [$version, '1.0']);
    ok(
       -f catfile(qw( t sql SQLite down 2.0-1.0 001-auto.sql )),
       '2.0-1.0 diff gets generated properly'
@@ -166,7 +166,7 @@ VERSION3: {
       -f catfile(qw( t sql SQLite schema 3.0 001-auto.sql )),
       '2.0 schema gets generated properly'
    );
-   $dm->prepare_downgrade($version, '1.0');
+   $dm->prepare_downgrade($version, '1.0', [$version, '1.0']);
    ok(
       -f catfile(qw( t sql SQLite down 3.0-1.0 001-auto.sql )),
       '3.0-1.0 diff gets generated properly'
@@ -176,11 +176,11 @@ VERSION3: {
       -f catfile(qw( t sql SQLite up 1.0-3.0 001-auto.sql )),
       '1.0-3.0 diff gets generated properly'
    );
-   $dm->prepare_upgrade( '2.0', $version );
+   $dm->prepare_upgrade( '2.0', $version, ['2.0', $version]);
    {
       my $warned = 0;
       local $SIG{__WARN__} = sub{$warned = 1};
-      $dm->prepare_upgrade( '2.0', $version );
+      $dm->prepare_upgrade( '2.0', $version, ['2.0', $version] );
       ok( $warned, 'prepare_upgrade warns if you clobber an existing upgrade file' );
    }
    ok(

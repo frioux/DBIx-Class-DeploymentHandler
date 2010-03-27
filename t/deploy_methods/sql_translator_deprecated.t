@@ -28,7 +28,7 @@ VERSION1: {
 
    ok( $dm, 'DBIC::DH::DM::SQLT::Deprecated gets instantiated correctly' );
 
-   $dm->prepare_install();
+   $dm->prepare_install;
 
    ok(
       -f catfile(qw( t sql DBICVersion-Schema-1.0-SQLite.sql )),
@@ -62,9 +62,9 @@ VERSION2: {
 		'DBIC::DH::DM::SQLT::Deprecated gets instantiated correctly w/ version 2.0'
 	);
 
-	$version = $s->schema_version();
-	$dm->prepare_install();
-	$dm->prepare_upgrade('1.0', $version);
+	$version = $s->schema_version;
+	$dm->prepare_install;
+	$dm->prepare_upgrade('1.0', $version, ['1.0', $version]);
 	dies_ok {
 		$s->resultset('Foo')->create({
 			bar => 'frew',
