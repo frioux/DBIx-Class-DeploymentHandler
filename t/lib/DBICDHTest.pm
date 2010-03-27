@@ -26,6 +26,7 @@ sub test_bundle {
 	VERSION1: {
 		use_ok 'DBICVersion_v1';
 		my $s = DBICVersion::Schema->connect(@connection);
+		is $s->schema_version, '1.0', 'schema version is at 1.0';
 		ok($s, 'DBICVersion::Schema 1.0 instantiates correctly');
 		my $handler = $bundle->new({
 			upgrade_directory => $sql_dir,
@@ -58,6 +59,7 @@ sub test_bundle {
 	VERSION2: {
 		use_ok 'DBICVersion_v2';
 		my $s = DBICVersion::Schema->connect(@connection);
+		is $s->schema_version, '2.0', 'schema version is at 2.0';
 		ok($s, 'DBICVersion::Schema 2.0 instantiates correctly');
 		my $handler = $bundle->new({
 			upgrade_directory => $sql_dir,
@@ -70,7 +72,6 @@ sub test_bundle {
 		my $version = $s->schema_version();
 		$handler->prepare_install();
 		$handler->prepare_upgrade('1.0', $version);
-		$handler->prepare_upgrade($version, '1.0');
 		dies_ok {
 			$s->resultset('Foo')->create({
 				bar => 'frew',
@@ -95,6 +96,7 @@ sub test_bundle {
 	VERSION3: {
 		use_ok 'DBICVersion_v3';
 		my $s = DBICVersion::Schema->connect(@connection);
+		is $s->schema_version, '3.0', 'schema version is at 3.0';
 		ok($s, 'DBICVersion::Schema 3.0 instantiates correctly');
 		my $handler = $bundle->new({
 			upgrade_directory => $sql_dir,
@@ -106,7 +108,6 @@ sub test_bundle {
 
 		my $version = $s->schema_version();
 		$handler->prepare_install;
-		$handler->prepare_upgrade( '1.0', $version );
 		$handler->prepare_upgrade( '2.0', $version );
 		dies_ok {
 			$s->resultset('Foo')->create({
@@ -123,6 +124,44 @@ sub test_bundle {
 				biff => 'frew',
 			})
 		} 'schema is deployed';
+	}
+
+	DOWN2: {
+		use_ok 'DBICVersion_v4';
+		my $s = DBICVersion::Schema->connect(@connection);
+		is $s->schema_version, '2.0', 'schema version is at 2.0';
+		ok($s, 'DBICVersion::Schema 2.0 instantiates correctly');
+		my $handler = $bundle->new({
+			upgrade_directory => $sql_dir,
+			schema => $s,
+			databases => 'SQLite',
+		});
+
+		ok($handler, 'DBIx::Class::DeploymentHandler w/2.0 instantiates correctly');
+
+		my $version = $s->schema_version();
+		$handler->prepare_downgrade('3.0', $version);
+		lives_ok {
+			$s->resultset('Foo')->create({
+				bar => 'frew',
+				baz => 'frew',
+				biff => 'frew',
+			})
+		} 'schema at version 3';
+		$handler->downgrade;
+		dies_ok {
+			$s->resultset('Foo')->create({
+				bar => 'frew',
+				baz => 'frew',
+				biff => 'frew',
+			})
+		} 'schema not at version 3';
+		lives_ok {
+			$s->resultset('Foo')->create({
+				bar => 'frew',
+				baz => 'frew',
+			})
+		} 'schema is at version 2';
 	}
 }
 

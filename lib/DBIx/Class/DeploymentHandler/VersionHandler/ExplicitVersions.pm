@@ -53,6 +53,7 @@ has _version_idx => (
 );
 
 sub _inc_version_idx { $_[0]->_version_idx($_[0]->_version_idx + 1 ) }
+sub _dec_version_idx { $_[0]->_version_idx($_[0]->_version_idx - 1 ) }
 
 sub _build__version_idx {
   my $self = shift;
@@ -74,6 +75,21 @@ sub next_version_set {
   # that the database version is in the list in the version_idx
   # builder
   my $next_idx = $self->_inc_version_idx;
+  return [
+    $self->ordered_versions->[$next_idx - 1],
+    $self->ordered_versions->[$next_idx    ],
+  ];
+}
+
+sub previous_version_set {
+  my $self = shift;
+  return undef
+    if $self->ordered_versions->[$self->_version_idx] eq $self->database_version;
+
+  # this should never get in infinite loops because we ensure
+  # that the database version is in the list in the version_idx
+  # builder
+  my $next_idx = $self->_dec_version_idx;
   return [
     $self->ordered_versions->[$next_idx - 1],
     $self->ordered_versions->[$next_idx    ],

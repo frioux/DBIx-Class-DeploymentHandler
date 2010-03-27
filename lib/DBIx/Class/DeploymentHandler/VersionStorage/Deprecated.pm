@@ -31,6 +31,10 @@ sub add_database_version {
   $_[0]->version_rs->create({ version => $_[1]->{version} })
 }
 
+sub delete_database_version {
+  $_[0]->version_rs->search({ version => $_[1]->{version}})->delete
+}
+
 __PACKAGE__->meta->make_immutable;
 
 1;

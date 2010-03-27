@@ -1,7 +1,9 @@
 package DBIx::Class::DeploymentHandler::HandlesVersioning;
 use Moose::Role;
 
+# note: the sets returned need to match!
 requires 'next_version_set';
+requires 'previous_version_set';
 
 1;
 
