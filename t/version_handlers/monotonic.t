@@ -40,7 +40,7 @@ use aliased
   );
 }
 
-{
+ONETOFIVE: {
   my $vh = Monotonic->new({
 	 to_version       => 5,
 	 schema_version   => 1,
@@ -66,6 +66,34 @@ use aliased
   );
   ok( !$vh->next_version_set, 'no more versions after final pair' );
   ok( !$vh->next_version_set, 'still no more versions after final pair' );
+}
+
+FIVETOONE: {
+  my $vh = Monotonic->new({
+	 to_version       => 1,
+	 schema_version   => 1,
+	 database_version => 5,
+  });
+
+  ok $vh, 'VersionHandler gets instantiated';
+  ok(
+	 eq_array($vh->previous_version_set, [4,5]),
+	 'first version pair works'
+  );
+  ok(
+	 eq_array($vh->previous_version_set, [3,4]),
+	 'second version pair works'
+  );
+  ok(
+	 eq_array($vh->previous_version_set, [2,3]),
+	 'third version pair works'
+  );
+  ok(
+	 eq_array($vh->previous_version_set, [1,2]),
+	 'fourth version pair works'
+  );
+  ok( !$vh->previous_version_set, 'no more versions before initial pair' );
+  ok( !$vh->previous_version_set, 'still no more versions before initial pair' );
 }
 
 dies_ok {
