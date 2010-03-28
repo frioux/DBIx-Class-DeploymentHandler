@@ -172,7 +172,11 @@ method _run_sql_and_perl($filenames) {
       eval "package $package;\n\n$filedata";
       use warnings;
 
-      $package->can('run')->($self->schema);
+      if (my $fn = $package->can('run')) {
+        $fn->($self->schema);
+      } else {
+        carp "$filename should define a run method that takes a schema but it didn't!";
+      }
     } else {
       croak "A file got to deploy that wasn't sql or perl!";
     }
