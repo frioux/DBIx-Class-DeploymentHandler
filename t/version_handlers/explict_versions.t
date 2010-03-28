@@ -83,7 +83,7 @@ my $versions = [map "$_.0", 0..100];
 
   ok $vh, 'VersionHandler gets instantiated';
   ok(
-    eq_array(::DwarnS($vh->previous_version_set), [qw( 4.0 5.0 )]),
+    eq_array($vh->previous_version_set, [qw( 4.0 5.0 )]),
     'first version pair works'
   );
   ok(
