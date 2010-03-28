@@ -27,23 +27,22 @@ has ordered_versions => (
   is       => 'ro',
   isa      => 'ArrayRef',
   required => 1,
-  trigger  => sub {
-    my $to_version = $_[0]->to_version;
-    my $db_version = $_[0]->database_version;
-
-    croak 'to_version not in ordered_versions'
-      unless grep { $to_version eq $_ } @{ $_[1] };
-
-    croak 'database_version not in ordered_versions'
-      unless grep { $db_version eq $_ } @{ $_[1] };
-
-    for (@{ $_[1] }) {
-      return if $_ eq $db_version;
-      croak 'to_version is before database version in ordered_versions'
-        if $_ eq $to_version;
-    }
-  },
 );
+
+has _index_of_versions => (
+  is         => 'ro',
+  isa        => 'HashRef',
+  lazy_build => 1,
+);
+
+sub _build__index_of_versions {
+  my %ret;
+  my $i = 0;
+  for (@{ $_[0]->ordered_versions }) {
+    $ret{$_} = $i++;
+  }
+  \%ret;
+}
 
 has _version_idx => (
   is         => 'rw',
@@ -51,48 +50,50 @@ has _version_idx => (
   lazy_build => 1,
 );
 
+sub _build__version_idx { $_[0]->_index_of_versions->{$_[0]->database_version} }
+
 sub _inc_version_idx { $_[0]->_version_idx($_[0]->_version_idx + 1 ) }
 sub _dec_version_idx { $_[0]->_version_idx($_[0]->_version_idx - 1 ) }
 
-sub _build__version_idx {
-  my $self = shift;
-  my $start = $self->database_version;
-  my $idx = 0;
-  for (@{$self->ordered_versions}) {
-    return $idx
-      if $_ eq $self->database_version;
-    $idx++;
-  }
-}
 
 sub next_version_set {
   my $self = shift;
-  return undef
-    if $self->ordered_versions->[$self->_version_idx] eq $self->to_version;
-
-  # this should never get in infinite loops because we ensure
-  # that the database version is in the list in the version_idx
-  # builder
-  my $next_idx = $self->_inc_version_idx;
-  return [
-    $self->ordered_versions->[$next_idx - 1],
-    $self->ordered_versions->[$next_idx    ],
-  ];
+  if (
+    $self->_index_of_versions->{$self->to_version} <
+    $self->_version_idx
+  ) {
+    croak "you are trying to upgrade and your current version is greater\n".
+          "than the version you are trying to upgrade to.  Either downgrade\n".
+          "or update your schema"
+  } elsif ( $self->_version_idx == $self->_index_of_versions->{$self->to_version}) {
+    return undef
+  } else {
+    my $next_idx = $self->_inc_version_idx;
+    return [
+      $self->ordered_versions->[$next_idx - 1],
+      $self->ordered_versions->[$next_idx    ],
+    ];
+  }
 }
 
 sub previous_version_set {
   my $self = shift;
-  return undef
-    if $self->ordered_versions->[$self->_version_idx] eq $self->database_version;
-
-  # this should never get in infinite loops because we ensure
-  # that the database version is in the list in the version_idx
-  # builder
-  my $next_idx = $self->_dec_version_idx;
-  return [
-    $self->ordered_versions->[$next_idx - 1],
-    $self->ordered_versions->[$next_idx    ],
-  ];
+  if (
+    $self->_index_of_versions->{$self->to_version} >
+    $self->_version_idx
+  ) {
+    croak "you are trying to downgrade and your current version is less\n".
+          "than the version you are trying to downgrade to.  Either upgrade\n".
+          "or update your schema"
+  } elsif ( $self->_version_idx == $self->_index_of_versions->{$self->to_version}) {
+    return undef
+  } else {
+    my $next_idx = $self->_dec_version_idx;
+    return [
+      $self->ordered_versions->[$next_idx    ],
+      $self->ordered_versions->[$next_idx + 1],
+    ];
+  }
 }
 
 __PACKAGE__->meta->make_immutable;
