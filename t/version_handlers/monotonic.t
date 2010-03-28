@@ -53,14 +53,6 @@ use aliased
 	 'first version pair works'
   );
   ok(
-	 eq_array($vh->previous_version_set, [1,2]),
-	 'doing previous version works'
-  );
-  ok(
-	 eq_array($vh->next_version_set, [1,2]),
-	 'first version pair works again'
-  );
-  ok(
 	 eq_array($vh->next_version_set, [2,3]),
 	 'second version pair works'
   );
@@ -81,7 +73,7 @@ dies_ok {
 	 schema_version   => 2,
 	 database_version => '1.1',
   });
-  $vh->next_vesion_set
+  $vh->next_version_set
 } 'dies if database version not an Int';
 
 dies_ok {
@@ -90,7 +82,17 @@ dies_ok {
 	 schema_version   => 1,
 	 database_version => 1,
   });
-} 'cannot request a version before the current version';
+  $vh->next_version_set;
+} 'cannot request an upgrade version before the current version';
+
+dies_ok {
+  my $vh = Monotonic->new({
+	 to_version       => 2,
+	 schema_version   => 1,
+	 database_version => 1,
+  });
+  $vh->previous_version_set;
+} 'cannot request a downgrade version after the current version';
 
 done_testing;
 #vim: ts=2 sw=2 expandtab

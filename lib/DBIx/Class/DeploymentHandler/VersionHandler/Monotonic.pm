@@ -37,7 +37,7 @@ sub _build__version { $_[0]->database_version }
 
 sub previous_version_set {
   my $self = shift;
-  if ($self->to_vesion > $self->_version) {
+  if ($self->to_version > $self->_version) {
     croak "you are trying to downgrade and your current version is less\n".
           "than the version you are trying to downgrade to.  Either upgrade\n".
           "or update your schema"
@@ -51,7 +51,7 @@ sub previous_version_set {
 
 sub next_version_set {
   my $self = shift;
-  if ($self->to_vesion < $self->_version) {
+  if ($self->to_version < $self->_version) {
     croak "you are trying to upgrade and your current version is greater\n".
           "than the version you are trying to upgrade to.  Either downgrade\n".
           "or update your schema"
