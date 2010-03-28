@@ -1,4 +1,3 @@
 make recommended bundle (monotonic)
-run arbitrary perl from migration scripts (tests)
 make deploy_version_storage
 pod

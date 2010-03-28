@@ -78,6 +78,7 @@ VERSION2: {
       upgrade_directory => $sql_dir,
       databases         => ['SQLite'],
       sqltargs          => { add_drop_table => 0 },
+		txn_wrap          => 1,
    });
 
    ok( $dm, 'DBIC::DH::SQL::Translator w/2.0 instantiates correctly');
@@ -126,11 +127,28 @@ VERSION2: {
    print {$common} qq<INSERT INTO Foo (bar, baz) VALUES ("hello", "world");\n\n>;
    close $common;
 
+   open my $common_pl, '>',
+      catfile(qw( t sql _common up 1.0-2.0 003-semiautomatic.pl ));
+   print {$common_pl} q|
+		sub run {
+			my $schema = shift;
+			$schema->resultset('Foo')->create({
+				bar => 'goodbye',
+				baz => 'blue skies',
+			})
+		}
+	|;
+   close $common_pl;
+
    $dm->upgrade_single_step([qw( 1.0 2.0 )]);
    is( $s->resultset('Foo')->search({
          bar => 'hello',
          baz => 'world',
       })->count, 1, '_common migration got run');
+   is( $s->resultset('Foo')->search({
+         bar => 'goodbye',
+         #baz => 'blue skies',
+      })->count, 1, '_common perl migration got run');
    lives_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',

@@ -162,8 +162,17 @@ method _run_sql_and_perl($filenames) {
         }
         $storage->_query_end($line);
       }
-    } elsif ( $filename =~ /\.pl$/ ) {
-      qx( $^X $filename );
+    } elsif ( $filename =~ /^(.+)\.pl$/ ) {
+      my $package = $1;
+      my $filedata = do { local( @ARGV, $/ ) = $filename; <> };
+      # make the package name more palateable to perl
+      $package =~ s/\W/_/g;
+
+      no warnings 'redefine';
+      eval "package $package;\n\n$filedata";
+      use warnings;
+
+      $package->can('run')->($self->schema);
     } else {
       croak "A file got to deploy that wasn't sql or perl!";
     }
