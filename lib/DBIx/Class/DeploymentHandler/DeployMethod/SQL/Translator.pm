@@ -368,11 +368,11 @@ method _read_sql_file($file) {
 
 sub downgrade_single_step {
   my $self = shift;
-  my @version_set = @{ shift @_ };
+  my $version_set = shift @_;
 
   my $sql = $self->_run_sql_and_perl($self->_ddl_schema_down_consume_filenames(
     $self->storage->sqlt_type,
-    \@version_set,
+    $version_set,
   ));
 
   return ['', $sql];
@@ -380,11 +380,11 @@ sub downgrade_single_step {
 
 sub upgrade_single_step {
   my $self = shift;
-  my @version_set = @{ shift @_ };
+  my $version_set = shift @_;
 
   my $sql = $self->_run_sql_and_perl($self->_ddl_schema_up_consume_filenames(
     $self->storage->sqlt_type,
-    \@version_set,
+    $version_set,
   ));
   return ['', $sql];
 }
