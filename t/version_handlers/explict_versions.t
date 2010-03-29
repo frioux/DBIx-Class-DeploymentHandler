@@ -119,7 +119,17 @@ dies_ok {
     database_version => '1.0',
   });
   $vh->next_version_set;
-} 'cannot request a version before the current version';
+} 'cannot request an upgrade before the current version';
+
+dies_ok {
+  my $vh = ExplicitVersions->new({
+    ordered_versions => $versions,
+    to_version => '2.0',
+    schema_version => '1.0',
+    database_version => '1.0',
+  });
+  $vh->previous_version_set;
+} 'cannot request a downgrade after the current version';
 
 done_testing;
 #vim: ts=2 sw=2 expandtab
