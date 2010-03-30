@@ -7,6 +7,7 @@ use Test::Exception;
 use lib 't/lib';
 use DBICDHTest;
 use aliased 'DBIx::Class::DeploymentHandler::VersionStorage::Standard';
+use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
 
 use DBICVersion_v1;
 use DBIx::Class::DeploymentHandler;
@@ -24,25 +25,34 @@ my $s = DBICVersion::Schema->connect(@connection);
 
 DBICDHTest::ready;
 
-my $handler = DBIx::Class::DeploymentHandler->new({
+my $dm = Translator->new({
+	schema            => $s,
 	upgrade_directory => $sql_dir,
-	schema => $s,
-	databases => 'SQLite',
-	sqltargs => { add_drop_table => 0 },
+	databases         => ['SQLite'],
+	sqltargs          => { add_drop_table => 0 },
 });
 
-$handler->prepare_install();
-
 my $vs = Standard->new({ schema => $s });
+
+$dm->prepare_resultsource_install(
+	$vs->version_rs->result_source
+);
 
 ok( $vs, 'DBIC::DH::VersionStorage::Standard instantiates correctly' );
 
 ok( !$vs->version_storage_is_installed, 'VersionStorage is not yet installed' );
 
-$handler->install();
+$dm->install_resultsource(
+	$vs->version_rs->result_source,
+	'1.0',
+);
 
 ok( $vs->version_storage_is_installed, 'VersionStorage is now installed' );
 
+
+$vs->add_database_version({
+	version => '1.0',
+});
 
 ok(
 	eq_array(

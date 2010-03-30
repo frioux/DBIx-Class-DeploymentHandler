@@ -142,6 +142,7 @@ method _run_sql_and_perl($filenames) {
   my @files = @{$filenames};
   my $storage = $self->storage;
 
+
   my $guard = $self->schema->txn_scope_guard if $self->txn_wrap;
 
   my $sql;
@@ -196,12 +197,13 @@ sub deploy {
   ));
 }
 
-sub prepare_install {
+sub _prepare_install {
   my $self = shift;
+  my $sqltargs  = { %{$self->sqltargs}, %{shift @_} };
+  my $to_file   = shift;
   my $schema    = $self->schema;
   my $databases = $self->databases;
   my $dir       = $self->upgrade_directory;
-  my $sqltargs  = $self->sqltargs;
   my $version = $schema->schema_version;
 
   my $sqlt = SQL::Translator->new({
@@ -220,7 +222,7 @@ sub prepare_install {
     $sqlt->{schema} = $sqlt_schema;
     $sqlt->producer($db);
 
-    my $filename = $self->_ddl_schema_produce_filename($db, $version, $dir);
+    my $filename = $self->$to_file($db, $version, $dir);
     if (-e $filename ) {
       carp "Overwriting existing DDL file - $filename";
       unlink $filename;
@@ -235,6 +237,47 @@ sub prepare_install {
     print {$file} $output;
     close $file;
   }
+}
+
+sub _resultsource_install_filename {
+  my ($self, $source_name) = @_;
+  return sub {
+    my ($self, $type, $version) = @_;
+    my $dirname = catfile( $self->upgrade_directory, $type, 'schema', $version );
+    mkpath($dirname) unless -d $dirname;
+
+    return catfile( $dirname, "001-auto-$source_name.sql" );
+  }
+}
+
+sub install_resultsource {
+  my ($self, $source, $version) = @_;
+
+  my $rs_install_file =
+    $self->_resultsource_install_filename($source->source_name);
+
+  my $files = [
+     $self->$rs_install_file(
+      $self->storage->sqlt_type,
+      $version,
+    )
+  ];
+  $self->_run_sql_and_perl($files);
+}
+
+sub prepare_resultsource_install {
+  my $self = shift;
+  my $source = shift;
+
+  my $filename = $self->_resultsource_install_filename($source->source_name);
+  $self->_prepare_install({
+      parser_args => { sources => [$source->source_name], }
+    }, $filename);
+}
+
+sub prepare_install {
+  my $self = shift;
+  $self->_prepare_install({}, '_ddl_schema_produce_filename');
 }
 
 sub prepare_upgrade {

@@ -26,6 +26,14 @@ around prepare_downgrade => sub {
   $self->$orig($from_version, $to_version, $version_set);
 };
 
+around install_resultsource => sub {
+  my $orig = shift;
+  my $self = shift;
+  my $source = shift;
+  my $version = shift || $self->to_version;
+
+  $self->$orig($source, $version);
+};
 
 1;
 
