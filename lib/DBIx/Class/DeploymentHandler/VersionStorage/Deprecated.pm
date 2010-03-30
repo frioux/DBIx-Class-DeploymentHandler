@@ -41,4 +41,24 @@ __PACKAGE__->meta->make_immutable;
 
 __END__
 
+=head1 THIS SUCKS
+
+Here's how to convert from that crufty old Deprecated VersionStorage to a shiny
+new Standard VersionStorage:
+
+ my $s  = My::Schema->connect(...);
+ my $dh = DeploymentHandler({
+   schema => $s,
+ });
+
+ $dh->prepare_version_storage_install;
+ $dh->install_version_storage;
+
+ my @versions = $s->{vschema}->resultset('Table')->search(undef, {
+   order_by => 'installed',
+ })->get_column('version')->all;
+
+ $dh->version_storage->add_database_vesion({ version => $_ })
+   for @versions;
+
 vim: ts=2 sw=2 expandtab
