@@ -9,6 +9,18 @@ requires 'previous_version_set';
 
 __END__
 
+=method next_version_set
+
+ while (my $version_set = $versions->next_version_set) {
+   ...
+ }
+
+=method previous_version_set
+
+ while (my $version_set = $versions->previous_version_set) {
+   ...
+ }
+
 # normally a VersionHandler will take
 # a to_version and yeild an iterator of
 # "version sets" or something like that.

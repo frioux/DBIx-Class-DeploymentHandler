@@ -282,18 +282,12 @@ sub prepare_install {
 
 sub prepare_upgrade {
   my ($self, $from_version, $to_version, $version_set) = @_;
-  # for updates prepared automatically (rob's stuff)
-  # one would want to explicitly set $version_set to
-  # [$to_version]
   $self->_prepare_changegrade($from_version, $to_version, $version_set, 'up');
 }
 
 sub prepare_downgrade {
   my ($self, $from_version, $to_version, $version_set) = @_;
 
-  # for updates prepared automatically (rob's stuff)
-  # one would want to explicitly set $version_set to
-  # [$to_version]
   $self->_prepare_changegrade($from_version, $to_version, $version_set, 'down');
 }
 
