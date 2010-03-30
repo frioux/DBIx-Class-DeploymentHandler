@@ -56,12 +56,6 @@ has databases => (
   default => sub { [qw( MySQL SQLite PostgreSQL )] },
 );
 
-has _filedata => (
-  isa => 'ArrayRef[Str]',
-  is  => 'rw',
-  default => sub { [] },
-);
-
 has txn_wrap => (
   is => 'ro',
   isa => 'Bool',
@@ -431,5 +425,35 @@ __PACKAGE__->meta->make_immutable;
 1;
 
 __END__
+
+=attr schema
+=attr storage
+=attr sqltargs
+=attr upgrade_directory
+=attr databases
+=attr txn_wrap
+
+=method __ddl_consume_with_prefix
+=method _ddl_schema_consume_filenames
+=method _ddl_schema_produce_filename
+=method _ddl_schema_up_consume_filenames
+=method _ddl_schema_down_consume_filenames
+=method _ddl_schema_up_produce_filenames
+=method _ddl_schema_down_produce_filenames
+=method _resultsource_install_filename
+=method _run_sql_and_perl
+
+=method _prepare_install
+=method _prepare_changegrade
+=method _read_sql_file
+
+=method deploy
+=method install_resultsource
+=method prepare_resultsouce_install
+=method prepare_install
+=method prepare_upgrade
+=method prepare_downgrade
+=method upgrade_single_step
+=method downgrade_single_step
 
 vim: ts=2 sw=2 expandtab
