@@ -133,4 +133,6 @@ of the tables
 
 Install the version storage and not the rest of the tables
 
+__END__
+
 vim: ts=2 sw=2 expandtab
