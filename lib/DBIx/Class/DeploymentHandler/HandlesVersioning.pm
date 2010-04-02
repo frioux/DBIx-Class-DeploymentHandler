@@ -11,13 +11,18 @@ __END__
 
 =head1 DESCRIPTION
 
-Typically a VersionHandler will take a to_version and yeild an iterator of
+Typically a VersionHandler will take a C<to_version> and yeild an iterator of
 "version sets."
 
-A "version set" is basically an arrayref of "version numbers" (which we
-already know is vague as is.)  Typically a call to a VersionHandler's
-L</next_version_set> with a db version of 1 and a "to_version" of 5 will
-iterate over something like the following:
+A "version set" could be defined as:
+
+ subtype 'Version', as 'Str';
+ subtype 'VersionSet', as 'ArrayRef[Str]';
+
+and all a "version set" does is uniquely identify a migration.
+
+Typically a call to a VersionHandler's L</next_version_set> with a C<db_version>
+of 1 and a C<to_version> of 5 will iterate over something like the following:
 
  [1, 2]
  [2, 3]
@@ -30,7 +35,7 @@ or maybe just
  [1, 5]
  undef
 
-Really how the version set's are arranged is up to the VersionHandler being
+Really how the version sets are arranged is up to the VersionHandler being
 used.
 
 In some cases users will not want versions to have inherent "previous

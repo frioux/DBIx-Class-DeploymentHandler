@@ -107,7 +107,7 @@ returned from L</upgrade_single_step>.
  $dh->downgrade
 
 Downgrades the database one step at a time till L</previous_version_set>
-returns C<undef>.  Each downgrade step will delete a C<version>from the
+returns C<undef>.  Each downgrade step will delete a C<version> from the
 version storage.
 
 =method backup
@@ -169,7 +169,7 @@ see L<DBIx::Class::DeploymentHandler::HandlesDeploy/prepare_install>
 
 =head2 prepare_resultsource_install
 
-see L<DBIx::Class::DeploymentHandler::HandlesDeploy/prepare_resultsouce_install>
+see L<DBIx::Class::DeploymentHandler::HandlesDeploy/prepare_resultsource_install>
 
 =head2 install_resultsource
 

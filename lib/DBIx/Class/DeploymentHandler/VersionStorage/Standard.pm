@@ -37,19 +37,4 @@ __PACKAGE__->meta->make_immutable;
 
 __END__
 
-=head1 THIS SUCKS
-
-You started your project and weren't using DBICDH?  FOOL!  Lucky for you I had
-you in mind when I wrote this doc <3
-
-First off, you'll want to just install the version_storage:
-
- my $s = My::Schema->connect(...);
- my $dh = DeployHandler({ schema => $s });
-
- $dh->prepare_version_storage_install;
- $dh->install_version_storage;
-
-Then, bump your schema version, and you can use DBICDH like normal!
-
 vim: ts=2 sw=2 expandtab
