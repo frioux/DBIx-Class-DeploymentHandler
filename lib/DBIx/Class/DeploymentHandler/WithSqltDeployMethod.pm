@@ -10,6 +10,26 @@ has deploy_method => (
   handles =>  'DBIx::Class::DeploymentHandler::HandlesDeploy',
 );
 
+has upgrade_directory => (
+  isa      => 'Str',
+  is       => 'ro',
+  required => 1,
+  default  => 'sql',
+);
+
+has databases => (
+  coerce  => 1,
+  isa     => 'DBIx::Class::DeploymentHandler::Databases',
+  is      => 'ro',
+  default => sub { [qw( MySQL SQLite PostgreSQL )] },
+);
+
+has sqltargs => (
+  isa => 'HashRef',
+  is  => 'ro',
+  default => sub { {} },
+);
+
 sub _build_deploy_method {
   my $self = shift;
   DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator->new({

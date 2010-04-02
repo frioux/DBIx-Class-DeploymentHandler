@@ -429,8 +429,17 @@ __END__
 =attr schema
 =attr storage
 =attr sqltargs
+
+#rename
 =attr upgrade_directory
+
+The directory (default C<'sql'>) that upgrades are stored in
+
 =attr databases
+
+The types of databases (default C<< [qw( MySQL SQLite PostgreSQL )] >>) to
+generate files for
+
 =attr txn_wrap
 
 =method __ddl_consume_with_prefix

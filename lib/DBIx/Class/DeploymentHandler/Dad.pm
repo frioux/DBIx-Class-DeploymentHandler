@@ -2,9 +2,7 @@ package DBIx::Class::DeploymentHandler::Dad;
 
 use Moose;
 use Method::Signatures::Simple;
-use DBIx::Class::DeploymentHandler::Types;
 require DBIx::Class::Schema;    # loaded for type constraint
-require DBIx::Class::ResultSet; # loaded for type constraint
 use Carp::Clan '^DBIx::Class::DeploymentHandler';
 
 has schema => (
@@ -14,38 +12,18 @@ has schema => (
   handles => ['schema_version'],
 );
 
-has upgrade_directory => ( # configuration
-  isa      => 'Str',
-  is       => 'ro',
-  required => 1,
-  default  => 'sql',
-);
-
-has backup_directory => ( # configuration
+has backup_directory => (
   isa => 'Str',
   is  => 'ro',
   predicate  => 'has_backup_directory',
 );
 
-has to_version => ( # configuration
+has to_version => (
   is         => 'ro',
   lazy_build => 1,
 );
 
 sub _build_to_version { $_[0]->schema->schema_version }
-
-has databases => ( # configuration
-  coerce  => 1,
-  isa     => 'DBIx::Class::DeploymentHandler::Databases',
-  is      => 'ro',
-  default => sub { [qw( MySQL SQLite PostgreSQL )] },
-);
-
-has sqltargs => ( # configuration
-  isa => 'HashRef',
-  is  => 'ro',
-  default => sub { {} },
-);
 
 method install {
   croak 'Install not possible as versions table already exists in database'
@@ -95,12 +73,6 @@ __PACKAGE__->meta->make_immutable;
 The L<DBIx::Class::Schema> (B<required>) that is used to talk to the database
 and generate the DDL.
 
-# this should be in a different place, maybe the SQLT role
-# this should be renamed
-=attr upgrade_directory
-
-The directory (default C<'sql'>) that upgrades are stored in
-
 =attr backup_directory
 
 The directory that backups are stored in
@@ -108,13 +80,6 @@ The directory that backups are stored in
 =attr to_version
 
 The version (defaults to schema's version) to migrate the database to
-
-# this should be in a different place, maybe the SQLT role
-=attr databases
-
-The types of databases (default C<< [qw( MySQL SQLite PostgreSQL )] >>) to
-generate files for
-
 
 =method install
 
