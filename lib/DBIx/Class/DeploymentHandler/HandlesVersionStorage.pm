@@ -1,18 +1,20 @@
 package DBIx::Class::DeploymentHandler::HandlesVersionStorage;
 use Moose::Role;
 
-requires 'database_version';
 requires 'add_database_version';
+requires 'database_version';
 requires 'delete_database_version';
 requires 'version_storage_is_installed';
 
 1;
 
-__END__
 
-=method database_version
+=head1 DESCRIPTION
 
- my $db_version = $version_storage->database_version;
+Typically VersionStorages will be implemented with a simple
+DBIx::Class::Result.  Take a look at the
+L<two existing implementations|/KNOWN IMPLEMENTATIONS> for examples of what you
+might want to do in your own storage.
 
 =method add_database_version
 
@@ -23,6 +25,10 @@ __END__
  });
 
 Store a new version into the version storage
+
+=method database_version
+
+ my $db_version = $version_storage->database_version;
 
 =method delete_database_version
 
@@ -37,5 +43,20 @@ simply deletes given database version from the version storage
 
 return true iff the version storage is installed.
 
+=head1 KNOWN IMPLEMENTATIONS
+
+=over
+
+=item *
+
+L<DBIx::Class::DeploymentHandler::VersionStorage::Standard>
+
+=item *
+
+L<DBIx::Class::DeploymentHandler::VersionStorage::Deprecated>
+
+=back
+
+__END__
 
 vim: ts=2 sw=2 expandtab

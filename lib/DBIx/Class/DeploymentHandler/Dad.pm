@@ -159,8 +159,6 @@ if you don't implement them, but if you want your subclass to get along with
 other subclasses (or more likely, tools made to use another subclass), you
 should probably implement these too, even if they are no-ops.
 
-The methods are:
-
 =head2 database_version
 
 see L<DBIx::Class::DeploymentHandler::HandlesVersionStorage/database_version>
@@ -187,6 +185,19 @@ see L<DBIx::Class::DeploymentHandler::HandlesDeploy/prepare_downgrade>
 
 =back
 
+=head2 SUBCLASSING
+
+All of the methods mentioned in L</METHODS THAT ARE REQUIRED IN SUBCLASSES> and
+L</ORTHODOX METHODS> can be implemented in any fashion you choose.  In the
+spirit of code reuse I have used roles to implement them in my two subclasses,
+L<DBIx::Class::DeploymentHandler> and
+L<DBIx::Class::DeploymentHandler::Deprecated>, but you are free to implement
+them entirely in a subclass if you so choose to.
+
+For in-depth documentation on how methods are supposed to work, see the roles
+L<DBIx::Class::DeploymentHandler::HandlesDeploy>,
+L<DBIx::Class::DeploymentHandler::HandlesVersioning>, and
+L<DBIx::Class::DeploymentHandler::HandlesVersionStorage>.
 
 __END__
 

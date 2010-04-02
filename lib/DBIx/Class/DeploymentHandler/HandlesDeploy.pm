@@ -12,8 +12,6 @@ requires 'deploy';
 
 1;
 
-__END__
-
 # should this be renamed prepare_deploy?
 
 =method prepare_install
@@ -64,5 +62,21 @@ version installed and C<$sql> used to get to that version.
 
 call a single downgrade migration.  Takes an arrayref describing the version to
 downgrade to.
+
+=head1 KNOWN IMPLEMENTATIONS
+
+=over
+
+=item *
+
+L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator>
+
+=item *
+
+L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::Deprecated>
+
+=back
+
+__END__
 
 vim: ts=2 sw=2 expandtab
