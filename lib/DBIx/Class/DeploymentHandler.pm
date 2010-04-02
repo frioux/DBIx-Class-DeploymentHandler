@@ -1,5 +1,7 @@
 package DBIx::Class::DeploymentHandler;
 
+# ABSTRACT: Extensible DBIx::Class deployment
+
 use Moose;
 
 extends 'DBIx::Class::DeploymentHandler::Dad';
@@ -30,9 +32,7 @@ __PACKAGE__->meta->make_immutable;
 
 1;
 
-__END__
-
-=SYNOPSIS
+=head1 SYNOPSIS
 
  use aliased 'DBIx::Class::DeploymentHandler' => 'DH';
  my $s = My::Schema->connect(...);

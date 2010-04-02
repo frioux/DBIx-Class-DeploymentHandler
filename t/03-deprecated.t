@@ -1,5 +1,8 @@
 #!perl
 
+use strict;
+use warnings;
+
 use lib 't/lib';
 use DBICDHTest;
 use aliased 'DBIx::Class::DeploymentHandler::Deprecated';
@@ -13,8 +16,6 @@ DBICDHTest::ready;
 my $db = 'dbi:SQLite:db.db';
 my @connection = ($db, '', '', { ignore_version => 1 });
 my $sql_dir = 't/sql';
-
-ready;
 
 VERSION1: {
   use_ok 'DBICVersion_v1';
