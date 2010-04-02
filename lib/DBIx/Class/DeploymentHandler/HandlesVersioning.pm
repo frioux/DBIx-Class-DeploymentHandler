@@ -11,15 +11,25 @@ __END__
 
 =method next_version_set
 
- while (my $version_set = $versions->next_version_set) {
-   ...
+ print 'versions to install: ';
+ while (my $vs = $dh->next_version_set) {
+   print join q(, ), @{$vs}
  }
+ print qq(\n);
+
+return an arrayref describing each version that needs to be
+installed to upgrade to C<< $dh->to_version >>.
 
 =method previous_version_set
 
- while (my $version_set = $versions->previous_version_set) {
-   ...
+ print 'versions to uninstall: ';
+ while (my $vs = $dh->previous_version_set) {
+   print join q(, ), @{$vs}
  }
+ print qq(\n);
+
+return an arrayref describing each version that needs to be
+"installed" to downgrade to C<< $dh->to_version >>.
 
 # normally a VersionHandler will take
 # a to_version and yeild an iterator of

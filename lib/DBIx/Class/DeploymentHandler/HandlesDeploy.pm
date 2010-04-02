@@ -22,7 +22,9 @@ __END__
 
 =method deploy
 
- $deploy_method->deploy;
+ $dh->deploy
+
+Deploy the schema to the database.
 
 =method prepare_resultsource_install
 
@@ -50,10 +52,17 @@ __END__
 
 =method upgrade_single_step
 
- $deploy_method->upgrade_single_step([1, 2]);
+ my ($ddl, $sql) = @{$dh->upgrade_single_step($version_set)||[]}
+
+call a single upgrade migration.  Takes an arrayref describing the version to
+upgrade to.  Optionally return an arrayref containing C<$ddl> describing
+version installed and C<$sql> used to get to that version.
 
 =method downgrade_single_step
 
- $deploy_method->upgrade_single_step([1, 2]);
+ $dh->downgrade_single_step($version_set);
+
+call a single downgrade migration.  Takes an arrayref describing the version to
+downgrade to.
 
 vim: ts=2 sw=2 expandtab

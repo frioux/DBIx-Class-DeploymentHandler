@@ -16,20 +16,26 @@ __END__
 
 =method add_database_version
 
- $version_storage->add_database_version({
-   version     => '1.2002',
-   ddl         => $ddl,     # optional
-   upgrade_sql => undef,    # optional
- })
+ $dh->add_database_version({
+   version     => '1.02',
+   ddl         => $ddl # can be undef,
+   upgrade_sql => $sql # can be undef,
+ });
+
+Store a new version into the version storage
 
 =method delete_database_version
 
- $version_storage->delete_database_version({ version => '1.2002' })
+ $dh->delete_database_version({ version => '1.02' })
+
+simply deletes given database version from the version storage
 
 =method version_storage_is_installed
 
- if ($verson_storage->version_storage_is_installed) {
-   say q(you're golden!)
- }
+ warn q(I can't version this database!)
+   unless $dh->version_storage_is_installed
+
+return true iff the version storage is installed.
+
 
 vim: ts=2 sw=2 expandtab

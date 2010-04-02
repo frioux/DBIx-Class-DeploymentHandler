@@ -120,71 +120,73 @@ assuming it will work.
 
 =head1 METHODS THAT ARE REQUIRED IN SUBCLASSES
 
-=head2 version_storage_is_installed
-
- warn q(I can't version this database!)
-   unless $dh->version_storage_is_installed
-
-return true iff the version storage is installed.
-
 =head2 deploy
 
- $dh->deploy
+See L<DBIx::Class::DeploymentHandler::HandlesDeploy/deploy>.
 
-Deploy the schema to the database.
+=head2 version_storage_is_installed
+
+See L<DBIx::Class::DeploymentHandler::HandlesVersionStorage/version_storage_is_installed>.
 
 =head2 add_database_version
 
- $dh->add_database_version({
-   version     => '1.02',
-   ddl         => $ddl # can be undef,
-   upgrade_sql => $sql # can be undef,
- });
-
-Store a new version into the version storage
+See L<DBIx::Class::DeploymentHandler::HandlesVersionStorage/add_database_version>.
 
 =head2 delete_database_version
 
- $dh->delete_database_version({ version => '1.02' })
-
-simply deletes given database version from the version storage
+See L<DBIx::Class::DeploymentHandler::HandlesVersionStorage/delete_database_version>.
 
 =head2 next_version_set
 
- print 'versions to install: ';
- while (my $vs = $dh->next_version_set) {
-   print join q(, ), @{$vs}
- }
- print qq(\n);
-
-return an arrayref describing each version that needs to be
-installed to upgrade to C<< $dh->to_version >>.
+See L<DBIx::Class::DeploymentHandler::HandlesVersioning/next_version_set>.
 
 =head2 previous_version_set
 
- print 'versions to uninstall: ';
- while (my $vs = $dh->previous_version_set) {
-   print join q(, ), @{$vs}
- }
- print qq(\n);
-
-return an arrayref describing each version that needs to be
-"installed" to downgrade to C<< $dh->to_version >>.
+See L<DBIx::Class::DeploymentHandler::HandlesVersioning/previous_version_set>.
 
 =head2 upgrade_single_step
 
- my ($ddl, $sql) = @{$dh->upgrade_single_step($version_set)||[]}
-
-call a single upgrade migration.  Takes an arrayref describing the version to
-upgrade to.  Optionally return an arrayref containing C<$ddl> describing
-version installed and C<$sql> used to get to that version.
+See L<DBIx::Class::DeploymentHandler::HandlesDeploy/upgrade_single_step>.
 
 =head2 downgrade_single_step
 
- $dh->upgrade_single_step($version_set);
+See L<DBIx::Class::DeploymentHandler::HandlesDeploy/downgrade_single_step>.
 
-call a single downgrade migration.  Takes an arrayref describing the version to
-downgrade to.
+=head1 ORTHODOX METHODS
+
+These methods are not actually B<required> as things will probably still work
+if you don't implement them, but if you want your subclass to get along with
+other subclasses (or more likely, tools made to use another subclass), you
+should probably implement these too, even if they are no-ops.
+
+The methods are:
+
+=head2 database_version
+
+see L<DBIx::Class::DeploymentHandler::HandlesVersionStorage/database_version>
+
+=head2 prepare_install
+
+see L<DBIx::Class::DeploymentHandler::HandlesDeploy/prepare_install>
+
+=head2 prepare_resultsource_install
+
+see L<DBIx::Class::DeploymentHandler::HandlesDeploy/prepare_resultsouce_install>
+
+=head2 install_resultsource
+
+see L<DBIx::Class::DeploymentHandler::HandlesDeploy/install_resultsource>
+
+=head2 prepare_upgrade
+
+see L<DBIx::Class::DeploymentHandler::HandlesDeploy/prepare_upgrade>
+
+=head2 prepare_downgrade
+
+see L<DBIx::Class::DeploymentHandler::HandlesDeploy/prepare_downgrade>
+
+=back
+
 
 __END__
 

@@ -79,8 +79,6 @@ with):
 
 =over
 
-=over
-
 =item *
 
 Downgrades in addition to upgrades.
