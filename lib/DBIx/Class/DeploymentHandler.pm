@@ -32,4 +32,105 @@ __PACKAGE__->meta->make_immutable;
 
 __END__
 
+=SYNOPSIS
+
+ use aliased 'DBIx::Class::DeploymentHandler' => 'DH';
+ my $s = My::Schema->connect(...);
+
+ my $dh = DH->new({
+   schema => $s,
+   databases => 'SQLite',
+   sqltargs => { add_drop_table => 0 },
+ });
+
+ $dh->prepare_install;
+
+ $dh->install;
+
+or for upgrades:
+
+ use aliased 'DBIx::Class::DeploymentHandler' => 'DH';
+ my $s = My::Schema->connect(...);
+
+ my $dh = DH->new({
+   schema => $s,
+   databases => 'SQLite',
+   sqltargs => { add_drop_table => 0 },
+ });
+
+ $dh->prepare_upgrade(1, 2);
+
+ $dh->upgrade;
+
+=head1 DESCRIPTION
+
+C<DBIx::Class::DeploymentHandler> is, as it's name suggests, a tool for
+deploying and upgrading databases with L<DBIx::Class>.  It is designed to be
+much more flexible than L<DBIx::Class::Schema::Versioned>, hence the use of
+L<Moose> and lots of roles.
+
+C<DBIx::Class::DeploymentHandler> itself is just a recommended set of roles
+that we think will not only work well for everyone, but will also yeild the
+best overall mileage.  Each role it uses has it's own nuances and
+documentation, so I won't describe all of them here, but here are a few of the
+major benefits over how L<DBIx::Class::Schema::Versioned> worked (and
+L<DBIx::Class::DeploymentHandler::Deprecated> tries to maintain compatibility
+with):
+
+=over
+
+=over
+
+=item *
+
+Downgrades in addition to upgrades.
+
+=item *
+
+Multiple sql files files per upgrade/downgrade/install.
+
+=item *
+
+Perl scripts allowed for upgrade/downgrade/install.
+
+=item *
+
+Just one set of files needed for upgrade, unlike before where one might need
+to generate C<factorial(scalar @versions)>, which is just silly.
+
+=item *
+
+And much, much more!
+
+=back
+
+That's really just a taste of some of the differences.  Check out each role for
+all the details.
+
+=head1 WHERE IS ALL THE DOC?!
+
+C<DBIx::Class::DeploymentHandler> extends
+L<DBIx::Class::DeploymentHandler::Dad>, so that's probably the first place to
+look when you are trying to figure out how everything works.
+
+Next would be to look at all the roles that fill in the blanks that
+L<DBIx::Class::DeploymentHandler::Dad> expects to be filled.  They would be
+L<DBIx::Class::DeploymentHandler::WithSqltDeployMethod>,
+L<DBIx::Class::DeploymentHandler::WithMonotonicVersions>,
+L<DBIx::Class::DeploymentHandler::WithStandardVersionStorage>, and
+L<DBIx::Class::DeploymentHandler::WithReasonableDefaults>.
+
+=method prepare_version_storage_install
+
+ $dh->prepare_version_storage_install
+
+Creates the needed C<.sql> file to install the version storage and not the rest
+of the tables
+
+=method install_version_storage
+
+ $dh->install_version_storage
+
+Install the version storage and not the rest of the tables
+
 vim: ts=2 sw=2 expandtab
