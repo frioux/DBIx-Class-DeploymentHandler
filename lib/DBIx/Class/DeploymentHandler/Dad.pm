@@ -81,7 +81,7 @@ and generate the DDL.
 
 =attr backup_directory
 
-The directory that backups are stored in
+The directory where backups are stored
 
 =attr to_version
 
@@ -188,8 +188,6 @@ see L<DBIx::Class::DeploymentHandler::HandlesDeploy/prepare_upgrade>
 =head2 prepare_downgrade
 
 see L<DBIx::Class::DeploymentHandler::HandlesDeploy/prepare_downgrade>
-
-=back
 
 =head2 SUBCLASSING
 
