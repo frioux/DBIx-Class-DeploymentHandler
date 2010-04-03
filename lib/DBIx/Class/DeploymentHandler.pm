@@ -149,3 +149,16 @@ First off, you'll want to just install the version_storage:
  $dh->install_version_storage;
 
 Then, bump your schema version, and you can use DBICDH like normal!
+
+=head1 DONATIONS
+
+If you'd like to thank me for the work I've done on this module, don't give me
+a donation. I spend a lot of free time creating free software, but I do it
+because I love it.
+
+Instead, consider donating to someone who might actually need it.  Obviously
+you should do research when donating to a charity, so don't just take my word
+on this.  I like
+L<<a href="http://www.childrenssurvivalfund.org/">Children's Survival Fund</a>>,
+but there are a host of other charities that can do much more good than I will
+with your money.
