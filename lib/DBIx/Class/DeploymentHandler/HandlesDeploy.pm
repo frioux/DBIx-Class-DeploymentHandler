@@ -16,11 +16,13 @@ requires 'deploy';
 
 __END__
 
-# should this be renamed prepare_deploy?
-
 =method prepare_install
 
- $deploy_method->prepare_install;
+ (should this be renamed prepare_deploy?)
+
+ $dh->prepare_install
+
+Generate the needed data files to install the schema to the database.
 
 =method deploy
 
@@ -30,21 +32,21 @@ Deploy the schema to the database.
 
 =method prepare_resultsource_install
 
- $deploy_method->prepare_resultsource_install($resultset->result_source);
+ $dh->prepare_resultsource_install($resultset->result_source)
 
 Takes a L<DBIx::Class::ResultSource> and generates a single migration file to
 create the resultsource's table.
 
 =method install_resultsource
 
- $deploy_method->prepare_resultsource_install($resultset->result_source);
+ $dh->prepare_resultsource_install($resultset->result_source);
 
 Takes a L<DBIx::Class::ResultSource> and runs a single migration file to
 deploy the resultsource's table.
 
 =method prepare_upgrade
 
- $deploy_method->prepare_upgrade(1, 2, [1, 2]);
+ $dh->prepare_upgrade(1, 2, [1, 2]);
 
 Takes two versions and a version set.  This basically is supposed to generate
 the needed C<SQL> to migrate up from the first version to the second version.
@@ -52,7 +54,7 @@ The version set uniquely identifies the migration.
 
 =method prepare_downgrade
 
- $deploy_method->prepare_downgrade(2, 1, [1, 2]);
+ $dh->prepare_downgrade(2, 1, [1, 2]);
 
 Takes two versions and a version set.  This basically is supposed to generate
 the needed C<SQL> to migrate down from the first version to the second version.
