@@ -137,18 +137,22 @@ Install the version storage and not the rest of the tables
 
 =head1 THIS SUCKS
 
-You started your project and weren't using DBICDH?  FOOL!  Lucky for you I had
-you in mind when I wrote this doc <3
+You started your project and weren't using C<DBIx::Class::DeploymentHandler>?
+Lucky for you I had you in mind when I wrote this doc.
 
 First off, you'll want to just install the version_storage:
 
  my $s = My::Schema->connect(...);
- my $dh = DeployHandler({ schema => $s });
+ my $dh = DBIx::Class::DeploymentHandler({ schema => $s });
 
  $dh->prepare_version_storage_install;
  $dh->install_version_storage;
 
-Then, bump your schema version, and you can use DBICDH like normal!
+Then set your database version:
+
+ $dh->add_database_version({ version => $s->version });
+
+Now you should be able to use DBIx::Class::DeploymentHandler like normal!
 
 =head1 DONATIONS
 
