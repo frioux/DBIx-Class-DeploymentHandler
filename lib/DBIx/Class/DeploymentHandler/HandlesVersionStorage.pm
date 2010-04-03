@@ -23,21 +23,23 @@ might want to do in your own storage.
 
  $dh->add_database_version({
    version     => '1.02',
-   ddl         => $ddl # can be undef,
-   upgrade_sql => $sql # can be undef,
+   ddl         => $ddl, # can be undef
+   upgrade_sql => $sql, # can be undef
  });
 
 Store a new version into the version storage
 
 =method database_version
 
- my $db_version = $version_storage->database_version;
+ my $db_version = $version_storage->database_version
+
+Returns the most recently installed version in the database.
 
 =method delete_database_version
 
  $dh->delete_database_version({ version => '1.02' })
 
-simply deletes given database version from the version storage
+Deletes given database version from the version storage
 
 =method version_storage_is_installed
 
