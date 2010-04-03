@@ -1,6 +1,8 @@
 package DBIx::Class::DeploymentHandler::WithSqltDeployMethod;
 use Moose::Role;
 
+# ABSTRACT: Delegate/Role for DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator
+
 use DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator;
 
 has deploy_method => (

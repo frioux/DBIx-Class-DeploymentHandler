@@ -1,6 +1,8 @@
 package DBIx::Class::DeploymentHandler::WithDatabaseToSchemaVersions;
 use Moose::Role;
 
+# ABSTRACT: Delegate/Role for DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions
+
 use DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions;
 
 use Carp 'carp';

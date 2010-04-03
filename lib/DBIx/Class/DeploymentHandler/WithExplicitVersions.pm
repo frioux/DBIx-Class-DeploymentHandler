@@ -1,6 +1,8 @@
 package DBIx::Class::DeploymentHandler::WithExplicitVersions;
 use Moose::Role;
 
+# ABSTRACT: Delegate/Role for DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions
+
 use DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions;
 
 use Carp 'carp';

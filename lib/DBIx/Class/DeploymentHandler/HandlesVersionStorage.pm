@@ -1,6 +1,8 @@
 package DBIx::Class::DeploymentHandler::HandlesVersionStorage;
 use Moose::Role;
 
+# ABSTRACT: Interface for version storage methods
+
 requires 'add_database_version';
 requires 'database_version';
 requires 'delete_database_version';

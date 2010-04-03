@@ -1,6 +1,8 @@
 package DBIx::Class::DeploymentHandler::WithMonotonicVersions;
 use Moose::Role;
 
+# ABSTRACT: Delegate/Role for DBIx::Class::DeploymentHandler::VersionHandler::Monotonic
+
 use DBIx::Class::DeploymentHandler::VersionHandler::Monotonic;
 
 has version_handler => (

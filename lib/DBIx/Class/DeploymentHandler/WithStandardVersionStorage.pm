@@ -1,6 +1,8 @@
 package DBIx::Class::DeploymentHandler::WithStandardVersionStorage;
 use Moose::Role;
 
+# ABSTRACT: Delegate/Role for DBIx::Class::DeploymentHandler::VersionStorage::Standard
+
 use DBIx::Class::DeploymentHandler::VersionStorage::Standard;
 
 has version_storage => (

@@ -1,6 +1,8 @@
 package DBIx::Class::DeploymentHandler::Deprecated::WithDeprecatedVersionStorage;
 use Moose::Role;
 
+# ABSTRACT: (DEPRECATED) Use this if you are stuck in the past
+
 use DBIx::Class::DeploymentHandler::VersionStorage::Deprecated;
 
 has version_storage => (

@@ -1,5 +1,7 @@
 package DBIx::Class::DeploymentHandler::Dad;
 
+# ABSTRACT: Parent class for DeploymentHandlers
+
 use Moose;
 use Method::Signatures::Simple;
 require DBIx::Class::Schema;    # loaded for type constraint

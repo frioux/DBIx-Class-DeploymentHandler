@@ -1,6 +1,8 @@
 package DBIx::Class::DeploymentHandler::HandlesDeploy;
 use Moose::Role;
 
+# ABSTRACT: Interface for deploy methods
+
 requires 'prepare_install';
 requires 'prepare_resultsource_install';
 requires 'install_resultsource';

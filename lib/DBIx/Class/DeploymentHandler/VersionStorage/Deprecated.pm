@@ -1,5 +1,8 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Deprecated;
 use Moose;
+
+# ABSTRACT: (DEPRECATED) Use this if you are stuck in the past
+
 use Method::Signatures::Simple;
 
 has schema => (

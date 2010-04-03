@@ -1,5 +1,8 @@
 package DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions;
 use Moose;
+
+# ABSTRACT: Define your own list of versions to use for migrations
+
 use Carp 'croak';
 
 with 'DBIx::Class::DeploymentHandler::HandlesVersioning';

@@ -2,6 +2,8 @@ package DBIx::Class::DeploymentHandler::Types;
 use strict;
 use warnings;
 
+# ABSTRACT: Types internal to DBIx::Class::DeploymentHandler
+
 use Moose::Util::TypeConstraints;
 subtype 'DBIx::Class::DeploymentHandler::Databases'
  => as 'ArrayRef[Str]';

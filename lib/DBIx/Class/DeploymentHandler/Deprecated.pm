@@ -1,5 +1,7 @@
 package DBIx::Class::DeploymentHandler::Deprecated;
 
+# ABSTRACT: (DEPRECATED) Use this if you are stuck in the past
+
 use Moose;
 use Moose::Util 'apply_all_roles';
 

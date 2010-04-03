@@ -1,5 +1,8 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Standard;
 use Moose;
+
+# ABSTRACT: Version storage that does the normal stuff
+
 use Method::Signatures::Simple;
 
 has schema => (
