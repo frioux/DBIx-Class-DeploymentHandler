@@ -7,6 +7,8 @@ requires 'previous_version_set';
 
 1;
 
+# vim: ts=2 sw=2 expandtab
+
 __END__
 
 =head1 DESCRIPTION
@@ -126,6 +128,3 @@ L<DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions>
 
 =back
 
-__END__
-
-vim: ts=2 sw=2 expandtab

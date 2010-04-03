@@ -40,6 +40,8 @@ __PACKAGE__->meta->make_immutable;
 
 1;
 
+# vim: ts=2 sw=2 expandtab
+
 __END__
 
 =head1 THIS SUCKS
@@ -61,4 +63,3 @@ totally switch!  Here's how:
   }
  }
 
-vim: ts=2 sw=2 expandtab

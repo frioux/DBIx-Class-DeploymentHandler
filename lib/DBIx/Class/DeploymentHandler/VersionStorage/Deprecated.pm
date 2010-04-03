@@ -39,6 +39,8 @@ __PACKAGE__->meta->make_immutable;
 
 1;
 
+# vim: ts=2 sw=2 expandtab
+
 __END__
 
 =head1 THIS SUCKS
@@ -61,4 +63,3 @@ new Standard VersionStorage:
  $dh->version_storage->add_database_vesion({ version => $_ })
    for @versions;
 
-vim: ts=2 sw=2 expandtab

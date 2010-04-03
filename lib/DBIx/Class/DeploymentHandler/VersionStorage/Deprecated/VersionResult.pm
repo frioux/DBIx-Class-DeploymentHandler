@@ -26,3 +26,7 @@ __PACKAGE__->resultset_class('DBIx::Class::DeploymentHandler::VersionStorage::De
 
 1;
 
+# vim: ts=2 sw=2 expandtab
+
+__END__
+

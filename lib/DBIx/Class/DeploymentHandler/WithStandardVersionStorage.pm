@@ -17,6 +17,6 @@ sub _build_version_storage {
 
 1;
 
-__END__
+# vim: ts=2 sw=2 expandtab
 
-vim: ts=2 sw=2 expandtab
+__END__

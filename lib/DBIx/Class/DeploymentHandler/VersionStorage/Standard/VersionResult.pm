@@ -33,3 +33,8 @@ __PACKAGE__->add_unique_constraint(['version']);
 __PACKAGE__->resultset_class('DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResultSet');
 
 1;
+
+# vim: ts=2 sw=2 expandtab
+
+__END__
+

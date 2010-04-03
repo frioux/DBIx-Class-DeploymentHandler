@@ -12,3 +12,8 @@ coerce 'DBIx::Class::DeploymentHandler::Databases'
 no Moose::Util::TypeConstraints;
 
 1;
+
+# vim: ts=2 sw=2 expandtab
+
+__END__
+

@@ -424,6 +424,8 @@ __PACKAGE__->meta->make_immutable;
 
 1;
 
+# vim: ts=2 sw=2 expandtab
+
 __END__
 
 =attr schema
@@ -485,4 +487,3 @@ generate files for
 
 =method downgrade_single_step
 
-vim: ts=2 sw=2 expandtab
