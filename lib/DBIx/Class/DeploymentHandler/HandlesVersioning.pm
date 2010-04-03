@@ -14,14 +14,7 @@ __END__
 =head1 DESCRIPTION
 
 Typically a VersionHandler will take a C<to_version> and yeild an iterator of
-"version sets."
-
-A "version set" could be defined as:
-
- subtype 'Version', as 'Str';
- subtype 'VersionSet', as 'ArrayRef[Str]';
-
-and all a "version set" does is uniquely identify a migration.
+L<version sets|/VERSION SET>.
 
 Typically a call to a VersionHandler's L</next_version_set> with a C<db_version>
 of 1 and a C<to_version> of 5 will iterate over something like the following:
@@ -37,8 +30,8 @@ or maybe just
  [1, 5]
  undef
 
-Really how the version sets are arranged is up to the VersionHandler being
-used.
+Really how the L<version sets|/VERSION SET> are arranged is up to the
+VersionHandler being used.
 
 In some cases users will not want versions to have inherent "previous
 versions," which is why the version set is an C<ArrayRef>.  In those cases the
@@ -67,8 +60,8 @@ there is no inherent order for this type of database upgraded.
 
 =head2 Downgrades
 
-For the typical case I'd like downgrades to be easy for users to perform and
-understand.  That means that with the first two examples give above we can use
+For the typical case downgrades should be easy for users to perform and
+understand.  That means that with the first two examples given above we can use
 the L</previous_version_set> iterator to yeild the following:
 
 
@@ -96,7 +89,7 @@ describes a version change, and not necesarily a defined progression.
  }
  print qq(\n);
 
-return an arrayref describing each version that needs to be
+Return a L<version set|/VERSION SET> describing each version that needs to be
 installed to upgrade to C<< $dh->to_version >>.
 
 =method previous_version_set
@@ -107,8 +100,17 @@ installed to upgrade to C<< $dh->to_version >>.
  }
  print qq(\n);
 
-return an arrayref describing each version that needs to be
+Return a L<version set|/VERSION SET> describing each version that needs to be
 "installed" to downgrade to C<< $dh->to_version >>.
+
+=head1 VERSION SET
+
+A version set could be defined as:
+
+ subtype 'Version', as 'Str';
+ subtype 'VersionSet', as 'ArrayRef[Str]';
+
+A version set should uniquely identify a migration.
 
 =head1 KNOWN IMPLEMENTATIONS
 
