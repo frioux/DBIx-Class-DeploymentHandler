@@ -46,6 +46,16 @@ __PACKAGE__->meta->make_immutable;
 
 __END__
 
+=head1 DEPRECATED
+
+I begrudgingly made this module (and other related modules) to keep porting
+from L<DBIx::Class::Schema::Versioned> relatively simple.  I will make changes
+to ensure that it works with output from L<DBIx::Class::Schema::Versioned> etc,
+but I will not add any new features to it.
+
+Once I hit major version 1 usage of this module will emit a warning.
+On version 2 it will be removed entirely.
+
 =head1 THIS SUCKS
 
 Here's how to convert from that crufty old Deprecated VersionStorage to a shiny

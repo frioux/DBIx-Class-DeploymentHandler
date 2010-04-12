@@ -428,9 +428,31 @@ __PACKAGE__->meta->make_immutable;
 
 __END__
 
+=head1 DESCRIPTION
+
+This class is the meat of L<DBIx::Class::DeploymentHandler>.  It takes care of
+generating sql files representing schemata as well as sql files to move from
+one version of a schema to the rest.  One of the hallmark features of this
+class is that it allows for multiple sql files for deploy and upgrade, allowing
+developers to fine tune deployment.  In addition it also allows for perl files
+to be run at any stage of the process.
+
+For basic usage see L<DBIx::Class::DeploymentHandler::HandlesDeploy>.  What's
+documented here is extra fun stuff or private methods.
+
+=head1 DIRECTORY LAYOUT
+
+It's heavily based upon L<DBIx::Migration::Directories>.
+
 =attr schema
 
+The L<DBIx::Class::Schema> (B<required>) that is used to talk to the database
+and generate the DDL.
+
 =attr storage
+
+The L<DBIx::Class::Storage> that is I<actually> used to talk to the database
+and generate the DDL.  This is automatically created with L</_build_storage>.
 
 =attr sqltargs
 
@@ -447,43 +469,97 @@ generate files for
 
 =attr txn_wrap
 
+Set to true (which is the default) to wrap all upgrades and deploys in a single
+transaction.
+
 =method __ddl_consume_with_prefix
+
+ $dm->__ddl_consume_with_prefix( 'SQLite', [qw( 1.00 1.01 )], 'up' )
+
+This is the meat of the multi-file upgrade/deploy stuff.  It returns a list of
+files in the order that they should be run for a generic "type" of upgrade.
+You should not be calling this in user code.
 
 =method _ddl_schema_consume_filenames
 
+ $dm->__ddl_schema_consume_filenames( 'SQLite', [qw( 1.00 )] )
+
+Just a curried L</__ddl_consume_with_prefix>.  Get's a list of files for an
+initial deploy.
+
 =method _ddl_schema_produce_filename
+
+ $dm->__ddl_schema_produce_filename( 'SQLite', [qw( 1.00 )] )
+
+Returns a single file in which an initial schema will be stored.
 
 =method _ddl_schema_up_consume_filenames
 
+ $dm->_ddl_schema_up_consume_filenames( 'SQLite', [qw( 1.00 )] )
+
+Just a curried L</__ddl_consume_with_prefix>.  Get's a list of files for an
+upgrade.
+
 =method _ddl_schema_down_consume_filenames
+
+ $dm->_ddl_schema_down_consume_filenames( 'SQLite', [qw( 1.00 )] )
+
+Just a curried L</__ddl_consume_with_prefix>.  Get's a list of files for a
+downgrade.
 
 =method _ddl_schema_up_produce_filenames
 
-=method _ddl_schema_down_produce_filenames
+ $dm->_ddl_schema_up_produce_filename( 'SQLite', [qw( 1.00 1.01 )] )
+
+Returns a single file in which the sql to upgrade from one schema to another
+will be stored.
+
+=method _ddl_schema_down_produce_filename
+
+ $dm->_ddl_schema_down_produce_filename( 'SQLite', [qw( 1.00 1.01 )] )
+
+Returns a single file in which the sql to downgrade from one schema to another
+will be stored.
 
 =method _resultsource_install_filename
 
+ my $filename_fn = $dm->_resultsource_install_filename('User');
+ $dm->$filename_fn('SQLite', '1.00')
+
+Returns a function which in turn returns a single filename used to install a
+single resultsource.  Weird interface is convenient for me.  Deal with it.
+
 =method _run_sql_and_perl
+
+ $dm->_run_sql_and_perl([qw( list of filenames )])
+
+Simply put, this runs the list of files passed to it.  If the file ends in
+C<.sql> it runs it as sql and if it ends in C<.pl> it runs it as a perl file.
+
+Depending on L</txn_wrap> all of the files run will be wrapped in a single
+transaction.
 
 =method _prepare_install
 
+ $dm->_prepare_install({ add_drop_table => 0 }, sub { 'file_to_create' })
+
+Generates the sql file for installing the database.  First arg is simply
+L<SQL::Translator> args and the second is a coderef that returns the filename
+to store the sql in.
+
 =method _prepare_changegrade
+
+ $dm->_prepare_changegrade('1.00', '1.01', [qw( 1.00 1.01)], 'up')
+
+Generates the sql file for migrating from one schema version to another.  First
+arg is the version to start from, second is the version to go to, third is the
+L<version set|DBIx::Class::DeploymentHandler/VERSION SET>, and last is the
+direction of the changegrade, be it 'up' or 'down'.
 
 =method _read_sql_file
 
-=method deploy
+ $dm->_read_sql_file('foo.sql')
 
-=method install_resultsource
-
-=method prepare_resultsouce_install
-
-=method prepare_install
-
-=method prepare_upgrade
-
-=method prepare_downgrade
-
-=method upgrade_single_step
-
-=method downgrade_single_step
+Reads a sql file and returns lines in an C<ArrayRef>.  Strips out comments,
+transactions, and blank lines.
 
