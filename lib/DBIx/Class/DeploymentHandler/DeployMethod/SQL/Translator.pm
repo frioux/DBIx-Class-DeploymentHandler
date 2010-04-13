@@ -184,10 +184,11 @@ method _run_sql_and_perl($filenames) {
 
 sub deploy {
   my $self = shift;
+  my $version = shift || $self->schema_version;
 
   return $self->_run_sql_and_perl($self->_ddl_schema_consume_filenames(
     $self->storage->sqlt_type,
-    $self->schema_version
+    $version,
   ));
 }
 
@@ -442,7 +443,91 @@ documented here is extra fun stuff or private methods.
 
 =head1 DIRECTORY LAYOUT
 
-It's heavily based upon L<DBIx::Migration::Directories>.
+Arguably this is the best feature of L<DBIx::Class::DeploymentHandler>.  It's
+heavily based upon L<DBIx::Migration::Directories>, but has some extensions and
+modifications, so even if you are familiar with it, please read this.  I feel
+like the best way to describe the layout is with the following example:
+
+ $sql_migration_dir
+ |- SQLite
+ |  |- down
+ |  |  `- 1-2
+ |  |     `- 001-auto.sql
+ |  |- schema
+ |  |  `- 1
+ |  |     `- 001-auto.sql
+ |  `- up
+ |     |- 1-2
+ |     |  `- 001-auto.sql
+ |     `- 2-3
+ |        `- 001-auto.sql
+ |- _common
+ |  |- down
+ |  |  `- 1-2
+ |  |     `- 002-remove-customers.pl
+ |  `- up
+ |     `- 1-2
+ |        `- 002-generate-customers.pl
+ |- _generic
+ |  |- down
+ |  |  `- 1-2
+ |  |     `- 001-auto.sql
+ |  |- schema
+ |  |  `- 1
+ |  |     `- 001-auto.sql
+ |  `- up
+ |     `- 1-2
+ |        |- 001-auto.sql
+ |        `- 002-create-stored-procedures.sql
+ `- MySQL
+    |- down
+    |  `- 1-2
+    |     `- 001-auto.sql
+    |- schema
+    |  `- 1
+    |     `- 001-auto.sql
+    `- up
+       `- 1-2
+          `- 001-auto.sql
+
+So basically, the code
+
+ $dm->deploy(1)
+
+on an C<SQLite> database that would simply run
+C<$sql_migration_dir/SQLite/schema/1/001-auto.sql>.  Next,
+
+ $dm->upgrade_single_step([1,2])
+
+would run C<$sql_migration_dir/SQLite/up/1-2/001-auto.sql> followed by
+C<$sql_migration_dir/_common/up/1-2/002-generate-customers.pl>.
+
+Now, a C<.pl> file doesn't have to be in the C<_common> directory, but most of
+the time it probably should be, since perl scripts will mostly be database
+independent.
+
+C<_generic> exists for when you for some reason are sure that your SQL is
+generic enough to run on all databases.  Good luck with that one.
+
+=head1 PERL SCRIPTS
+
+A perl script for this tool is very simple.  It merely needs to contain a
+sub called C<run> that takes a L<DBIx::Class::Schema> as it's only argument.
+A very basic perl script might look like:
+
+ #!perl
+
+ use strict;
+ use warnings;
+
+ sub run {
+   my $schema = shift;
+
+   $schema->resultset('Users')->create({
+     name => 'root',
+     password => 'root',
+   })
+ }
 
 =attr schema
 
