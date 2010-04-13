@@ -47,7 +47,7 @@ __END__
    sqltargs => { add_drop_table => 0 },
  });
 
- $dh->prepare_install;
+ $dh->prepare_deploy;
 
  $dh->install;
 

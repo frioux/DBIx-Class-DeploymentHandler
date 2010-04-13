@@ -27,12 +27,12 @@ VERSION1: {
 
    ok( $dm, 'DBIC::DH::DM::SQL::Translator gets instantiated correctly' );
 
-   $dm->prepare_install;
+   $dm->prepare_deploy;
    {
       my $warned = 0;
       local $SIG{__WARN__} = sub{$warned = 1};
-      $dm->prepare_install;
-      ok( $warned, 'prepare_install warns if you run it twice' );
+      $dm->prepare_deploy;
+      ok( $warned, 'prepare_deploy warns if you run it twice' );
    }
    mkpath(catfile(qw( t sql _common schema 1.0 )));
    open my $common, '>',
@@ -78,13 +78,13 @@ VERSION2: {
       upgrade_directory => $sql_dir,
       databases         => ['SQLite'],
       sqltargs          => { add_drop_table => 0 },
-		txn_wrap          => 1,
+      txn_wrap          => 1,
    });
 
    ok( $dm, 'DBIC::DH::SQL::Translator w/2.0 instantiates correctly');
 
    $version = $s->schema_version();
-   $dm->prepare_install;
+   $dm->prepare_deploy;
    ok(
       -f catfile(qw( t sql SQLite schema 2.0 001-auto.sql )),
       '2.0 schema gets generated properly'
@@ -130,14 +130,14 @@ VERSION2: {
    open my $common_pl, '>',
       catfile(qw( t sql _common up 1.0-2.0 003-semiautomatic.pl ));
    print {$common_pl} q|
-		sub run {
-			my $schema = shift;
-			$schema->resultset('Foo')->create({
-				bar => 'goodbye',
-				baz => 'blue skies',
-			})
-		}
-	|;
+      sub run {
+         my $schema = shift;
+         $schema->resultset('Foo')->create({
+            bar => 'goodbye',
+            baz => 'blue skies',
+         })
+      }
+   |;
    close $common_pl;
 
    $dm->upgrade_single_step([qw( 1.0 2.0 )]);
@@ -179,7 +179,7 @@ VERSION3: {
    ok( $dm, 'DBIC::DH::SQL::Translator w/3.0 instantiates correctly');
 
    $version = $s->schema_version();
-   $dm->prepare_install;
+   $dm->prepare_deploy;
    ok(
       -f catfile(qw( t sql SQLite schema 3.0 001-auto.sql )),
       '2.0 schema gets generated properly'

@@ -270,7 +270,7 @@ sub prepare_resultsource_install {
     }, $filename);
 }
 
-sub prepare_install {
+sub prepare_deploy {
   my $self = shift;
   $self->_prepare_install({}, '_ddl_schema_produce_filename');
 }

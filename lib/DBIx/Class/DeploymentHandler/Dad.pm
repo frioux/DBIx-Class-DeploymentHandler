@@ -94,7 +94,7 @@ The version (defaults to schema's version) to migrate the database to
 Deploys the current schema into the database.  Populates C<version_storage> with
 C<version> and C<ddl>.
 
-B<Note>: you typically need to call C<< $dh->prepare_install >> before you call
+B<Note>: you typically need to call C<< $dh->prepare_deploy >> before you call
 this method.
 
 B<Note>: you cannot install on top of an already installed database
@@ -169,9 +169,9 @@ should probably implement these too, even if they are no-ops.
 
 see L<DBIx::Class::DeploymentHandler::HandlesVersionStorage/database_version>
 
-=head2 prepare_install
+=head2 prepare_deploy
 
-see L<DBIx::Class::DeploymentHandler::HandlesDeploy/prepare_install>
+see L<DBIx::Class::DeploymentHandler::HandlesDeploy/prepare_deploy>
 
 =head2 prepare_resultsource_install
 

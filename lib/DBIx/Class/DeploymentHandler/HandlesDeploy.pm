@@ -3,14 +3,17 @@ use Moose::Role;
 
 # ABSTRACT: Interface for deploy methods
 
-requires 'prepare_install';
+requires 'prepare_deploy';
+requires 'deploy';
+
 requires 'prepare_resultsource_install';
 requires 'install_resultsource';
+
 requires 'prepare_upgrade';
-requires 'prepare_downgrade';
 requires 'upgrade_single_step';
+
+requires 'prepare_downgrade';
 requires 'downgrade_single_step';
-requires 'deploy';
 
 1;
 
@@ -18,11 +21,9 @@ requires 'deploy';
 
 __END__
 
-=method prepare_install
+=method prepare_deploy
 
- (should this be renamed prepare_deploy?)
-
- $dh->prepare_install
+ $dh->prepare_deploy
 
 Generate the needed data files to install the schema to the database.
 
