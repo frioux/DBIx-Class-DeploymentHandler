@@ -140,7 +140,7 @@ Install the version storage and not the rest of the tables
 You started your project and weren't using C<DBIx::Class::DeploymentHandler>?
 Lucky for you I had you in mind when I wrote this doc.
 
-First off, you'll want to just install the version_storage:
+First off, you'll want to just install the C<version_storage>:
 
  my $s = My::Schema->connect(...);
  my $dh = DBIx::Class::DeploymentHandler({ schema => $s });
@@ -152,7 +152,7 @@ Then set your database version:
 
  $dh->add_database_version({ version => $s->version });
 
-Now you should be able to use DBIx::Class::DeploymentHandler like normal!
+Now you should be able to use C<DBIx::Class::DeploymentHandler> like normal!
 
 =head1 DONATIONS
 
