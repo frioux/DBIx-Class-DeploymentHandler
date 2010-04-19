@@ -1,0 +1,7 @@
+Revision history for {{$dist->name}}
+
+{{$NEXT}}
+       - add autodie as dep
+
+0.001000_01
+       - initial dev release
