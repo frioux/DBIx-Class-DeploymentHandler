@@ -1,6 +1,9 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - bump File::Path dep
+
+0.001000_02 2010-04-19 18:46:16 CST6CDT
        - add autodie as dep
 
 0.001000_01
