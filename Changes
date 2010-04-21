@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.001000_03 2010-04-20 23:19:36 CST6CDT
        - bump File::Path dep
 
 0.001000_02 2010-04-19 18:46:16 CST6CDT
