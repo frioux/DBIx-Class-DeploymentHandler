@@ -29,8 +29,8 @@ sub install_version_storage {
 }
 
 sub prepare_install {
-	$_[0]->prepare_deploy;
-	$_[0]->prepare_version_storage_install;
+   $_[0]->prepare_deploy;
+   $_[0]->prepare_version_storage_install;
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -52,7 +52,7 @@ __END__
    sqltargs => { add_drop_table => 0 },
  });
 
- $dh->prepare_deploy;
+ $dh->prepare_install;
 
  $dh->install;
 
@@ -133,6 +133,13 @@ L<DBIx::Class::DeploymentHandler::WithReasonableDefaults>.
 
 Creates the needed C<.sql> file to install the version storage and not the rest
 of the tables
+
+=method prepare_install
+
+ $dh->prepare_install
+
+First prepare all the tables to be installed and the prepare just the version
+storage
 
 =method install_version_storage
 

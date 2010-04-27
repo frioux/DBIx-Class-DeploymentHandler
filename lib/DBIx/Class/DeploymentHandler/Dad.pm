@@ -85,6 +85,11 @@ __END__
 The L<DBIx::Class::Schema> (B<required>) that is used to talk to the database
 and generate the DDL.
 
+=attr schema_version
+
+The version that the schema is currently at.  Defaults to
+C<< $self->schema->schema_version >>.
+
 =attr backup_directory
 
 The directory where backups are stored
