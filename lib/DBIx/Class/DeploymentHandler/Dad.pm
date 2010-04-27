@@ -11,7 +11,6 @@ has schema => (
   isa      => 'DBIx::Class::Schema',
   is       => 'ro',
   required => 1,
-  handles => ['schema_version'],
 );
 
 has backup_directory => (
@@ -26,6 +25,13 @@ has to_version => (
 );
 
 sub _build_to_version { $_[0]->schema->schema_version }
+
+has schema_version => (
+  is         => 'ro',
+  lazy_build => 1,
+);
+
+sub _build_schema_version { $_[0]->schema->schema_version }
 
 method install {
   croak 'Install not possible as versions table already exists in database'
