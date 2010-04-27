@@ -1,6 +1,10 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - schema_version is now an attr so that users can more easily force the
+         version of the schema
+       - add prepare_install method which installs everything as well as the
+         version storage
 
 0.001000_03 2010-04-20 23:19:36 CST6CDT
        - bump File::Path dep
