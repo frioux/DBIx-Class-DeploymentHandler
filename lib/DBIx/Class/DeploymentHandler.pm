@@ -28,6 +28,11 @@ sub install_version_storage {
   );
 }
 
+sub prepare_install {
+	$_[0]->prepare_deploy;
+	$_[0]->prepare_version_storage_install;
+}
+
 __PACKAGE__->meta->make_immutable;
 
 1;
