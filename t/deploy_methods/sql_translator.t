@@ -52,7 +52,7 @@ VERSION1: {
    } 'schema not deployed';
 
    mkpath catfile(qw( t sql _common schema 1.0 ));
-   open my $common, '>',
+   open $common, '>',
       catfile(qw( t sql _common schema 1.0 001-auto.sql ));
    print {$common} qq<This will never get run>;
    close $common;
