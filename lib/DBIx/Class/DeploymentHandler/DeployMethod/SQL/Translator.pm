@@ -22,7 +22,6 @@ has schema => (
   isa      => 'DBIx::Class::Schema',
   is       => 'ro',
   required => 1,
-  handles => [qw( schema_version )],
 );
 
 has storage => (
@@ -61,6 +60,13 @@ has txn_wrap => (
   isa => 'Bool',
   default => 1,
 );
+
+has schema_version => (
+  is => 'ro',
+  lazy_build => 1,
+);
+
+method _build_schema_version { $self->schema->schema_version }
 
 method __ddl_consume_with_prefix($type, $versions, $prefix) {
   my $base_dir = $self->upgrade_directory;
@@ -193,13 +199,13 @@ sub deploy {
 }
 
 sub _prepare_install {
-  my $self = shift;
+  my $self      = shift;
   my $sqltargs  = { %{$self->sqltargs}, %{shift @_} };
   my $to_file   = shift;
   my $schema    = $self->schema;
   my $databases = $self->databases;
   my $dir       = $self->upgrade_directory;
-  my $version = $schema->schema_version;
+  my $version   = $self->schema_version;
 
   my $sqlt = SQL::Translator->new({
     add_drop_table          => 1,
@@ -292,7 +298,7 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
   my $dir       = $self->upgrade_directory;
   my $sqltargs  = $self->sqltargs;
 
-  my $schema_version = $schema->schema_version;
+  my $schema_version = $self->schema_version;
 
   $sqltargs = {
     add_drop_table => 1,
@@ -541,7 +547,8 @@ and generate the DDL.  This is automatically created with L</_build_storage>.
 
 =attr sqltargs
 
-#rename
+TODO
+# rename
 
 =attr upgrade_directory
 
@@ -556,6 +563,11 @@ generate files for
 
 Set to true (which is the default) to wrap all upgrades and deploys in a single
 transaction.
+
+=attr schema_version
+
+The version the schema on your harddrive is at.  Defaults to
+C<< $self->schema->schema_version >>.
 
 =method __ddl_consume_with_prefix
 

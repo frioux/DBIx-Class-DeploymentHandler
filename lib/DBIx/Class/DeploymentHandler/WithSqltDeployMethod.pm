@@ -34,12 +34,15 @@ has sqltargs => (
 
 sub _build_deploy_method {
   my $self = shift;
-  DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator->new({
+  my $args = {
     schema            => $self->schema,
     databases         => $self->databases,
     upgrade_directory => $self->upgrade_directory,
     sqltargs          => $self->sqltargs,
-  });
+  };
+
+  $args->{schema_version} = $self->schema_version if $self->has_schema_version;
+  DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator->new($args);
 }
 
 1;
@@ -47,3 +50,5 @@ sub _build_deploy_method {
 # vim: ts=2 sw=2 expandtab
 
 __END__
+
+TODO: pod
