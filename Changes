@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Add a bunch of boilerplate and not so boilerplate doc
+		 - rename sqltargs attribute to sql_translator_args
 
 0.001000_05 2010-05-04 13:37:29 CST6CDT
        - put schema_version attr in more places
