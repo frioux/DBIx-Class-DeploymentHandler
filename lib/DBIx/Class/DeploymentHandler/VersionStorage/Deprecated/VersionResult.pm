@@ -32,3 +32,10 @@ __PACKAGE__->resultset_class('DBIx::Class::DeploymentHandler::VersionStorage::De
 
 __END__
 
+=head1 DEPRECATED
+
+This component has been suplanted by
+L<DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResult>.
+In the next major version (1) we will begin issuing a warning on it's use.
+In the major version after that (2) we will remove it entirely.
+

@@ -51,6 +51,13 @@ sub create {
 
 __END__
 
+=head1 DEPRECATED
+
+This component has been suplanted by
+L<DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResultSet>.
+In the next major version (1) we will begin issuing a warning on it's use.
+In the major version after that (2) we will remove it entirely.
+
 =method version_storage_is_installed
 
 True if (!!!) the version storage has been installed
@@ -62,3 +69,5 @@ The version of the database
 =method create
 
 Overridden to default C<installed> to the current time. (take a look, it's yucky)
+
+

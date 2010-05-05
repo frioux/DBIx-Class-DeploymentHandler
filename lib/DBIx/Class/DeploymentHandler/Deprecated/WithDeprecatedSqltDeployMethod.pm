@@ -48,6 +48,13 @@ sub _build_deploy_method {
 
 __END__
 
+=head1 DEPRECATED
+
+This component has been suplanted by
+L<DBIx::Class::DeploymentHandler::WithSqltDeployMethod>.
+In the next major version (1) we will begin issuing a warning on it's use.
+In the major version after that (2) we will remove it entirely.
+
 =head1 DELEGATION ROLE
 
 This role is entirely for making delegation look like a role.  The actual
