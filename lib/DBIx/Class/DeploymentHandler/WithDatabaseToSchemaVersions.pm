@@ -32,4 +32,8 @@ sub _build_version_handler {
 
 __END__
 
-TODO: pod
+=head1 DELEGATION ROLE
+
+This role is entirely for making delegation look like a role.  The actual
+docs for the methods and attributes are at
+L<DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions>

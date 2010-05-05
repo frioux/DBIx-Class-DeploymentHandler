@@ -48,3 +48,8 @@ sub _build_deploy_method {
 
 __END__
 
+=head1 DELEGATION ROLE
+
+This role is entirely for making delegation look like a role.  The actual
+docs for the methods and attributes are at
+L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::Deprecated>
