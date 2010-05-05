@@ -1,5 +1,7 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Deprecated::VersionResult;
 
+# ABSTRACT: (DEPRECATED) The old way to store versions in the database
+
 use strict;
 use warnings;
 

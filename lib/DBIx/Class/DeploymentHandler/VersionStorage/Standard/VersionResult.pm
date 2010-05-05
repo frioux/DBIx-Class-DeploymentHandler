@@ -1,5 +1,7 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResult;
 
+# ABSTRACT: The typical way to store versions in the database
+
 use strict;
 use warnings;
 

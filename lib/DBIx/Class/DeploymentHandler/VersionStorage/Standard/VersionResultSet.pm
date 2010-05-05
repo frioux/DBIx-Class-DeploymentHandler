@@ -1,5 +1,7 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResultSet;
 
+# ABSTRACT: Predefined searches to find what you want from the version storage
+
 use strict;
 use warnings;
 
@@ -26,3 +28,10 @@ sub database_version {
 
 __END__
 
+=method version_storage_is_installed
+
+True if (!!!) the version storage has been installed
+
+=method database_version
+
+The version of the database

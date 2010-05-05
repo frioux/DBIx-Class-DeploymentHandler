@@ -1,5 +1,7 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Deprecated::VersionResultSet;
 
+# ABSTRACT: (DEPRECATED) Predefined searches to find what you want from the version storage
+
 use strict;
 use warnings;
 
@@ -49,3 +51,14 @@ sub create {
 
 __END__
 
+=method version_storage_is_installed
+
+True if (!!!) the version storage has been installed
+
+=method database_version
+
+The version of the database
+
+=method create
+
+Overridden to default C<installed> to the current time. (take a look, it's yucky)

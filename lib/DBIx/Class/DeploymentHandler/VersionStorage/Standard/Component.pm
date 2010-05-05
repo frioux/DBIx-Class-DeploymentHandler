@@ -1,5 +1,7 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Standard::Component;
 
+# ABSTRACT: Attach this component to your schema to ensure you stay up to date
+
 use strict;
 use warnings;
 

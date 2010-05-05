@@ -1,5 +1,7 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Deprecated::Component;
 
+# ABSTRACT: (DEPRECATED) Attach this component to your schema to ensure you stay up to date
+
 use strict;
 use warnings;
 
