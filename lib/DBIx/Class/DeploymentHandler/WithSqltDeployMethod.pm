@@ -26,7 +26,7 @@ has databases => (
   default => sub { [qw( MySQL SQLite PostgreSQL )] },
 );
 
-has sqltargs => (
+has sql_translator_args => (
   isa => 'HashRef',
   is  => 'ro',
   default => sub { {} },
@@ -35,10 +35,10 @@ has sqltargs => (
 sub _build_deploy_method {
   my $self = shift;
   my $args = {
-    schema            => $self->schema,
-    databases         => $self->databases,
-    upgrade_directory => $self->upgrade_directory,
-    sqltargs          => $self->sqltargs,
+    schema              => $self->schema,
+    databases           => $self->databases,
+    upgrade_directory   => $self->upgrade_directory,
+    sql_translator_args => $self->sql_translator_args,
   };
 
   $args->{schema_version} = $self->schema_version if $self->has_schema_version;

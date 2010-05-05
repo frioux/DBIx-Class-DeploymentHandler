@@ -47,9 +47,9 @@ __END__
  my $s = My::Schema->connect(...);
 
  my $dh = DH->new({
-   schema => $s,
-   databases => 'SQLite',
-   sqltargs => { add_drop_table => 0 },
+   schema              => $s,
+   databases           => 'SQLite',
+   sql_translator_args => { add_drop_table => 0 },
  });
 
  $dh->prepare_install;
@@ -62,9 +62,9 @@ or for upgrades:
  my $s = My::Schema->connect(...);
 
  my $dh = DH->new({
-   schema => $s,
-   databases => 'SQLite',
-   sqltargs => { add_drop_table => 0 },
+   schema              => $s,
+   databases           => 'SQLite',
+   sql_translator_args => { add_drop_table => 0 },
  });
 
  $dh->prepare_upgrade(1, 2);

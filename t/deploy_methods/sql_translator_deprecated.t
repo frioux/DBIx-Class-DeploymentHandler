@@ -23,7 +23,7 @@ VERSION1: {
       schema            => $s,
       upgrade_directory => $sql_dir,
       databases         => ['SQLite'],
-      sqltargs          => { add_drop_table => 0 },
+      sql_translator_args          => { add_drop_table => 0 },
    });
 
    ok( $dm, 'DBIC::DH::DM::SQLT::Deprecated gets instantiated correctly' );

@@ -22,7 +22,7 @@ VERSION1: {
       schema            => $s,
       upgrade_directory => $sql_dir,
       databases         => ['SQLite'],
-      sqltargs          => { add_drop_table => 0 },
+      sql_translator_args          => { add_drop_table => 0 },
    });
 
    ok( $dm, 'DBIC::DH::DM::SQL::Translator gets instantiated correctly' );
@@ -77,7 +77,7 @@ VERSION2: {
       schema            => $s,
       upgrade_directory => $sql_dir,
       databases         => ['SQLite'],
-      sqltargs          => { add_drop_table => 0 },
+      sql_translator_args          => { add_drop_table => 0 },
       txn_wrap          => 1,
    });
 
@@ -172,7 +172,7 @@ VERSION3: {
       schema            => $s,
       upgrade_directory => $sql_dir,
       databases         => ['SQLite'],
-      sqltargs          => { add_drop_table => 0 },
+      sql_translator_args          => { add_drop_table => 0 },
       txn_wrap          => 0,
    });
 

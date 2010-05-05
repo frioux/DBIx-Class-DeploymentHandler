@@ -36,7 +36,7 @@ method _build_storage {
   $s
 }
 
-has sqltargs => (
+has sql_translator_args => (
   isa => 'HashRef',
   is  => 'ro',
   default => sub { {} },
@@ -200,7 +200,7 @@ sub deploy {
 
 sub _prepare_install {
   my $self      = shift;
-  my $sqltargs  = { %{$self->sqltargs}, %{shift @_} };
+  my $sqltargs  = { %{$self->sql_translator_args}, %{shift @_} };
   my $to_file   = shift;
   my $schema    = $self->schema;
   my $databases = $self->databases;
@@ -296,7 +296,7 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
   my $schema    = $self->schema;
   my $databases = $self->databases;
   my $dir       = $self->upgrade_directory;
-  my $sqltargs  = $self->sqltargs;
+  my $sqltargs  = $self->sql_translator_args;
 
   my $schema_version = $self->schema_version;
 
@@ -545,10 +545,9 @@ and generate the DDL.
 The L<DBIx::Class::Storage> that is I<actually> used to talk to the database
 and generate the DDL.  This is automatically created with L</_build_storage>.
 
-=attr sqltargs
+=attr sql_translator_args
 
-TODO
-# rename
+The arguments that get passed to L<SQL::Translator> when it's used.
 
 =attr upgrade_directory
 

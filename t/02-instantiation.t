@@ -27,7 +27,7 @@ VERSION1: {
     upgrade_directory => $sql_dir,
     schema => $s,
     databases => 'SQLite',
-    sqltargs => { add_drop_table => 0 },
+    sql_translator_args => { add_drop_table => 0 },
   });
 
   ok($handler, 'DBIx::Class::DeploymentHandler w/1 instantiates correctly');
