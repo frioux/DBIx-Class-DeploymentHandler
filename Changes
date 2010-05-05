@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.001000_06 2010-05-05 00:46:24 CST6CDT
        - Add a bunch of boilerplate and not so boilerplate doc
 		 - rename sqltargs attribute to sql_translator_args
 
