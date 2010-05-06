@@ -7,14 +7,13 @@ use Moose;
 extends 'DBIx::Class::DeploymentHandler::Dad';
 # a single with would be better, but we can't do that
 # see: http://rt.cpan.org/Public/Bug/Display.html?id=46347
-with 'DBIx::Class::DeploymentHandler::WithSqltDeployMethod',
-     #'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
-			#interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersionStorage',
-			#class_name           => 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator',
-			#delegate_name        => 'deploy_method',
-			#attributes_to_assume => ['schema'],
-			#attributes_to_copy   => [qw( databases upgrade_directory sql_translator_args )],
-	  #},
+with 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
+			interface_role       => 'DBIx::Class::DeploymentHandler::HandlesDeploy',
+			class_name           => 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator',
+			delegate_name        => 'deploy_method',
+			attributes_to_assume => ['schema'],
+			attributes_to_copy   => [qw( databases upgrade_directory sql_translator_args )],
+	  },
 	  'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
 			interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
 			class_name           => 'DBIx::Class::DeploymentHandler::VersionHandler::Monotonic',

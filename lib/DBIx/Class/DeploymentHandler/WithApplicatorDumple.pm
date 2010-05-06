@@ -18,11 +18,6 @@ parameter delegate_name => (
   required => 1,
 );
 
-parameter interface_role => (
-  isa      => 'Str',
-  required => 1,
-);
-
 parameter attributes_to_copy => (
   isa => 'ArrayRef[Str]',
   default => sub {[]},
@@ -42,7 +37,8 @@ role {
 
   my $meta = Class::MOP::class_of($class_name);
 
-  has [map %{$_->clone}, map $meta->get_attribute($_), @{ $p->attributes_to_copy }];
+  has $_->name => %{ $_->clone }
+    for grep { $_ } map $meta->get_attribute($_), @{ $p->attributes_to_copy };
 
   has $p->delegate_name => (
     is         => 'ro',
