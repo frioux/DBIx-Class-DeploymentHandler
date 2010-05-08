@@ -93,8 +93,8 @@ sub previous_version_set {
   } else {
     my $next_idx = $self->_dec_version_idx;
     return [
-      $self->ordered_versions->[$next_idx    ],
       $self->ordered_versions->[$next_idx + 1],
+      $self->ordered_versions->[$next_idx    ],
     ];
   }
 }
