@@ -111,10 +111,10 @@ look when you are trying to figure out how everything works.
 
 Next would be to look at all the roles that fill in the blanks that
 L<DBIx::Class::DeploymentHandler::Dad> expects to be filled.  They would be
-L<DBIx::Class::DeploymentHandler::Deprecated::WithSqltDeployMethod>,
-L<DBIx::Class::DeploymentHandler::Deprecated::WithDeprecatedVersionStorage>, and
+L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::Deprecated>,
+L<DBIx::Class::DeploymentHandler::VersionStorage::Deprecated>, and
 L<DBIx::Class::DeploymentHandler::WithReasonableDefaults>.  Also, this class
 is special in that it applies either
-L<DBIx::Class::DeploymentHandler::WithExplicitVersions> or
-L<DBIx::Class::DeploymentHandler::WithDatabaseToSchemaVersions> depending on
+L<DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions> or
+L<DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions> depending on
 your schema.

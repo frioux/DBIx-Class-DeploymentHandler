@@ -138,9 +138,9 @@ look when you are trying to figure out how everything works.
 
 Next would be to look at all the roles that fill in the blanks that
 L<DBIx::Class::DeploymentHandler::Dad> expects to be filled.  They would be
-L<DBIx::Class::DeploymentHandler::WithSqltDeployMethod>,
-L<DBIx::Class::DeploymentHandler::WithMonotonicVersions>,
-L<DBIx::Class::DeploymentHandler::WithStandardVersionStorage>, and
+L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator>,
+L<DBIx::Class::DeploymentHandler::VersionHandler::Monotonic>,
+L<DBIx::Class::DeploymentHandler::VersionStorage::Standard>, and
 L<DBIx::Class::DeploymentHandler::WithReasonableDefaults>.
 
 =method prepare_version_storage_install
