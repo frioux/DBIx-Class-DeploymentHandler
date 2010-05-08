@@ -67,15 +67,15 @@ the L</previous_version_set> iterator to yeild the following:
 
 
  db_version = 5, to_version=1
- [4, 5]
- [3, 4]
- [2, 3]
- [1, 2]
+ [5, 4]
+ [4, 3]
+ [3, 2]
+ [2, 1]
  undef
 
 or maybe just
 
- [1, 5]
+ [5, 1]
  undef
 
 Note that we do not swap the version number order.  This allows us to remain
