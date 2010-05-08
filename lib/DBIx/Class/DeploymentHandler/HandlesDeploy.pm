@@ -3,6 +3,8 @@ use Moose::Role;
 
 # ABSTRACT: Interface for deploy methods
 
+requires 'preinstall_scripts';
+
 requires 'prepare_deploy';
 requires 'deploy';
 

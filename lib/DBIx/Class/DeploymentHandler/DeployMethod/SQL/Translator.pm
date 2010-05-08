@@ -104,6 +104,10 @@ method __ddl_consume_with_prefix($type, $versions, $prefix) {
   return [@files{sort keys %files}]
 }
 
+method _ddl_preinstall_consume_filenames($type, $version) {
+  $self->__ddl_consume_with_prefix($type, [ $version ], 'preinstall')
+}
+
 method _ddl_schema_consume_filenames($type, $version) {
   $self->__ddl_consume_with_prefix($type, [ $version ], 'schema')
 }
@@ -181,7 +185,7 @@ method _run_sql_and_perl($filenames) {
         carp "$filename should define a run method that takes a schema but it didn't!";
       }
     } else {
-      croak "A file got to deploy that wasn't sql or perl!";
+      croak "A file ($filename) got to deploy that wasn't sql or perl!";
     }
   }
 
@@ -198,6 +202,37 @@ sub deploy {
     $self->storage->sqlt_type,
     $version,
   ));
+}
+
+sub preinstall_scripts {
+  my $self = shift;
+  my $version = shift || $self->schema_version;
+
+  my @files = @{$self->_ddl_preinstall_consume_filenames(
+    $self->storage->sqlt_type,
+    $version,
+  )};
+
+  for my $filename (@files) {
+    # We ignore sql for now (till I figure out what to do with it)
+    if ( $filename =~ /^(.+)\.pl$/ ) {
+      my $package = $1;
+      my $filedata = do { local( @ARGV, $/ ) = $filename; <> };
+      # make the package name more palateable to perl
+      $package =~ s/\W/_/g;
+
+      no warnings 'redefine';
+      eval "package $package;\n\n$filedata";
+      use warnings;
+      if (my $fn = $package->can('run')) {
+        $fn->()
+      } else {
+        carp "$filename should define a run sub but it didn't!";
+      }
+    } else {
+      croak "A file ($filename) got to preinstall_scripts that wasn't sql or perl!";
+    }
+  }
 }
 
 sub _prepare_install {
