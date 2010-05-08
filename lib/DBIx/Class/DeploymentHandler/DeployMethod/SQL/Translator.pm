@@ -493,7 +493,7 @@ like the best way to describe the layout is with the following example:
  $sql_migration_dir
  |- SQLite
  |  |- down
- |  |  `- 1-2
+ |  |  `- 2-1
  |  |     `- 001-auto.sql
  |  |- schema
  |  |  `- 1
@@ -505,14 +505,14 @@ like the best way to describe the layout is with the following example:
  |        `- 001-auto.sql
  |- _common
  |  |- down
- |  |  `- 1-2
+ |  |  `- 2-1
  |  |     `- 002-remove-customers.pl
  |  `- up
  |     `- 1-2
  |        `- 002-generate-customers.pl
  |- _generic
  |  |- down
- |  |  `- 1-2
+ |  |  `- 2-1
  |  |     `- 001-auto.sql
  |  |- schema
  |  |  `- 1
@@ -523,7 +523,7 @@ like the best way to describe the layout is with the following example:
  |        `- 002-create-stored-procedures.sql
  `- MySQL
     |- down
-    |  `- 1-2
+    |  `- 2-1
     |     `- 001-auto.sql
     |- schema
     |  `- 1
