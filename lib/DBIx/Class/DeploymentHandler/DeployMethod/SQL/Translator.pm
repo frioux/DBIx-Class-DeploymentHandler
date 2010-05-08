@@ -553,8 +553,8 @@ generic enough to run on all databases.  Good luck with that one.
 
 =head1 PERL SCRIPTS
 
-A perl script for this tool is very simple.  It merely needs to contain a
-sub called C<run> that takes a L<DBIx::Class::Schema> as it's only argument.
+A perl script for this tool is very simple.  It merely needs to contain an
+anonymous sub that takes a L<DBIx::Class::Schema> as it's only argument.
 A very basic perl script might look like:
 
  #!perl
@@ -562,7 +562,7 @@ A very basic perl script might look like:
  use strict;
  use warnings;
 
- sub run {
+ sub {
    my $schema = shift;
 
    $schema->resultset('Users')->create({
