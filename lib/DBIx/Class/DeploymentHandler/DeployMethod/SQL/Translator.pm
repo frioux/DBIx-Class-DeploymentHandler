@@ -224,7 +224,9 @@ sub preinstall_scripts {
       no warnings 'redefine';
       eval "package $package;\n\n$filedata";
       use warnings;
-      if (my $fn = $package->can('run')) {
+		if ($@) {
+        carp "$filename failed to compile: $@";
+		} elsif (my $fn = $package->can('run')) {
         $fn->()
       } else {
         carp "$filename should define a run sub but it didn't!";
