@@ -28,6 +28,16 @@ VERSION1: {
    ok( $dm, 'DBIC::DH::DM::SQL::Translator gets instantiated correctly' );
 
    $dm->prepare_deploy;
+
+   mkpath(catfile(qw( t sql SQLite preinstall 1.0 )));
+   open my $prerun, '>',
+      catfile(qw( t sql SQLite preinstall 1.0 003-semiautomatic.pl ));
+   print {$prerun} "sub run {use File::Touch; touch(q(foobar));}";
+   close $prerun;
+   $dm->preinstall_scripts('1.0');
+
+   ok -e 'foobar';
+
    {
       my $warned = 0;
       local $SIG{__WARN__} = sub{$warned = 1};
@@ -161,7 +171,7 @@ VERSION2: {
          bar => 'frew',
          baz => 'frew',
       })
-   } 'schema is downpgrayyed';
+   } 'schema is downgrayyed';
    $dm->upgrade_single_step([qw( 1.0 2.0 )]);
 }
 
