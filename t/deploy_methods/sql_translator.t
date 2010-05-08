@@ -32,7 +32,7 @@ VERSION1: {
    mkpath(catfile(qw( t sql SQLite preinstall 1.0 )));
    open my $prerun, '>',
       catfile(qw( t sql SQLite preinstall 1.0 003-semiautomatic.pl ));
-   print {$prerun} "sub run {use File::Touch; touch(q(foobar));}";
+   print {$prerun} "sub {use File::Touch; touch(q(foobar));}";
    close $prerun;
    $dm->preinstall_scripts('1.0');
 
@@ -140,7 +140,7 @@ VERSION2: {
    open my $common_pl, '>',
       catfile(qw( t sql _common up 1.0-2.0 003-semiautomatic.pl ));
    print {$common_pl} q|
-      sub run {
+      sub {
          my $schema = shift;
          $schema->resultset('Foo')->create({
             bar => 'goodbye',
