@@ -170,19 +170,18 @@ method _run_sql_and_perl($filenames) {
         $storage->_query_end($line);
       }
     } elsif ( $filename =~ /^(.+)\.pl$/ ) {
-      my $package = $1;
       my $filedata = do { local( @ARGV, $/ ) = $filename; <> };
-      # make the package name more palateable to perl
-      $package =~ s/\W/_/g;
 
       no warnings 'redefine';
-      eval "package $package;\n\n$filedata";
+      my $fn = eval "$filedata";
       use warnings;
 
-      if (my $fn = $package->can('run')) {
-        $fn->($self->schema);
+		if ($@) {
+        carp "$filename failed to compile: $@";
+		} elsif (ref $fn eq 'CODE') {
+        $fn->($self->schema)
       } else {
-        carp "$filename should define a run method that takes a schema but it didn't!";
+        carp "$filename should define an anonymouse sub that takes a schema but it didn't!";
       }
     } else {
       croak "A file ($filename) got to deploy that wasn't sql or perl!";
@@ -216,20 +215,18 @@ sub preinstall_scripts {
   for my $filename (@files) {
     # We ignore sql for now (till I figure out what to do with it)
     if ( $filename =~ /^(.+)\.pl$/ ) {
-      my $package = $1;
       my $filedata = do { local( @ARGV, $/ ) = $filename; <> };
-      # make the package name more palateable to perl
-      $package =~ s/\W/_/g;
 
-      no warnings 'redefine';
-      eval "package $package;\n\n$filedata";
+		no warnings 'redefine';
+      my $fn = eval "$filedata";
       use warnings;
+
 		if ($@) {
         carp "$filename failed to compile: $@";
-		} elsif (my $fn = $package->can('run')) {
+		} elsif (ref $fn eq 'CODE') {
         $fn->()
       } else {
-        carp "$filename should define a run sub but it didn't!";
+        carp "$filename should define an anonymous sub but it didn't!";
       }
     } else {
       croak "A file ($filename) got to preinstall_scripts that wasn't sql or perl!";
