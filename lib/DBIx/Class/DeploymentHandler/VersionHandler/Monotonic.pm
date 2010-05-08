@@ -48,7 +48,7 @@ sub previous_version_set {
     return undef
   } else {
     $self->_dec_version;
-    return [$self->_version, $self->_version + 1];
+    return [$self->_version + 1, $self->_version];
   }
 }
 

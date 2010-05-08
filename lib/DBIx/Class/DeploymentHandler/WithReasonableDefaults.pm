@@ -23,7 +23,7 @@ around prepare_downgrade => sub {
 
   my $from_version = shift || $self->database_version;
   my $to_version   = shift || $self->schema_version;
-  my $version_set  = shift || [$to_version, $from_version];
+  my $version_set  = shift || [$from_version, $to_version];
 
   $self->$orig($from_version, $to_version, $version_set);
 };
@@ -64,7 +64,7 @@ Defaulted args:
 
   my $from_version = $self->database_version;
   my $to_version   = $self->schema_version;
-  my $version_set  = [$from_version, $to_version];
+  my $version_set  = [$to_version];
 
 =head2 install_resultsource
 
