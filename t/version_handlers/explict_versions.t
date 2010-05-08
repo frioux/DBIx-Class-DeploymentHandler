@@ -83,19 +83,19 @@ my $versions = [map "$_.0", 0..100];
 
   ok $vh, 'VersionHandler gets instantiated';
   ok(
-    eq_array($vh->previous_version_set, [qw( 4.0 5.0 )]),
+    eq_array($vh->previous_version_set, [qw( 5.0 4.0 )]),
     'first version pair works'
   );
   ok(
-    eq_array($vh->previous_version_set, [qw( 3.0 4.0 )]),
+    eq_array($vh->previous_version_set, [qw( 4.0 3.0 )]),
     'second version pair works'
   );
   ok(
-    eq_array($vh->previous_version_set, [qw( 2.0 3.0 )]),
+    eq_array($vh->previous_version_set, [qw( 3.0 2.0 )]),
     'third version pair works'
   );
   ok(
-    eq_array($vh->previous_version_set, [qw( 1.0 2.0 )]),
+    eq_array($vh->previous_version_set, [qw( 2.0 1.0 )]),
     'fourth version pair works'
   );
   ok( !$vh->previous_version_set, 'no more versions after final pair' );
