@@ -3,6 +3,13 @@ use MooseX::Role::Parameterized;
 use Class::MOP;
 use namespace::autoclean;
 
+# this is at least a little ghetto and not super well
+# thought out.  Take a look at the following at some
+# point to clean it all up:
+#
+# http://search.cpan.org/~jjnapiork/MooseX-Role-BuildInstanceOf-0.06/lib/MooseX/Role/BuildInstanceOf.pm
+# http://github.com/rjbs/role-subsystem/blob/master/lib/Role/Subsystem.pm
+
 parameter interface_role => (
   isa      => 'Str',
   required => 1,
@@ -38,7 +45,7 @@ role {
   my $meta = Class::MOP::class_of($class_name);
 
   has $_->name => %{ $_->clone }
-    for grep { $_ } map $meta->get_attribute($_), @{ $p->attributes_to_copy };
+    for grep { $_ } map $meta->find_attribute_by_name($_), @{ $p->attributes_to_copy };
 
   has $p->delegate_name => (
     is         => 'ro',
