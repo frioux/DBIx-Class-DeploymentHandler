@@ -109,7 +109,7 @@ C<DBIx::Class::DeploymentHandler::Deprecated> extends
 L<DBIx::Class::DeploymentHandler::Dad>, so that's probably the first place to
 look when you are trying to figure out how everything works.
 
-Next would be to look at all the roles that fill in the blanks that
+Next would be to look at all the pieces that fill in the blanks that
 L<DBIx::Class::DeploymentHandler::Dad> expects to be filled.  They would be
 L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::Deprecated>,
 L<DBIx::Class::DeploymentHandler::VersionStorage::Deprecated>, and
