@@ -1,0 +1,73 @@
+ package MyApp::Schema::JournalStorage;
+ use Moose;
+ extends 'DBIx::Class::DeploymentHandler::VersionStorage::Standard';
+
+ sub _build_version_rs {
+   $_[0]->schema->register_class(
+     __VERSION =>
+       'FL::Bench::Schema::JournalTable'
+   );
+   $_[0]->schema->resultset('__VERSION')
+ }
+
+ no Moose;
+ __PACKAGE__->meta->make_immutable;
+ 1;
+
+ package MyApp::Schema::JournalTable;
+ use parent 'DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResult';
+ __PACKAGE__->table('fl_bench_journal_versions');
+ 1;
+
+ package MyApp::Schema::Journal;
+ use Moose;
+ extends 'DBIx::Class::DeploymentHandler::Dad';
+
+ # a single with would be better, but we can't do that
+ # see: http://rt.cpan.org/Public/Bug/Display.html?id=46347
+ with 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
+     interface_role       => 'DBIx::Class::DeploymentHandler::HandlesDeploy',
+     class_name           => 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator',
+     delegate_name        => 'deploy_method',
+     attributes_to_assume => ['schema'],
+     attributes_to_copy   => [qw( databases upgrade_directory sql_translator_args )],
+   },
+   'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
+     interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
+     class_name           => 'DBIx::Class::DeploymentHandler::VersionHandler::Monotonic',
+     delegate_name        => 'version_handler',
+     attributes_to_assume => [qw( database_version schema_version to_version )],
+   },
+   'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
+     interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersionStorage',
+     class_name           => 'MyApp::Schema::JournalStorage',
+     delegate_name        => 'version_storage',
+     attributes_to_assume => ['schema'],
+   };
+ with 'DBIx::Class::DeploymentHandler::WithReasonableDefaults';
+
+ sub prepare_version_storage_install {
+   my $self = shift;
+
+   $self->prepare_resultsource_install(
+     $self->version_storage->version_rs->result_source
+   );
+ }
+
+ sub install_version_storage {
+   my $self = shift;
+
+   $self->install_resultsource(
+     $self->version_storage->version_rs->result_source
+   );
+ }
+
+ sub prepare_install {
+    $_[0]->prepare_deploy;
+    $_[0]->prepare_version_storage_install;
+ }
+
+ no Moose;
+ __PACKAGE__->meta->make_immutable;
+ 1;
+
