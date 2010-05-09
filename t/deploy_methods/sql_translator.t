@@ -34,7 +34,7 @@ VERSION1: {
       catfile(qw( t sql SQLite preinstall 1.0 003-semiautomatic.pl ));
    print {$prerun} "sub {use File::Touch; touch(q(foobar));}";
    close $prerun;
-   $dm->preinstall_scripts('1.0');
+   $dm->preinstall('1.0');
 
    ok -e 'foobar';
 
