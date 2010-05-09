@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.001000_07 2010-05-09 01:59:59 CST6CDT
        - Downgrades swap from version and to version, so instead of up 1-2
          being down 1-2, it's down 2-1, which clearly makes more sense
        - perl scripts are now just anonymous subroutines, instead of files
