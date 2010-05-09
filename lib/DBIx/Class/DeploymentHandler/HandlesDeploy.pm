@@ -3,7 +3,7 @@ use Moose::Role;
 
 # ABSTRACT: Interface for deploy methods
 
-requires 'preinstall_scripts';
+requires 'preinstall';
 
 requires 'prepare_deploy';
 requires 'deploy';
@@ -22,6 +22,12 @@ requires 'downgrade_single_step';
 # vim: ts=2 sw=2 expandtab
 
 __END__
+
+=method preinstall
+
+ $dh->preinstall
+
+Run scripts before deploying to the database
 
 =method prepare_deploy
 

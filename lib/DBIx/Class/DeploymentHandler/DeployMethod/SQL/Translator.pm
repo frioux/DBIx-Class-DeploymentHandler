@@ -203,7 +203,7 @@ sub deploy {
   ));
 }
 
-sub preinstall_scripts {
+sub preinstall {
   my $self = shift;
   my $version = shift || $self->schema_version;
 
@@ -525,6 +525,10 @@ like the best way to describe the layout is with the following example:
     |- down
     |  `- 2-1
     |     `- 001-auto.sql
+    |- preinstall
+    |  `- 1
+    |     |- 001-create_database.pl
+    |     `- 002-create_users_and_permissions.pl
     |- schema
     |  `- 1
     |     `- 001-auto.sql
@@ -550,6 +554,13 @@ independent.
 
 C<_generic> exists for when you for some reason are sure that your SQL is
 generic enough to run on all databases.  Good luck with that one.
+
+Note that unlike most steps in the process, C<preinstall> will not run SQL, as
+there may not even be an database at preinstall time.  It will run perl scripts
+just like the other steps in the process, but nothing is passed to them.
+Until people have used this more it will remain freeform, but a recommended use
+of preinstall is to have it prompt for username and password, and then call the
+appropriate C<< CREATE DATABASE >> commands etc.
 
 =head1 PERL SCRIPTS
 
