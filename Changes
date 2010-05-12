@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.001000_08 2010-05-11 22:42:20 CST6CDT
        - Add missing dep namespace::autoclean
 
 0.001000_07 2010-05-09 01:59:59 CST6CDT
