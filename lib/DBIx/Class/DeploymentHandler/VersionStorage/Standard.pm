@@ -4,6 +4,7 @@ use Moose;
 # ABSTRACT: Version storage that does the normal stuff
 
 use Method::Signatures::Simple;
+use DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResult;
 
 has schema => (
   isa      => 'DBIx::Class::Schema',
@@ -14,7 +15,7 @@ has schema => (
 has version_rs => (
   isa        => 'DBIx::Class::ResultSet',
   is         => 'ro',
-  lazy_build => 1,
+  builder    => '_build_version_rs',
   handles    => [qw( database_version version_storage_is_installed )],
 );
 

@@ -49,6 +49,9 @@ sub prepare_install {
   $_[0]->prepare_version_storage_install;
 }
 
+# the following is just a hack so that ->version_storage
+# won't be lazy
+sub BUILD { $_[0]->version_storage }
 __PACKAGE__->meta->make_immutable;
 
 1;

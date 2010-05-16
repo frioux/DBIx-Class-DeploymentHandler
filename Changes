@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Schemata is no longer required to add version checking component
 
 0.001000_08 2010-05-11 22:42:20 CST6CDT
        - Add missing dep namespace::autoclean
