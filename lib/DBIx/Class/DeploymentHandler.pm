@@ -174,7 +174,7 @@ Lucky for you I had you in mind when I wrote this doc.
 First off, you'll want to just install the C<version_storage>:
 
  my $s = My::Schema->connect(...);
- my $dh = DBIx::Class::DeploymentHandler({ schema => $s });
+ my $dh = DBIx::Class::DeploymentHandler->({ schema => $s });
 
  $dh->prepare_version_storage_install;
  $dh->install_version_storage;
