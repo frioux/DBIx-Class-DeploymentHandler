@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.001000_09 2010-05-15 23:19:05 CST6CDT
        - Schemata is no longer required to add version checking component
 
 0.001000_08 2010-05-11 22:42:20 CST6CDT
