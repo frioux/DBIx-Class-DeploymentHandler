@@ -66,7 +66,7 @@ VERSION2: {
 
   my $version = $s->schema_version();
   $handler->prepare_deploy();
-  $handler->prepare_upgrade(1, $version);
+  $handler->prepare_upgrade({ from_version => 1, to_version => $version });
   dies_ok {
     $s->resultset('Foo')->create({
       bar => 'frew',
@@ -103,7 +103,7 @@ VERSION3: {
 
   my $version = $s->schema_version();
   $handler->prepare_deploy;
-  $handler->prepare_upgrade( 2, $version );
+  $handler->prepare_upgrade({ from_version => 2, to_version => $version });
   dies_ok {
     $s->resultset('Foo')->create({
         bar => 'frew',
@@ -135,7 +135,7 @@ DOWN2: {
   ok($handler, 'DBIx::Class::DeploymentHandler w/2 instantiates correctly');
 
   my $version = $s->schema_version();
-  $handler->prepare_downgrade(3, $version);
+  $handler->prepare_downgrade({ from_version => 3, to_version => $version });
   lives_ok {
     $s->resultset('Foo')->create({
       bar => 'frew',

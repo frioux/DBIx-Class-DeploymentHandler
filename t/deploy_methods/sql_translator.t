@@ -34,7 +34,7 @@ VERSION1: {
       catfile(qw( t sql SQLite preinstall 1.0 003-semiautomatic.pl ));
    print {$prerun} "sub {use File::Touch; touch(q(foobar));}";
    close $prerun;
-   $dm->preinstall('1.0');
+   $dm->preinstall({ version => '1.0' });
 
    ok -e 'foobar';
 
@@ -100,12 +100,20 @@ VERSION2: {
       '2.0 schema gets generated properly'
    );
    mkpath(catfile(qw( t sql SQLite up 1.0-2.0 )));
-   $dm->prepare_upgrade(qw(1.0 2.0), [qw(1.0 2.0)]);
+   $dm->prepare_upgrade({
+     from_version => '1.0',
+     to_version => '2.0',
+     version_set => [qw(1.0 2.0)]
+   });
 
    {
       my $warned = 0;
       local $SIG{__WARN__} = sub{$warned = 1};
-      $dm->prepare_upgrade(qw(0.0 1.0), [qw(0.0 1.0)]);
+      $dm->prepare_upgrade({
+        from_version => '0.0',
+        to_version => '1.0',
+        version_set => [qw(0.0 1.0)]
+      });
       ok( $warned, 'prepare_upgrade with a bogus preversion warns' );
    }
    ok(
@@ -113,7 +121,11 @@ VERSION2: {
       '1.0-2.0 diff gets generated properly and default start and end versions get set'
    );
    mkpath(catfile(qw( t sql SQLite down 2.0-1.0 )));
-   $dm->prepare_downgrade($version, '1.0', [$version, '1.0']);
+   $dm->prepare_downgrade({
+     from_version => $version,
+     to_version => '1.0',
+     version_set => [$version, '1.0']
+   });
    ok(
       -f catfile(qw( t sql SQLite down 2.0-1.0 001-auto.sql )),
       '2.0-1.0 diff gets generated properly'
@@ -150,7 +162,7 @@ VERSION2: {
    |;
    close $common_pl;
 
-   $dm->upgrade_single_step([qw( 1.0 2.0 )]);
+   $dm->upgrade_single_step({ version_set => [qw( 1.0 2.0 )] });
    is( $s->resultset('Foo')->search({
          bar => 'hello',
          baz => 'world',
@@ -165,14 +177,14 @@ VERSION2: {
          baz => 'frew',
       })
    } 'schema is deployed';
-   $dm->downgrade_single_step([qw( 2.0 1.0 )]);
+   $dm->downgrade_single_step({ version_set => [qw( 2.0 1.0 )] });
    dies_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',
          baz => 'frew',
       })
    } 'schema is downgrayyed';
-   $dm->upgrade_single_step([qw( 1.0 2.0 )]);
+   $dm->upgrade_single_step({ version_set => [qw( 1.0 2.0 )] });
 }
 
 VERSION3: {
@@ -194,21 +206,37 @@ VERSION3: {
       -f catfile(qw( t sql SQLite schema 3.0 001-auto.sql )),
       '2.0 schema gets generated properly'
    );
-   $dm->prepare_downgrade($version, '1.0', [$version, '1.0']);
+   $dm->prepare_downgrade({
+     from_version => $version,
+     to_version => '1.0',
+     version_set => [$version, '1.0']
+   });
    ok(
       -f catfile(qw( t sql SQLite down 3.0-1.0 001-auto.sql )),
       '3.0-1.0 diff gets generated properly'
    );
-   $dm->prepare_upgrade( '1.0', $version, ['1.0', $version] );
+   $dm->prepare_upgrade({
+     from_version => '1.0',
+     to_version => $version,
+     version_set => ['1.0', $version]
+   });
    ok(
       -f catfile(qw( t sql SQLite up 1.0-3.0 001-auto.sql )),
       '1.0-3.0 diff gets generated properly'
    );
-   $dm->prepare_upgrade( '2.0', $version, ['2.0', $version]);
+   $dm->prepare_upgrade({
+     from_version => '2.0',
+     to_version => $version,
+     version_set => ['2.0', $version]
+   });
    {
       my $warned = 0;
       local $SIG{__WARN__} = sub{$warned = 1};
-      $dm->prepare_upgrade( '2.0', $version, ['2.0', $version] );
+      $dm->prepare_upgrade({
+        from_version => '2.0',
+        to_version => $version,
+        version_set => ['2.0', $version]
+      });
       ok( $warned, 'prepare_upgrade warns if you clobber an existing upgrade file' );
    }
    ok(
@@ -226,7 +254,7 @@ VERSION3: {
             biff => 'frew',
          })
    } 'schema not deployed';
-   $dm->upgrade_single_step([qw( 2.0 3.0 )]);
+   $dm->upgrade_single_step({ version_set => [qw( 2.0 3.0 )] });
    lives_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',
@@ -237,7 +265,7 @@ VERSION3: {
    rmtree(catfile(qw( t sql SQLite )));
    rmtree(catfile(qw( t sql _generic )));
    dies_ok {
-      $dm->upgrade_single_step([qw( 2.0 3.0 )]);
+      $dm->upgrade_single_step({ version_set => [qw( 2.0 3.0 )] });
    } 'dies when sql dir does not exist';
 }
 done_testing;

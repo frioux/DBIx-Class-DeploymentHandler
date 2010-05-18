@@ -48,7 +48,9 @@ method install {
 sub upgrade {
   my $self = shift;
   while ( my $version_list = $self->next_version_set ) {
-    my ($ddl, $upgrade_sql) = @{$self->upgrade_single_step($version_list)||[]};
+    my ($ddl, $upgrade_sql) = @{
+		$self->upgrade_single_step({ version_set => $version_list })
+    ||[]};
 
     $self->add_database_version({
       version     => $version_list->[-1],
@@ -61,7 +63,7 @@ sub upgrade {
 sub downgrade {
   my $self = shift;
   while ( my $version_list = $self->previous_version_set ) {
-    $self->downgrade_single_step($version_list);
+    $self->downgrade_single_step({ version_set => $version_list });
 
     # do we just delete a row here?  I think so but not sure
     $self->delete_database_version({ version => $version_list->[-1] });

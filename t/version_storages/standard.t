@@ -34,18 +34,18 @@ my $dm = Translator->new({
 
 my $vs = Standard->new({ schema => $s });
 
-$dm->prepare_resultsource_install(
-   $vs->version_rs->result_source
-);
+$dm->prepare_resultsource_install({
+   result_source => $vs->version_rs->result_source
+});
 
 ok( $vs, 'DBIC::DH::VersionStorage::Standard instantiates correctly' );
 
 ok( !$vs->version_storage_is_installed, 'VersionStorage is not yet installed' );
 
-$dm->install_resultsource(
-   $vs->version_rs->result_source,
-   '1.0',
-);
+$dm->install_resultsource({
+   result_source => $vs->version_rs->result_source,
+   version => '1.0',
+});
 
 ok( $vs->version_storage_is_installed, 'VersionStorage is now installed' );
 

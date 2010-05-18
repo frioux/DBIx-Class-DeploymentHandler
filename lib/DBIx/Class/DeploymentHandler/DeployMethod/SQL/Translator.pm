@@ -195,7 +195,7 @@ method _run_sql_and_perl($filenames) {
 
 sub deploy {
   my $self = shift;
-  my $version = shift || $self->schema_version;
+  my $version = (shift @_ || {})->{version} || $self->schema_version;
 
   return $self->_run_sql_and_perl($self->_ddl_schema_consume_filenames(
     $self->storage->sqlt_type,
@@ -290,8 +290,9 @@ sub _resultsource_install_filename {
 }
 
 sub install_resultsource {
-  my ($self, $source, $version) = @_;
-
+  my ($self, $args) = @_;
+  my $source          = $args->{result_source};
+  my $version         = $args->{version};
   my $rs_install_file =
     $self->_resultsource_install_filename($source->source_name);
 
@@ -306,7 +307,7 @@ sub install_resultsource {
 
 sub prepare_resultsource_install {
   my $self = shift;
-  my $source = shift;
+  my $source = (shift @_)->{result_source};
 
   my $filename = $self->_resultsource_install_filename($source->source_name);
   $self->_prepare_install({
@@ -320,14 +321,17 @@ sub prepare_deploy {
 }
 
 sub prepare_upgrade {
-  my ($self, $from_version, $to_version, $version_set) = @_;
-  $self->_prepare_changegrade($from_version, $to_version, $version_set, 'up');
+  my ($self, $args) = @_;
+  $self->_prepare_changegrade(
+    $args->{from_version}, $args->{to_version}, $args->{version_set}, 'up'
+  );
 }
 
 sub prepare_downgrade {
-  my ($self, $from_version, $to_version, $version_set) = @_;
-
-  $self->_prepare_changegrade($from_version, $to_version, $version_set, 'down');
+  my ($self, $args) = @_;
+  $self->_prepare_changegrade(
+    $args->{from_version}, $args->{to_version}, $args->{version_set}, 'down'
+  );
 }
 
 method _prepare_changegrade($from_version, $to_version, $version_set, $direction) {
@@ -444,7 +448,7 @@ method _read_sql_file($file) {
 
 sub downgrade_single_step {
   my $self = shift;
-  my $version_set = shift @_;
+  my $version_set = (shift @_)->{version_set};
 
   my $sql = $self->_run_sql_and_perl($self->_ddl_schema_down_consume_filenames(
     $self->storage->sqlt_type,
@@ -456,7 +460,7 @@ sub downgrade_single_step {
 
 sub upgrade_single_step {
   my $self = shift;
-  my $version_set = shift @_;
+  my $version_set = (shift @_)->{version_set};
 
   my $sql = $self->_run_sql_and_perl($self->_ddl_schema_up_consume_filenames(
     $self->storage->sqlt_type,

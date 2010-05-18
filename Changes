@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - change method args to named args
+       - document method args
        - preconnect should not connect to the database
 
 0.001000_09 2010-05-15 23:19:05 CST6CDT

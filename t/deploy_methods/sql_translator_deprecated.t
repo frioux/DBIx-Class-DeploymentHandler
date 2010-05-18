@@ -64,7 +64,11 @@ VERSION2: {
 
    $version = $s->schema_version;
    $dm->prepare_deploy;
-   $dm->prepare_upgrade('1.0', $version, ['1.0', $version]);
+   $dm->prepare_upgrade({
+	  from_version => '1.0',
+	  to_version => $version,
+	  version_set => ['1.0', $version]
+   });
    dies_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',
@@ -77,7 +81,7 @@ VERSION2: {
          baz => 'frew',
       })
    } 'schema not uppgrayyed';
-   $dm->upgrade_single_step(['1.0', $version]);
+   $dm->upgrade_single_step({ version_set => ['1.0', $version] });
    lives_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',

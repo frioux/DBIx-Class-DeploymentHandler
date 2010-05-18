@@ -8,12 +8,13 @@ requires qw( prepare_upgrade prepare_downgrade database_version schema_version )
 around prepare_upgrade => sub {
   my $orig = shift;
   my $self = shift;
+  my $args = shift || {};
 
-  my $from_version = shift || $self->database_version;
-  my $to_version   = shift || $self->schema_version;
-  my $version_set  = shift || [$from_version, $to_version];
+  $args->{from_version} ||= $self->database_version;
+  $args->{to_version}   ||= $self->schema_version;
+  $args->{version_set}  ||= [$args->{from_version}, $args->{to_version}];
 
-  $self->$orig($from_version, $to_version, $version_set);
+  $self->$orig($args);
 };
 
 
@@ -21,11 +22,13 @@ around prepare_downgrade => sub {
   my $orig = shift;
   my $self = shift;
 
-  my $from_version = shift || $self->database_version;
-  my $to_version   = shift || $self->schema_version;
-  my $version_set  = shift || [$from_version, $to_version];
+  my $args = shift || {};
 
-  $self->$orig($from_version, $to_version, $version_set);
+  $args->{from_version} ||= $self->database_version;
+  $args->{to_version}   ||= $self->schema_version;
+  $args->{version_set}  ||= [$args->{from_version}, $args->{to_version}];
+
+  $self->$orig($args);
 };
 
 around install_resultsource => sub {
