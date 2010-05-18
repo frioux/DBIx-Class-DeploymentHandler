@@ -1,3 +1,5 @@
+package DBIx::Class::DeploymentHandler::Cookbook::CustomResultSource;
+
 =pod
 
 One of the reasons for the absurd level of flexibility that
