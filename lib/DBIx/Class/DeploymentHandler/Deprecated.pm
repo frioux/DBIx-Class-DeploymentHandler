@@ -13,7 +13,7 @@ with 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     class_name           => 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::Deprecated',
     delegate_name        => 'deploy_method',
     attributes_to_assume => ['schema'],
-    attributes_to_copy   => [qw( upgrade_directory databases sql_translator_args )],
+    attributes_to_copy   => [qw( script_directory databases sql_translator_args )],
   },
   'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersionStorage',

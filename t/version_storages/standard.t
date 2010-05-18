@@ -27,7 +27,7 @@ DBICDHTest::ready;
 
 my $dm = Translator->new({
    schema            => $s,
-   upgrade_directory => $sql_dir,
+   script_directory => $sql_dir,
    databases         => ['SQLite'],
    sql_translator_args          => { add_drop_table => 0 },
 });

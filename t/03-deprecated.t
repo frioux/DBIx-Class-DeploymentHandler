@@ -23,7 +23,7 @@ VERSION1: {
   is $s->schema_version, '1.0', 'schema version is at 1.0';
   ok($s, 'DBICVersion::Schema 1.0 instantiates correctly');
   my $handler = Deprecated->new({
-    upgrade_directory => $sql_dir,
+    script_directory => $sql_dir,
     schema => $s,
     databases => 'SQLite',
     sql_translator_args => { add_drop_table => 0 },
@@ -56,7 +56,7 @@ VERSION2: {
   is $s->schema_version, '2.0', 'schema version is at 2.0';
   ok($s, 'DBICVersion::Schema 2.0 instantiates correctly');
   my $handler = Deprecated->new({
-    upgrade_directory => $sql_dir,
+    script_directory => $sql_dir,
     schema => $s,
     databases => 'SQLite',
   });
@@ -93,7 +93,7 @@ VERSION3: {
   is $s->schema_version, '3.0', 'schema version is at 3.0';
   ok($s, 'DBICVersion::Schema 3.0 instantiates correctly');
   my $handler = Deprecated->new({
-    upgrade_directory => $sql_dir,
+    script_directory => $sql_dir,
     schema => $s,
     databases => 'SQLite',
   });

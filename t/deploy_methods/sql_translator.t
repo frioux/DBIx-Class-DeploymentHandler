@@ -20,7 +20,7 @@ VERSION1: {
    my $s = DBICVersion::Schema->connect(@connection);
    my $dm = Translator->new({
       schema            => $s,
-      upgrade_directory => $sql_dir,
+      script_directory => $sql_dir,
       databases         => ['SQLite'],
       sql_translator_args          => { add_drop_table => 0 },
    });
@@ -85,7 +85,7 @@ VERSION2: {
    my $s = DBICVersion::Schema->connect(@connection);
    my $dm = Translator->new({
       schema            => $s,
-      upgrade_directory => $sql_dir,
+      script_directory => $sql_dir,
       databases         => ['SQLite'],
       sql_translator_args          => { add_drop_table => 0 },
       txn_wrap          => 1,
@@ -192,7 +192,7 @@ VERSION3: {
    my $s = DBICVersion::Schema->connect(@connection);
    my $dm = Translator->new({
       schema            => $s,
-      upgrade_directory => $sql_dir,
+      script_directory => $sql_dir,
       databases         => ['SQLite'],
       sql_translator_args          => { add_drop_table => 0 },
       txn_wrap          => 0,

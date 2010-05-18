@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - upgrade_directory is wrong and vague, instead we use script_directory
        - stricter validation (no undef) on versions to prevent weird surprises
        - change method args to named args
        - document method args

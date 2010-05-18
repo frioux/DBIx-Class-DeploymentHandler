@@ -43,7 +43,7 @@ has sql_translator_args => (
   is  => 'ro',
   default => sub { {} },
 );
-has upgrade_directory => (
+has script_directory => (
   isa      => 'Str',
   is       => 'ro',
   required => 1,
@@ -72,7 +72,7 @@ has schema_version => (
 method _build_schema_version { $self->schema->schema_version }
 
 method __ddl_consume_with_prefix($type, $versions, $prefix) {
-  my $base_dir = $self->upgrade_directory;
+  my $base_dir = $self->script_directory;
 
   my $main    = catfile( $base_dir, $type      );
   my $generic = catfile( $base_dir, '_generic' );
@@ -114,7 +114,7 @@ method _ddl_schema_consume_filenames($type, $version) {
 }
 
 method _ddl_schema_produce_filename($type, $version) {
-  my $dirname = catfile( $self->upgrade_directory, $type, 'schema', $version );
+  my $dirname = catfile( $self->script_directory, $type, 'schema', $version );
   mkpath($dirname) unless -d $dirname;
 
   return catfile( $dirname, '001-auto.sql' );
@@ -129,7 +129,7 @@ method _ddl_schema_down_consume_filenames($type, $versions) {
 }
 
 method _ddl_schema_up_produce_filename($type, $versions) {
-  my $dir = $self->upgrade_directory;
+  my $dir = $self->script_directory;
 
   my $dirname = catfile( $dir, $type, 'up', join q(-), @{$versions});
   mkpath($dirname) unless -d $dirname;
@@ -243,7 +243,7 @@ sub _prepare_install {
   my $to_file   = shift;
   my $schema    = $self->schema;
   my $databases = $self->databases;
-  my $dir       = $self->upgrade_directory;
+  my $dir       = $self->script_directory;
   my $version   = $self->schema_version;
 
   my $sqlt = SQL::Translator->new({
@@ -283,7 +283,7 @@ sub _resultsource_install_filename {
   my ($self, $source_name) = @_;
   return sub {
     my ($self, $type, $version) = @_;
-    my $dirname = catfile( $self->upgrade_directory, $type, 'schema', $version );
+    my $dirname = catfile( $self->script_directory, $type, 'schema', $version );
     mkpath($dirname) unless -d $dirname;
 
     return catfile( $dirname, "001-auto-$source_name.sql" );
@@ -338,7 +338,7 @@ sub prepare_downgrade {
 method _prepare_changegrade($from_version, $to_version, $version_set, $direction) {
   my $schema    = $self->schema;
   my $databases = $self->databases;
-  my $dir       = $self->upgrade_directory;
+  my $dir       = $self->script_directory;
   my $sqltargs  = $self->sql_translator_args;
 
   my $schema_version = $self->schema_version;
@@ -603,9 +603,9 @@ and generate the DDL.  This is automatically created with L</_build_storage>.
 
 The arguments that get passed to L<SQL::Translator> when it's used.
 
-=attr upgrade_directory
+=attr script_directory
 
-The directory (default C<'sql'>) that upgrades are stored in
+The directory (default C<'sql'>) that scripts are stored in
 
 =attr databases
 

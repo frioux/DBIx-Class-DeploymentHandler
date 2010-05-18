@@ -24,7 +24,7 @@ VERSION1: {
   $DBICVersion::Schema::VERSION = 1;
   ok($s, 'DBICVersion::Schema 1 instantiates correctly');
   my $handler = DH->new({
-    upgrade_directory => $sql_dir,
+    script_directory => $sql_dir,
     schema => $s,
     databases => 'SQLite',
     sql_translator_args => { add_drop_table => 0 },
@@ -57,7 +57,7 @@ VERSION2: {
   $DBICVersion::Schema::VERSION = 2;
   ok($s, 'DBICVersion::Schema 2 instantiates correctly');
   my $handler = DH->new({
-    upgrade_directory => $sql_dir,
+    script_directory => $sql_dir,
     schema => $s,
     databases => 'SQLite',
   });
@@ -94,7 +94,7 @@ VERSION3: {
   $DBICVersion::Schema::VERSION = 3;
   ok($s, 'DBICVersion::Schema 3 instantiates correctly');
   my $handler = DH->new({
-    upgrade_directory => $sql_dir,
+    script_directory => $sql_dir,
     schema => $s,
     databases => 'SQLite',
   });
@@ -127,7 +127,7 @@ DOWN2: {
   $DBICVersion::Schema::VERSION = 2;
   ok($s, 'DBICVersion::Schema 2 instantiates correctly');
   my $handler = DH->new({
-    upgrade_directory => $sql_dir,
+    script_directory => $sql_dir,
     schema => $s,
     databases => 'SQLite',
   });

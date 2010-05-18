@@ -25,7 +25,7 @@ VERSION1: {
   ok($s, 'DBICVersion::Schema 1 instantiates correctly');
   ok !$s->storage->connected, 'creating schema did not connect';
   my $handler = DH->new({
-    upgrade_directory => $sql_dir,
+    script_directory => $sql_dir,
     schema => $s,
     databases => 'SQLite',
     sql_translator_args => { add_drop_table => 0 },
