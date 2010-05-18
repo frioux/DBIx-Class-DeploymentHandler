@@ -65,6 +65,7 @@ has txn_wrap => (
 
 has schema_version => (
   is => 'ro',
+  isa => 'Str',
   lazy_build => 1,
 );
 

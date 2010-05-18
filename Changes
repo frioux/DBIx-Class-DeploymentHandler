@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - stricter validation (no undef) on versions to prevent weird surprises
        - change method args to named args
        - document method args
        - preconnect should not connect to the database

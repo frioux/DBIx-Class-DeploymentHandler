@@ -21,8 +21,8 @@ has database_version => (
 
 has to_version => ( # configuration
   is         => 'ro',
-  lazy_build => 1, # builder comes from another role...
-                   # which is... probably not how we want it
+  isa        => 'Str',
+  lazy_build => 1,
 );
 
 sub _build_to_version { $_[0]->schema_version }

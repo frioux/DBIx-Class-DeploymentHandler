@@ -21,6 +21,7 @@ has database_version => (
 
 has to_version => (
   is         => 'ro',
+  isa        => 'Str',
   lazy_build => 1,
 );
 

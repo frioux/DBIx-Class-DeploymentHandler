@@ -21,6 +21,7 @@ has backup_directory => (
 
 has to_version => (
   is         => 'ro',
+  isa        => 'Str',
   lazy_build => 1,
 );
 
@@ -28,6 +29,7 @@ sub _build_to_version { $_[0]->schema_version }
 
 has schema_version => (
   is         => 'ro',
+  isa        => 'Str',
   lazy_build => 1,
 );
 
