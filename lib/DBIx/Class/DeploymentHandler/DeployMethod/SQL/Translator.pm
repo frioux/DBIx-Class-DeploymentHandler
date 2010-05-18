@@ -69,6 +69,9 @@ has schema_version => (
   lazy_build => 1,
 );
 
+# this will probably never get called as the DBICDH
+# will be passing down a schema_version normally, which
+# is built the same way, but we leave this in place
 method _build_schema_version { $self->schema->schema_version }
 
 method __ddl_consume_with_prefix($type, $versions, $prefix) {
