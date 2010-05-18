@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.001000_10 2010-05-18 00:07:31 CST6CDT
        - upgrade_directory is wrong and vague, instead we use script_directory
        - stricter validation (no undef) on versions to prevent weird surprises
        - change method args to named args
