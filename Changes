@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - preconnect should not connect to the database
 
 0.001000_09 2010-05-15 23:19:05 CST6CDT
        - Schemata is no longer required to add version checking component

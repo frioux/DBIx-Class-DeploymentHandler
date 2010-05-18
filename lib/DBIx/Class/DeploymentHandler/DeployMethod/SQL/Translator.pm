@@ -176,9 +176,9 @@ method _run_sql_and_perl($filenames) {
       my $fn = eval "$filedata";
       use warnings;
 
-		if ($@) {
+      if ($@) {
         carp "$filename failed to compile: $@";
-		} elsif (ref $fn eq 'CODE') {
+      } elsif (ref $fn eq 'CODE') {
         $fn->($self->schema)
       } else {
         carp "$filename should define an anonymouse sub that takes a schema but it didn't!";
@@ -204,11 +204,13 @@ sub deploy {
 }
 
 sub preinstall {
-  my $self = shift;
-  my $version = shift || $self->schema_version;
+  my $self         = shift;
+  my $args         = shift;
+  my $version      = $args->{version}      || $self->schema_version;
+  my $storage_type = $args->{storage_type} || $self->storage->sqlt_type;
 
   my @files = @{$self->_ddl_preinstall_consume_filenames(
-    $self->storage->sqlt_type,
+    $storage_type,
     $version,
   )};
 
@@ -217,13 +219,13 @@ sub preinstall {
     if ( $filename =~ /^(.+)\.pl$/ ) {
       my $filedata = do { local( @ARGV, $/ ) = $filename; <> };
 
-		no warnings 'redefine';
+      no warnings 'redefine';
       my $fn = eval "$filedata";
       use warnings;
 
-		if ($@) {
+      if ($@) {
         carp "$filename failed to compile: $@";
-		} elsif (ref $fn eq 'CODE') {
+      } elsif (ref $fn eq 'CODE') {
         $fn->()
       } else {
         carp "$filename should define an anonymous sub but it didn't!";
