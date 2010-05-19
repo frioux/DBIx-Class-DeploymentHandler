@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Add logging with Log::Contextual
 
 0.001000_10 2010-05-18 00:07:31 CST6CDT
        - upgrade_directory is wrong and vague, instead we use script_directory
