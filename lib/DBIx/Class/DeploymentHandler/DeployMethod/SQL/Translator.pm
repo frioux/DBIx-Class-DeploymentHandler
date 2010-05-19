@@ -180,7 +180,7 @@ method _run_sql_and_perl($filenames) {
         }
         $storage->_query_end($line);
       }
-    } elsif ( $filename =~ /^(.+)\.pl$/ ) {
+    } elsif ( $filename =~ /\.pl$/ ) {
       log_debug { "[DBICDH] Running Perl from $filename" };
       my $filedata = do { local( @ARGV, $/ ) = $filename; <> };
 
