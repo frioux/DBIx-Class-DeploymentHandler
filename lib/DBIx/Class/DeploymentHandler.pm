@@ -185,6 +185,27 @@ Then set your database version:
 
 Now you should be able to use C<DBIx::Class::DeploymentHandler> like normal!
 
+=head1 LOGGING
+
+This is a complex tool, and because of that sometimes you'll want to see
+what exactly is happening.  The best way to do that is to use the built
+in logging functionality.  Currently three of the standard five log levels
+are used; C<info>, C<debug>, and C<trace>.  Info will typically just print
+out when methods that actually change things along with the most important
+args to the method.  Debug will give you a little bit more information,
+for example debug will currently tell you which files are being run when
+a migration is being called.  Trace of course goes even further.  It will
+actually give you the SQL or Perl code being executed when a migration is run.
+
+To enable the various logging levels all you need to do is set some environment
+variables: C<DBICDH_INFO>, C<DBICDH_DEBUG>, and C<DBICDH_TRACE>.  Each level
+can be set on it's own, so you can turn on trace without turning on info.
+
+Lastly, the logging uses L<Log::Contextual>, so if you have already set up an
+application-wide logger this will use that logger instead, and the environment
+variables will be completely ignored (unless you did something weird like
+set your logger to log when the above environment variables are set.)
+
 =head1 DONATIONS
 
 If you'd like to thank me for the work I've done on this module, don't give me

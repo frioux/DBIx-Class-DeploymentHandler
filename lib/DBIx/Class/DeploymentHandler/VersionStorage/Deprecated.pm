@@ -1,5 +1,10 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Deprecated;
 use Moose;
+use Log::Contextual::WarnLogger;
+use Log::Contextual ':log', -default_logger => Log::Contextual::WarnLogger->new({
+	env_prefix => 'DBICDH'
+});
+
 
 # ABSTRACT: (DEPRECATED) Use this if you are stuck in the past
 
@@ -31,11 +36,15 @@ sub _build_version_rs {
 
 sub add_database_version {
   # deprecated doesn't support ddl or upgrade_ddl
-  $_[0]->version_rs->create({ version => $_[1]->{version} })
+  my $version = $_[1]->{version};
+  log_debug { "[DBICDH] Adding database version $version" };
+  $_[0]->version_rs->create({ version => $version })
 }
 
 sub delete_database_version {
-  $_[0]->version_rs->search({ version => $_[1]->{version}})->delete
+  my $version = $_[1]->{version};
+  log_debug { "[DBICDH] Deleting database version $version" };
+  $_[0]->version_rs->search({ version => $version})->delete
 }
 
 __PACKAGE__->meta->make_immutable;

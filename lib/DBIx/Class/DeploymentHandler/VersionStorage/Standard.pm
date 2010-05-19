@@ -1,5 +1,9 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Standard;
 use Moose;
+use Log::Contextual::WarnLogger;
+use Log::Contextual ':log', -default_logger => Log::Contextual::WarnLogger->new({
+  env_prefix => 'DBICDH'
+});
 
 # ABSTRACT: Version storage that does the normal stuff
 
@@ -29,10 +33,16 @@ sub _build_version_rs {
   $_[0]->schema->resultset('__VERSION')
 }
 
-sub add_database_version { $_[0]->version_rs->create($_[1]) }
+sub add_database_version {
+  my $version = $_[1]->{version};
+  log_debug { "[DBICDH] Adding database version $version" };
+  $_[0]->version_rs->create($_[1])
+}
 
 sub delete_database_version {
-  $_[0]->version_rs->search({ version => $_[1]->{version}})->delete
+  my $version = $_[1]->{version};
+  log_debug { "[DBICDH] Deleting database version $version" };
+  $_[0]->version_rs->search({ version => $version})->delete
 }
 
 __PACKAGE__->meta->make_immutable;
