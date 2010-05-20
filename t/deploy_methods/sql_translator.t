@@ -36,7 +36,7 @@ VERSION1: {
    close $prerun;
    $dm->preinstall({ version => '1.0' });
 
-   ok -e 'foobar';
+   ok -e 'foobar', 'perl migration runs';
 
    {
       my $warned = 0;
@@ -51,7 +51,7 @@ VERSION1: {
    close $common;
 
    ok(
-      -f catfile(qw( t sql SQLite schema 1.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite schema 1.0 001-auto.sql-json )),
       '1.0 schema gets generated properly'
    );
 
@@ -96,7 +96,7 @@ VERSION2: {
    $version = $s->schema_version();
    $dm->prepare_deploy;
    ok(
-      -f catfile(qw( t sql SQLite schema 2.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite schema 2.0 001-auto.sql-json )),
       '2.0 schema gets generated properly'
    );
    mkpath(catfile(qw( t sql SQLite up 1.0-2.0 )));
@@ -117,7 +117,7 @@ VERSION2: {
       ok( $warned, 'prepare_upgrade with a bogus preversion warns' );
    }
    ok(
-      -f catfile(qw( t sql SQLite up 1.0-2.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite up 1.0-2.0 001-auto.sql-json )),
       '1.0-2.0 diff gets generated properly and default start and end versions get set'
    );
    mkpath(catfile(qw( t sql SQLite down 2.0-1.0 )));
@@ -127,7 +127,7 @@ VERSION2: {
      version_set => [$version, '1.0']
    });
    ok(
-      -f catfile(qw( t sql SQLite down 2.0-1.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite down 2.0-1.0 001-auto.sql-json )),
       '2.0-1.0 diff gets generated properly'
    );
    dies_ok {
@@ -203,7 +203,7 @@ VERSION3: {
    $version = $s->schema_version();
    $dm->prepare_deploy;
    ok(
-      -f catfile(qw( t sql SQLite schema 3.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite schema 3.0 001-auto.sql-json )),
       '2.0 schema gets generated properly'
    );
    $dm->prepare_downgrade({
@@ -212,7 +212,7 @@ VERSION3: {
      version_set => [$version, '1.0']
    });
    ok(
-      -f catfile(qw( t sql SQLite down 3.0-1.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite down 3.0-1.0 001-auto.sql-json )),
       '3.0-1.0 diff gets generated properly'
    );
    $dm->prepare_upgrade({
@@ -221,7 +221,7 @@ VERSION3: {
      version_set => ['1.0', $version]
    });
    ok(
-      -f catfile(qw( t sql SQLite up 1.0-3.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite up 1.0-3.0 001-auto.sql-json )),
       '1.0-3.0 diff gets generated properly'
    );
    $dm->prepare_upgrade({
@@ -240,11 +240,11 @@ VERSION3: {
       ok( $warned, 'prepare_upgrade warns if you clobber an existing upgrade file' );
    }
    ok(
-      -f catfile(qw( t sql SQLite up 1.0-2.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite up 1.0-2.0 001-auto.sql-json )),
       '2.0-3.0 diff gets generated properly'
    );
    mkpath catfile(qw( t sql _generic up 2.0-3.0 ));
-   rename catfile(qw( t sql SQLite up 2.0-3.0 001-auto.sql )), catfile(qw( t sql _generic up 2.0-3.0 001-auto.sql ));
+   rename catfile(qw( t sql SQLite up 2.0-3.0 001-auto.sql-json )), catfile(qw( t sql _generic up 2.0-3.0 001-auto.sql-json ));
    rmtree(catfile(qw( t sql SQLite )));
    warn 'how can this be' if -d catfile(qw( t sql SQLite ));
    dies_ok {
