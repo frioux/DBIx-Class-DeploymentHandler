@@ -555,12 +555,13 @@ __END__
 
 =head1 DESCRIPTION
 
-This class is the meat of L<DBIx::Class::DeploymentHandler>.  It takes care of
-generating sql files representing schemata as well as sql files to move from
-one version of a schema to the rest.  One of the hallmark features of this
-class is that it allows for multiple sql files for deploy and upgrade, allowing
-developers to fine tune deployment.  In addition it also allows for perl files
-to be run at any stage of the process.
+This class is the meat of L<DBIx::Class::DeploymentHandler>.  It takes
+care of generating serialized sql files representing schemata as well
+as serialized sql files to move from one version of a schema to the rest.
+One of the hallmark features of this class is that it allows for multiple sql
+files for deploy and upgrade, allowing developers to fine tune deployment.
+In addition it also allows for perl files to be run
+at any stage of the process.
 
 For basic usage see L<DBIx::Class::DeploymentHandler::HandlesDeploy>.  What's
 documented here is extra fun stuff or private methods.
@@ -576,15 +577,15 @@ like the best way to describe the layout is with the following example:
  |- SQLite
  |  |- down
  |  |  `- 2-1
- |  |     `- 001-auto.sql
+ |  |     `- 001-auto.sql-json
  |  |- schema
  |  |  `- 1
- |  |     `- 001-auto.sql
+ |  |     `- 001-auto.sql-json
  |  `- up
  |     |- 1-2
- |     |  `- 001-auto.sql
+ |     |  `- 001-auto.sql-json
  |     `- 2-3
- |        `- 001-auto.sql
+ |        `- 001-auto.sql-json
  |- _common
  |  |- down
  |  |  `- 2-1
@@ -595,44 +596,43 @@ like the best way to describe the layout is with the following example:
  |- _generic
  |  |- down
  |  |  `- 2-1
- |  |     `- 001-auto.sql
+ |  |     `- 001-auto.sql-json
  |  |- schema
  |  |  `- 1
- |  |     `- 001-auto.sql
+ |  |     `- 001-auto.sql-json
  |  `- up
  |     `- 1-2
- |        |- 001-auto.sql
+ |        |- 001-auto.sql-json
  |        `- 002-create-stored-procedures.sql
  `- MySQL
     |- down
     |  `- 2-1
-    |     `- 001-auto.sql
+    |     `- 001-auto.sql-json
     |- preinstall
     |  `- 1
     |     |- 001-create_database.pl
     |     `- 002-create_users_and_permissions.pl
     |- schema
     |  `- 1
-    |     `- 001-auto.sql
+    |     `- 001-auto.sql-json
     `- up
        `- 1-2
-          `- 001-auto.sql
+          `- 001-auto.sql-json
 
 So basically, the code
 
  $dm->deploy(1)
 
 on an C<SQLite> database that would simply run
-C<$sql_migration_dir/SQLite/schema/1/001-auto.sql>.  Next,
+C<$sql_migration_dir/SQLite/schema/1/001-auto.sql-json>.  Next,
 
  $dm->upgrade_single_step([1,2])
 
-would run C<$sql_migration_dir/SQLite/up/1-2/001-auto.sql> followed by
+would run C<$sql_migration_dir/SQLite/up/1-2/001-auto.sql-json> followed by
 C<$sql_migration_dir/_common/up/1-2/002-generate-customers.pl>.
 
-Now, a C<.pl> file doesn't have to be in the C<_common> directory, but most of
-the time it probably should be, since perl scripts will mostly be database
-independent.
+C<.pl> files don't have to be in the C<_common> directory, but most of the time
+they should be, because perl scripts are generally be database independent.
 
 C<_generic> exists for when you for some reason are sure that your SQL is
 generic enough to run on all databases.  Good luck with that one.
@@ -643,6 +643,22 @@ just like the other steps in the process, but nothing is passed to them.
 Until people have used this more it will remain freeform, but a recommended use
 of preinstall is to have it prompt for username and password, and then call the
 appropriate C<< CREATE DATABASE >> commands etc.
+
+=head1 SERIALIZED SQL
+
+The SQL that this module generates and uses is serialized into an array of
+SQL statements.  The reason being that some databases handle multiple
+statements in a single execution differently.  Generally you do not need to
+worry about this as these are scripts generated for you.  If you find that
+you are editing them on a regular basis something is wrong and you either need
+to submit a bug or consider writing extra serialized SQL or Perl scripts to run
+before or after the automatically generated script.
+
+B<NOTE:> Currently the SQL is serialized into JSON.  I am willing to merge in
+patches that will allow more serialization formats if you want that feature,
+but if you do send me a patch for that realize that I do not want to add YAML
+support or whatever, I would rather add a generic method of adding any
+serialization format.
 
 =head1 PERL SCRIPTS
 
