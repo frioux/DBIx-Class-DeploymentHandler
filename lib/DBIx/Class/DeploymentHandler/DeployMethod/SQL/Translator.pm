@@ -97,7 +97,7 @@ method __ddl_consume_with_prefix($type, $versions, $prefix) {
   }
 
   opendir my($dh), $dir;
-  my %files = map { $_ => "$dir/$_" } grep { /\.(?:sql|pl)$/ && -f "$dir/$_" } readdir $dh;
+  my %files = map { $_ => "$dir/$_" } grep { /\.(?:sql|pl|sql-\w+)$/ && -f "$dir/$_" } readdir $dh;
   closedir $dh;
 
   if (-d $common) {
@@ -153,14 +153,12 @@ method _ddl_schema_down_produce_filename($type, $versions, $dir) {
   return catfile( $dirname, '001-auto.sql');
 }
 
-method _run_sql($filename) {
+method _run_sql_array($sql) {
   my $storage = $self->storage;
-  log_debug { "[DBICDH] Running SQL from $filename" };
-  my @sql = @{$self->_read_sql_file($filename)};
-  my $sql .= join "\n", @sql;
-  log_trace { "[DBICDH] Running SQL $sql" };
 
-  foreach my $line (@sql) {
+  my $ret = join "\n", @$sql;
+  log_trace { "[DBICDH] Running SQL $sql" };
+  foreach my $line (@{$sql}) {
     $storage->_query_start($line);
     try {
       # do a dbh_do cycle here, as we need some error checking in
@@ -172,7 +170,12 @@ method _run_sql($filename) {
     }
     $storage->_query_end($line);
   }
-  return $sql
+  return $ret
+}
+
+method _run_sql($filename) {
+  log_debug { "[DBICDH] Running SQL from $filename" };
+  return $self->_run_sql_array($self->_read_sql_file($filename));
 }
 
 method _run_perl($filename) {
@@ -192,13 +195,22 @@ method _run_perl($filename) {
     carp "$filename should define an anonymouse sub that takes a schema but it didn't!";
   }
 }
+{
+   my $json;
 
-method _run_serialized_sql($filename, $type) {
+   method _run_serialized_sql($filename, $type) {
+      if ($type eq 'json') {
+         require JSON;
+         $json ||= JSON->new->pretty;
+         my @sql = @{$json->decode($filename)};
+      } else {
+         croak "A file ($filename) got to deploy that wasn't sql or perl!";
+      }
+   }
 
 }
 
 method _run_sql_and_perl($filenames) {
-  my $storage = $self->storage;
   my @files   = @{$filenames};
   my $guard   = $self->schema->txn_scope_guard if $self->txn_wrap;
 
