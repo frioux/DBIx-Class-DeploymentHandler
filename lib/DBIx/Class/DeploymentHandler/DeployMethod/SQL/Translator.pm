@@ -156,8 +156,7 @@ method _ddl_schema_down_produce_filename($type, $versions, $dir) {
 method _run_sql_array($sql) {
   my $storage = $self->storage;
 
-  my $ret = join "\n", @$sql;
-  log_trace { "[DBICDH] Running SQL $sql" };
+  log_trace { '[DBICDH] Running SQL ' . Dumper($sql) };
   foreach my $line (@{$sql}) {
     $storage->_query_start($line);
     try {
@@ -170,7 +169,7 @@ method _run_sql_array($sql) {
     }
     $storage->_query_end($line);
   }
-  return $ret
+  return join "\n", @$sql
 }
 
 method _run_sql($filename) {
