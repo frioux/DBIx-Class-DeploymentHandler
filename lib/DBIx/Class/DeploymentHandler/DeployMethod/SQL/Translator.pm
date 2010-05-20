@@ -153,49 +153,63 @@ method _ddl_schema_down_produce_filename($type, $versions, $dir) {
   return catfile( $dirname, '001-auto.sql');
 }
 
-method _run_sql_and_perl($filenames) {
-  my @files = @{$filenames};
+method _run_sql($filename) {
   my $storage = $self->storage;
+  log_debug { "[DBICDH] Running SQL from $filename" };
+  my @sql = @{$self->_read_sql_file($filename)};
+  my $sql .= join "\n", @sql;
+  log_trace { "[DBICDH] Running SQL $sql" };
 
+  foreach my $line (@sql) {
+    $storage->_query_start($line);
+    try {
+      # do a dbh_do cycle here, as we need some error checking in
+      # place (even though we will ignore errors)
+      $storage->dbh_do (sub { $_[1]->do($line) });
+    }
+    catch {
+      carp "$_ (running '${line}')"
+    }
+    $storage->_query_end($line);
+  }
+  return $sql
+}
 
-  my $guard = $self->schema->txn_scope_guard if $self->txn_wrap;
+method _run_perl($filename) {
+  log_debug { "[DBICDH] Running Perl from $filename" };
+  my $filedata = do { local( @ARGV, $/ ) = $filename; <> };
 
-  my $sql;
+  no warnings 'redefine';
+  my $fn = eval "$filedata";
+  use warnings;
+  log_trace { '[DBICDH] Running Perl ' . Dumper($fn) };
+
+  if ($@) {
+    carp "$filename failed to compile: $@";
+  } elsif (ref $fn eq 'CODE') {
+    $fn->($self->schema)
+  } else {
+    carp "$filename should define an anonymouse sub that takes a schema but it didn't!";
+  }
+}
+
+method _run_serialized_sql($filename, $type) {
+
+}
+
+method _run_sql_and_perl($filenames) {
+  my $storage = $self->storage;
+  my @files   = @{$filenames};
+  my $guard   = $self->schema->txn_scope_guard if $self->txn_wrap;
+
+  my $sql = '';
   for my $filename (@files) {
     if ($filename =~ /\.sql$/) {
-      log_debug { "[DBICDH] Running SQL from $filename" };
-      my @sql = @{$self->_read_sql_file($filename)};
-      $sql .= join "\n", @sql;
-      log_trace { "[DBICDH] Running SQL $sql" };
-
-      foreach my $line (@sql) {
-        $storage->_query_start($line);
-        try {
-          # do a dbh_do cycle here, as we need some error checking in
-          # place (even though we will ignore errors)
-          $storage->dbh_do (sub { $_[1]->do($line) });
-        }
-        catch {
-          carp "$_ (running '${line}')"
-        }
-        $storage->_query_end($line);
-      }
+       $sql .= $self->_run_sql($filename)
+    } elsif ( $filename =~ /\.sql-(\w+)$/ ) {
+       $sql .= $self->_run_serialized_sql($filename, $1)
     } elsif ( $filename =~ /\.pl$/ ) {
-      log_debug { "[DBICDH] Running Perl from $filename" };
-      my $filedata = do { local( @ARGV, $/ ) = $filename; <> };
-
-      no warnings 'redefine';
-      my $fn = eval "$filedata";
-      use warnings;
-      log_trace { '[DBICDH] Running Perl ' . Dumper($fn) };
-
-      if ($@) {
-        carp "$filename failed to compile: $@";
-      } elsif (ref $fn eq 'CODE') {
-        $fn->($self->schema)
-      } else {
-        carp "$filename should define an anonymouse sub that takes a schema but it didn't!";
-      }
+       $self->_run_perl($filename)
     } else {
       croak "A file ($filename) got to deploy that wasn't sql or perl!";
     }
