@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.001000_11 2010-05-21 00:16:13 CST6CDT
        - Make default (and preferred) way of using this tool serialized SQL
 			instead of just sql files
        - Add logging with Log::Contextual
