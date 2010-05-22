@@ -173,13 +173,12 @@ method _run_sql_array($sql) {
   log_trace { '[DBICDH] Running SQL ' . Dumper($sql) };
   foreach my $line (@{$sql}) {
     $storage->_query_start($line);
+    # the whole reason we do this is so that we can see the line that was run
     try {
-      # do a dbh_do cycle here, as we need some error checking in
-      # place (even though we will ignore errors)
       $storage->dbh_do (sub { $_[1]->do($line) });
     }
     catch {
-      carp "$_ (running '${line}')"
+      die "$_ (running line '$line')"
     }
     $storage->_query_end($line);
   }
