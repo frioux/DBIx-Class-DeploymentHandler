@@ -9,7 +9,6 @@ use Log::Contextual::WarnLogger;
 use Log::Contextual qw(:log :dlog), -default_logger => Log::Contextual::WarnLogger->new({
    env_prefix => 'DBICDH'
 });
-use Data::Dumper::Concise;
 
 use Method::Signatures::Simple;
 use Try::Tiny;
@@ -170,7 +169,7 @@ method _run_sql_array($sql) {
     join '', grep { !/^--/ } split /\n/ # remove comments
   } @$sql];
 
-  log_trace { '[DBICDH] Running SQL ' . Dumper($sql) };
+  Dlog_trace { "[DBICDH] Running SQL $_" } $sql;
   foreach my $line (@{$sql}) {
     $storage->_query_start($line);
     # the whole reason we do this is so that we can see the line that was run
@@ -197,7 +196,7 @@ method _run_perl($filename) {
   no warnings 'redefine';
   my $fn = eval "$filedata";
   use warnings;
-  log_trace { '[DBICDH] Running Perl ' . Dumper($fn) };
+  Dlog_trace { "[DBICDH] Running Perl $_" } $fn;
 
   if ($@) {
     carp "$filename failed to compile: $@";
@@ -522,7 +521,7 @@ method _default_read_sql_file_as_string($file) {
 sub downgrade_single_step {
   my $self = shift;
   my $version_set = (shift @_)->{version_set};
-  log_info { qq([DBICDH] downgrade_single_step'ing ) . Dumper($version_set) };
+  Dlog_info { qq([DBICDH] downgrade_single_step'ing $_) } $version_set;
 
   my $sql = $self->_run_sql_and_perl($self->_ddl_schema_down_consume_filenames(
     $self->storage->sqlt_type,
@@ -535,7 +534,7 @@ sub downgrade_single_step {
 sub upgrade_single_step {
   my $self = shift;
   my $version_set = (shift @_)->{version_set};
-  log_info { qq([DBICDH] upgrade_single_step'ing ) . Dumper($version_set) };
+  Dlog_info { qq([DBICDH] upgrade_single_step'ing $_) } $version_set;
 
   my $sql = $self->_run_sql_and_perl($self->_ddl_schema_up_consume_filenames(
     $self->storage->sqlt_type,
