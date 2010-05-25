@@ -44,11 +44,6 @@ VERSION1: {
       $dm->prepare_deploy;
       ok( $warned, 'prepare_deploy warns if you run it twice' );
    }
-   mkpath(catfile(qw( t sql _common schema 1.0 )));
-   open my $common, '>',
-      catfile(qw( t sql _common schema 1.0 002-error.sql ));
-   print {$common} qq<syntax fail\n\n>;
-   close $common;
 
    ok(
       -f catfile(qw( t sql SQLite schema 1.0 001-auto.sql-json )),
@@ -61,17 +56,7 @@ VERSION1: {
       })
    } 'schema not deployed';
 
-   mkpath catfile(qw( t sql _common schema 1.0 ));
-   open $common, '>',
-      catfile(qw( t sql _common schema 1.0 001-auto.sql ));
-   print {$common} qq<This will never get run>;
-   close $common;
-   {
-      my $warned = 0;
-      local $SIG{__WARN__} = sub{$warned = 1};
-      $dm->deploy;
-      ok( $warned, 'deploy warns on sql errors' );
-   }
+   $dm->deploy;
 
    lives_ok {
       $s->resultset('Foo')->create({
