@@ -56,7 +56,9 @@ method install {
 sub upgrade {
   log_info { '[DBICDH] upgrading' };
   my $self = shift;
+  my $ran_once = 0;
   while ( my $version_list = $self->next_version_set ) {
+    $ran_once = 1;
     my ($ddl, $upgrade_sql) = @{
       $self->upgrade_single_step({ version_set => $version_list })
     ||[]};
@@ -67,17 +69,22 @@ sub upgrade {
       upgrade_sql => $upgrade_sql,
     });
   }
+
+  log_warn { '[DBICDH] no need to run upgrade' } unless $ran_once;
 }
 
 sub downgrade {
   log_info { '[DBICDH] upgrading' };
   my $self = shift;
+  my $ran_once = 0;
   while ( my $version_list = $self->previous_version_set ) {
+    $ran_once = 1;
     $self->downgrade_single_step({ version_set => $version_list });
 
     # do we just delete a row here?  I think so but not sure
     $self->delete_database_version({ version => $version_list->[-1] });
   }
+  log_warn { '[DBICDH] no version to run downgrade' } unless $ran_once;
 }
 
 method backup {
