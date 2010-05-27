@@ -1,10 +1,12 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Better defaults and cascading for Logging
+       - Die on SQL errors
 
 0.001000_11 2010-05-21 00:16:13 CST6CDT
        - Make default (and preferred) way of using this tool serialized SQL
-			instead of just sql files
+         instead of just sql files
        - Add logging with Log::Contextual
 
 0.001000_10 2010-05-18 00:07:31 CST6CDT
