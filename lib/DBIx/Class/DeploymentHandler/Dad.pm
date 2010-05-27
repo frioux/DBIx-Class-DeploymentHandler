@@ -6,10 +6,11 @@ use Moose;
 use Method::Signatures::Simple;
 require DBIx::Class::Schema;    # loaded for type constraint
 use Carp::Clan '^DBIx::Class::DeploymentHandler';
-use Log::Contextual::WarnLogger;
-use Log::Contextual ':log', -default_logger => Log::Contextual::WarnLogger->new({
-	env_prefix => 'DBICDH'
-});
+use DBIx::Class::DeploymentHandler::Logger;
+use Log::Contextual ':log', -default_logger =>
+  DBIx::Class::DeploymentHandler::Logger->new({
+    env_prefix => 'DBICDH'
+  });
 
 has schema => (
   isa      => 'DBIx::Class::Schema',
@@ -57,7 +58,7 @@ sub upgrade {
   my $self = shift;
   while ( my $version_list = $self->next_version_set ) {
     my ($ddl, $upgrade_sql) = @{
-		$self->upgrade_single_step({ version_set => $version_list })
+      $self->upgrade_single_step({ version_set => $version_list })
     ||[]};
 
     $self->add_database_version({

@@ -188,18 +188,17 @@ Now you should be able to use C<DBIx::Class::DeploymentHandler> like normal!
 =head1 LOGGING
 
 This is a complex tool, and because of that sometimes you'll want to see
-what exactly is happening.  The best way to do that is to use the built
-in logging functionality.  Currently three of the standard five log levels
-are used; C<info>, C<debug>, and C<trace>.  Info will typically just print
-out when methods that actually change things along with the most important
-args to the method.  Debug will give you a little bit more information,
-for example debug will currently tell you which files are being run when
-a migration is being called.  Trace of course goes even further.  It will
-actually give you the SQL or Perl code being executed when a migration is run.
+what exactly is happening.  The best way to do that is to use the built in
+logging functionality.  It the standard six log levels; C<fatal>, C<error>,
+C<warn>, C<info>, C<debug>, and C<trace>.  Most of those are pretty self
+explanatory.  Generally a safe level to see what all is going on is debug,
+which will give you everything except for the exact SQL being run.
 
-To enable the various logging levels all you need to do is set some environment
-variables: C<DBICDH_INFO>, C<DBICDH_DEBUG>, and C<DBICDH_TRACE>.  Each level
-can be set on it's own, so you can turn on trace without turning on info.
+To enable the various logging levels all you need to do is set an environment
+variables: C<DBICDH_FATAL>, C<DBICDH_ERROR>, C<DBICDH_WARN>, C<DBICDH_INFO>,
+C<DBICDH_DEBUG>, and C<DBICDH_TRACE>.  Each level can be set on it's own,
+but the default is the first three on and the last three off, and the levels
+cascade, so if you turn on trace the rest will turn on automatically.
 
 Lastly, the logging uses L<Log::Contextual>, so if you have already set up an
 application-wide logger this will use that logger instead, and the environment

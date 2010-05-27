@@ -5,10 +5,11 @@ use Moose;
 
 use autodie;
 use Carp qw( carp croak );
-use Log::Contextual::WarnLogger;
-use Log::Contextual qw(:log :dlog), -default_logger => Log::Contextual::WarnLogger->new({
-   env_prefix => 'DBICDH'
-});
+use DBIx::Class::DeploymentHandler::Logger;
+use Log::Contextual qw(:log :dlog), -default_logger =>
+  DBIx::Class::DeploymentHandler::Logger->new({
+    env_prefix => 'DBICDH'
+  });
 
 use Method::Signatures::Simple;
 use Try::Tiny;
