@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Add missing dep
        - Better defaults and cascading for Logging
        - Die on SQL errors
 
