@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.001000_12 2010-05-27 19:12:20 CST6CDT
        - Add missing dep
        - Better defaults and cascading for Logging
        - Die on SQL errors
