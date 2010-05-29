@@ -79,13 +79,6 @@ has schema_version => (
 # is built the same way, but we leave this in place
 method _build_schema_version { $self->schema->schema_version }
 
-has _json => (
-  is => 'ro',
-  lazy_build => 1,
-);
-
-sub _build__json { require JSON; JSON->new->pretty }
-
 method __ddl_consume_with_prefix($type, $versions, $prefix) {
   my $base_dir = $self->script_directory;
 
@@ -132,7 +125,7 @@ method _ddl_schema_produce_filename($type, $version) {
   my $dirname = catfile( $self->script_directory, $type, 'schema', $version );
   mkpath($dirname) unless -d $dirname;
 
-  return catfile( $dirname, '001-auto.sql-json' );
+  return catfile( $dirname, '001-auto.sql' );
 }
 
 method _ddl_schema_up_consume_filenames($type, $versions) {
@@ -149,14 +142,15 @@ method _ddl_schema_up_produce_filename($type, $versions) {
   my $dirname = catfile( $dir, $type, 'up', join q(-), @{$versions});
   mkpath($dirname) unless -d $dirname;
 
-  return catfile( $dirname, '001-auto.sql-json' );
+  return catfile( $dirname, '001-auto.sql'
+  );
 }
 
 method _ddl_schema_down_produce_filename($type, $versions, $dir) {
   my $dirname = catfile( $dir, $type, 'down', join q(-), @{$versions} );
   mkpath($dirname) unless -d $dirname;
 
-  return catfile( $dirname, '001-auto.sql-json');
+  return catfile( $dirname, '001-auto.sql');
 }
 
 method _run_sql_array($sql) {
@@ -207,15 +201,19 @@ method _run_perl($filename) {
     carp "$filename should define an anonymouse sub that takes a schema but it didn't!";
   }
 }
+{
+   my $json;
 
-method _run_serialized_sql($filename, $type) {
-  if (lc $type eq 'json') {
-    return $self->_run_sql_array($self->_json->decode(
-      do { local( @ARGV, $/ ) = $filename; <> } # slurp
-    ))
-  } else {
-    croak "$type is not one of the supported serialzed types"
-  }
+   method _run_serialized_sql($filename, $type) {
+      if ($type eq 'json') {
+         require JSON;
+         $json ||= JSON->new->pretty;
+         my @sql = @{$json->decode($filename)};
+      } else {
+         croak "A file ($filename) got to deploy that wasn't sql or perl!";
+      }
+   }
+
 }
 
 method _run_sql_and_perl($filenames) {
@@ -295,7 +293,6 @@ sub _prepare_install {
   my $version   = $self->schema_version;
 
   my $sqlt = SQL::Translator->new({
-    no_comments             => 1,
     add_drop_table          => 1,
     ignore_constraint_names => 1,
     ignore_index_names      => 1,
@@ -317,20 +314,15 @@ sub _prepare_install {
       unlink $filename;
     }
 
-    my $sql = $self->_generate_final_sql($sqlt);
-    if(!$sql) {
+    my $output = $sqlt->translate;
+    if(!$output) {
       carp("Failed to translate to $db, skipping. (" . $sqlt->error . ")");
       next;
     }
     open my $file, q(>), $filename;
-    print {$file} $sql;
+    print {$file} $output;
     close $file;
   }
-}
-
-method _generate_final_sql($sqlt) {
-  my @output = $sqlt->translate;
-  $self->_json->encode(\@output);
 }
 
 sub _resultsource_install_filename {
@@ -340,7 +332,7 @@ sub _resultsource_install_filename {
     my $dirname = catfile( $self->script_directory, $type, 'schema', $version );
     mkpath($dirname) unless -d $dirname;
 
-    return catfile( $dirname, "001-auto-$source_name.sql-json" );
+    return catfile( $dirname, "001-auto-$source_name.sql" );
   }
 }
 
@@ -408,7 +400,6 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
 
   $sqltargs = {
     add_drop_table => 1,
-    no_comments => 1,
     ignore_constraint_names => 1,
     ignore_index_names => 1,
     %{$sqltargs}
@@ -448,8 +439,7 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
       $t->parser( $db ) # could this really throw an exception?
         or croak($t->error);
 
-      my $sql = $self->_default_read_sql_file_as_string($prefilename);
-      my $out = $t->translate( \$sql )
+      my $out = $t->translate( $prefilename )
         or croak($t->error);
 
       $source_schema = $t->schema;
@@ -474,8 +464,7 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
         or croak($t->error);
 
       my $filename = $self->_ddl_schema_produce_filename($db, $to_version, $dir);
-      my $sql = $self->_default_read_sql_file_as_string($filename);
-      my $out = $t->translate( \$sql )
+      my $out = $t->translate( $filename )
         or croak($t->error);
 
       $dest_schema = $t->schema;
@@ -484,21 +473,15 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
         unless $dest_schema->name;
     }
 
+    my $diff = SQL::Translator::Diff::schema_diff(
+       $source_schema, $db,
+       $dest_schema,   $db,
+       $sqltargs
+    );
     open my $file, q(>), $diff_file;
-    print {$file}
-      $self->_generate_final_diff($source_schema, $dest_schema, $db, $sqltargs);
+    print {$file} $diff;
     close $file;
   }
-}
-
-method _generate_final_diff($source_schema, $dest_schema, $db, $sqltargs) {
-  $self->_json->encode([
-     SQL::Translator::Diff::schema_diff(
-        $source_schema, $db,
-        $dest_schema,   $db,
-        $sqltargs
-     )
-  ])
 }
 
 method _read_sql_file($file) {
@@ -508,13 +491,15 @@ method _read_sql_file($file) {
   my @data = split /;\n/, join '', <$fh>;
   close $fh;
 
-  return \@data;
-}
+  @data = grep {
+    $_ && # remove blank lines
+    !/^(BEGIN|BEGIN TRANSACTION|COMMIT)/ # strip txn's
+  } map {
+    s/^\s+//; s/\s+$//; # trim whitespace
+    join '', grep { !/^--/ } split /\n/ # remove comments
+  } @data;
 
-method _default_read_sql_file_as_string($file) {
-  return join q(), map "$_;\n", @{$self->_json->decode(
-    do { local( @ARGV, $/ ) = $file; <> } # slurp
-  )};
+  return \@data;
 }
 
 sub downgrade_single_step {
