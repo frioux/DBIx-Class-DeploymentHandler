@@ -29,4 +29,12 @@ sub is_fatal {
    return $_[0]->is_error || 1
 }
 
+sub _log {
+  my $self    = shift;
+  my $level   = shift;
+  my $message = join( "\n", @_ );
+  $message .= "\n" unless $message =~ /\n$/;
+  warn "[DBICDH] [$level] $message";
+}
+
 1;

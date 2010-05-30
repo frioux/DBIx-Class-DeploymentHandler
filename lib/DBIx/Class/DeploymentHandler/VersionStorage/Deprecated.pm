@@ -38,13 +38,13 @@ sub _build_version_rs {
 sub add_database_version {
   # deprecated doesn't support ddl or upgrade_ddl
   my $version = $_[1]->{version};
-  log_debug { "[DBICDH] Adding database version $version" };
+  log_debug { "Adding database version $version" };
   $_[0]->version_rs->create({ version => $version })
 }
 
 sub delete_database_version {
   my $version = $_[1]->{version};
-  log_debug { "[DBICDH] Deleting database version $version" };
+  log_debug { "Deleting database version $version" };
   $_[0]->version_rs->search({ version => $version})->delete
 }
 

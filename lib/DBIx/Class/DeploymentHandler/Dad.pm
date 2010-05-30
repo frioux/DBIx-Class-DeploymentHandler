@@ -41,7 +41,7 @@ has schema_version => (
 sub _build_schema_version { $_[0]->schema->schema_version }
 
 method install {
-  log_info { '[DBICDH] installing version ' . $self->to_version };
+  log_info { 'installing version ' . $self->to_version };
   croak 'Install not possible as versions table already exists in database'
     if $self->version_storage_is_installed;
 
@@ -54,7 +54,7 @@ method install {
 }
 
 sub upgrade {
-  log_info { '[DBICDH] upgrading' };
+  log_info { 'upgrading' };
   my $self = shift;
   my $ran_once = 0;
   while ( my $version_list = $self->next_version_set ) {
@@ -70,11 +70,11 @@ sub upgrade {
     });
   }
 
-  log_warn { '[DBICDH] no need to run upgrade' } unless $ran_once;
+  log_warn { 'no need to run upgrade' } unless $ran_once;
 }
 
 sub downgrade {
-  log_info { '[DBICDH] upgrading' };
+  log_info { 'upgrading' };
   my $self = shift;
   my $ran_once = 0;
   while ( my $version_list = $self->previous_version_set ) {
@@ -84,11 +84,11 @@ sub downgrade {
     # do we just delete a row here?  I think so but not sure
     $self->delete_database_version({ version => $version_list->[-1] });
   }
-  log_warn { '[DBICDH] no version to run downgrade' } unless $ran_once;
+  log_warn { 'no version to run downgrade' } unless $ran_once;
 }
 
 method backup {
-  log_info { '[DBICDH] backing up' };
+  log_info { 'backing up' };
   $self->storage->backup($self->backup_directory)
 }
 

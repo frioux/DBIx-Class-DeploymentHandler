@@ -170,7 +170,7 @@ method _run_sql_array($sql) {
     join '', grep { !/^--/ } split /\n/ # remove comments
   } @$sql];
 
-  Dlog_trace { "[DBICDH] Running SQL $_" } $sql;
+  Dlog_trace { "Running SQL $_" } $sql;
   foreach my $line (@{$sql}) {
     $storage->_query_start($line);
     # the whole reason we do this is so that we can see the line that was run
@@ -186,18 +186,18 @@ method _run_sql_array($sql) {
 }
 
 method _run_sql($filename) {
-  log_debug { "[DBICDH] Running SQL from $filename" };
+  log_debug { "Running SQL from $filename" };
   return $self->_run_sql_array($self->_read_sql_file($filename));
 }
 
 method _run_perl($filename) {
-  log_debug { "[DBICDH] Running Perl from $filename" };
+  log_debug { "Running Perl from $filename" };
   my $filedata = do { local( @ARGV, $/ ) = $filename; <> };
 
   no warnings 'redefine';
   my $fn = eval "$filedata";
   use warnings;
-  Dlog_trace { "[DBICDH] Running Perl $_" } $fn;
+  Dlog_trace { "Running Perl $_" } $fn;
 
   if ($@) {
     carp "$filename failed to compile: $@";
@@ -243,7 +243,7 @@ method _run_sql_and_perl($filenames) {
 sub deploy {
   my $self = shift;
   my $version = (shift @_ || {})->{version} || $self->schema_version;
-  log_info { "[DBICDH] deploying version $version" };
+  log_info { "deploying version $version" };
 
   return $self->_run_sql_and_perl($self->_ddl_schema_consume_filenames(
     $self->storage->sqlt_type,
@@ -255,7 +255,7 @@ sub preinstall {
   my $self         = shift;
   my $args         = shift;
   my $version      = $args->{version}      || $self->schema_version;
-  log_info { "[DBICDH] preinstalling version $version" };
+  log_info { "preinstalling version $version" };
   my $storage_type = $args->{storage_type} || $self->storage->sqlt_type;
 
   my @files = @{$self->_ddl_preinstall_consume_filenames(
@@ -348,7 +348,7 @@ sub install_resultsource {
   my ($self, $args) = @_;
   my $source          = $args->{result_source};
   my $version         = $args->{version};
-  log_info { '[DBICDH] installing_resultsource ' . $source->source_name . ", version $version" };
+  log_info { 'installing_resultsource ' . $source->source_name . ", version $version" };
   my $rs_install_file =
     $self->_resultsource_install_filename($source->source_name);
 
@@ -364,7 +364,7 @@ sub install_resultsource {
 sub prepare_resultsource_install {
   my $self = shift;
   my $source = (shift @_)->{result_source};
-  log_info { '[DBICDH] preparing install for resultsource ' . $source->source_name };
+  log_info { 'preparing install for resultsource ' . $source->source_name };
 
   my $filename = $self->_resultsource_install_filename($source->source_name);
   $self->_prepare_install({
@@ -373,7 +373,7 @@ sub prepare_resultsource_install {
 }
 
 sub prepare_deploy {
-  log_info { '[DBICDH] preparing deploy' };
+  log_info { 'preparing deploy' };
   my $self = shift;
   $self->_prepare_install({}, '_ddl_schema_produce_filename');
 }
@@ -381,8 +381,7 @@ sub prepare_deploy {
 sub prepare_upgrade {
   my ($self, $args) = @_;
   log_info {
-     '[DBICDH] preparing upgrade ' .
-     "from $args->{from_version} to $args->{to_version}"
+     "preparing upgrade from $args->{from_version} to $args->{to_version}"
   };
   $self->_prepare_changegrade(
     $args->{from_version}, $args->{to_version}, $args->{version_set}, 'up'
@@ -392,8 +391,7 @@ sub prepare_upgrade {
 sub prepare_downgrade {
   my ($self, $args) = @_;
   log_info {
-     '[DBICDH] preparing downgrade ' .
-     "from $args->{from_version} to $args->{to_version}"
+     "preparing downgrade from $args->{from_version} to $args->{to_version}"
   };
   $self->_prepare_changegrade(
     $args->{from_version}, $args->{to_version}, $args->{version_set}, 'down'
@@ -522,7 +520,7 @@ method _default_read_sql_file_as_string($file) {
 sub downgrade_single_step {
   my $self = shift;
   my $version_set = (shift @_)->{version_set};
-  Dlog_info { qq([DBICDH] downgrade_single_step'ing $_) } $version_set;
+  Dlog_info { "downgrade_single_step'ing $_" } $version_set;
 
   my $sql = $self->_run_sql_and_perl($self->_ddl_schema_down_consume_filenames(
     $self->storage->sqlt_type,
@@ -535,7 +533,7 @@ sub downgrade_single_step {
 sub upgrade_single_step {
   my $self = shift;
   my $version_set = (shift @_)->{version_set};
-  Dlog_info { qq([DBICDH] upgrade_single_step'ing $_) } $version_set;
+  Dlog_info { "upgrade_single_step'ing $_" } $version_set;
 
   my $sql = $self->_run_sql_and_perl($self->_ddl_schema_up_consume_filenames(
     $self->storage->sqlt_type,
