@@ -149,8 +149,7 @@ method _ddl_schema_up_produce_filename($type, $versions) {
   my $dirname = catfile( $dir, $type, 'up', join q(-), @{$versions});
   mkpath($dirname) unless -d $dirname;
 
-  return catfile( $dirname, '001-auto.sql'
-  );
+  return catfile( $dirname, '001-auto.sql' );
 }
 
 method _ddl_schema_down_produce_filename($type, $versions, $dir) {
@@ -208,20 +207,6 @@ method _run_perl($filename) {
     carp "$filename should define an anonymouse sub that takes a schema but it didn't!";
   }
 }
-{
-   my $json;
-
-   method _run_serialized_sql($filename, $type) {
-      if ($type eq 'json') {
-         require JSON;
-         $json ||= JSON->new->pretty;
-         my @sql = @{$json->decode($filename)};
-      } else {
-         croak "A file ($filename) got to deploy that wasn't sql or perl!";
-      }
-   }
-
-}
 
 method _run_sql_and_perl($filenames) {
   my @files   = @{$filenames};
@@ -231,8 +216,6 @@ method _run_sql_and_perl($filenames) {
   for my $filename (@files) {
     if ($filename =~ /\.sql$/) {
        $sql .= $self->_run_sql($filename)
-    } elsif ( $filename =~ /\.sql-(\w+)$/ ) {
-       $sql .= $self->_run_serialized_sql($filename, $1)
     } elsif ( $filename =~ /\.pl$/ ) {
        $self->_run_perl($filename)
     } else {
@@ -293,6 +276,7 @@ sub preinstall {
 sub _prepare_install {
   my $self      = shift;
   my $sqltargs  = { %{$self->sql_translator_args}, %{shift @_} };
+  my $from_file = shift;
   my $to_file   = shift;
   my $schema    = $self->schema;
   my $databases = $self->databases;
@@ -305,7 +289,7 @@ sub _prepare_install {
     %{$sqltargs}
   });
 
-  my $yaml_filename = $self->_ddl_protoschema_produce_filename($version);
+  my $yaml_filename = $self->$from_file($version);
 
   foreach my $db (@$databases) {
     $sqlt->reset;
@@ -339,6 +323,17 @@ sub _resultsource_install_filename {
   }
 }
 
+sub _resultsource_protoschema_filename {
+  my ($self, $source_name) = @_;
+  return sub {
+    my ($self, $version) = @_;
+    my $dirname = catfile( $self->script_directory, '_protoschema', $version );
+    mkpath($dirname) unless -d $dirname;
+
+    return catfile( $dirname, "001-auto-$source_name.yml" );
+  }
+}
+
 sub install_resultsource {
   my ($self, $args) = @_;
   my $source          = $args->{result_source};
@@ -361,17 +356,19 @@ sub prepare_resultsource_install {
   my $source = (shift @_)->{result_source};
   log_info { 'preparing install for resultsource ' . $source->source_name };
 
-  my $filename = $self->_resultsource_install_filename($source->source_name);
-  $self->_prepare_install({
+  my $install_filename = $self->_resultsource_install_filename($source->source_name);
+  my $proto_filename = $self->_resultsource_protoschema_filename($source->source_name);
+  $self->_generate_protoschema({
       parser_args => { sources => [$source->source_name], }
-    }, $filename);
+  }, $proto_filename);
+  $self->_prepare_install({}, $proto_filename, $install_filename);
 }
 
 sub prepare_deploy {
   log_info { 'preparing deploy' };
   my $self = shift;
-  $self->_generate_protoschema;
-  $self->_prepare_install({}, '_ddl_schema_produce_filename');
+  $self->_generate_protoschema({}, '_ddl_protoschema_produce_filename');
+  $self->_prepare_install({}, '_ddl_protoschema_produce_filename', '_ddl_schema_produce_filename');
 }
 
 sub prepare_upgrade {
@@ -409,72 +406,59 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
     %{$sqltargs}
   };
 
-  my $sqlt = SQL::Translator->new( $sqltargs );
+  my $diff_file_method = "_ddl_schema_${direction}_produce_filename";
+  my $source_schema;
+  {
+    my $prefilename = $self->_ddl_protoschema_produce_filename($from_version, $dir);
 
-  $sqlt->parser('SQL::Translator::Parser::DBIx::Class');
-  my $sqlt_schema = $sqlt->translate( data => $schema )
-    or croak($sqlt->error);
+    # should probably be a croak
+    carp("No previous schema file found ($prefilename)")
+       unless -e $prefilename;
 
+    my $t = SQL::Translator->new({
+       %{$sqltargs},
+       debug => 0,
+       trace => 0,
+       parser => 'SQL::Translator::Parser::YAML',
+    });
+
+    my $out = $t->translate( $prefilename )
+      or croak($t->error);
+
+    $source_schema = $t->schema;
+
+    $source_schema->name( $prefilename )
+      unless  $source_schema->name;
+  }
+
+  my $dest_schema;
+  {
+    my $filename = $self->_ddl_protoschema_produce_filename($to_version, $dir);
+
+    # should probably be a croak
+    carp("No next schema file found ($filename)")
+       unless -e $filename;
+
+    my $t = SQL::Translator->new({
+       %{$sqltargs},
+       debug => 0,
+       trace => 0,
+       parser => 'SQL::Translator::Parser::YAML',
+    });
+
+    my $out = $t->translate( $filename )
+      or croak($t->error);
+
+    $dest_schema = $t->schema;
+
+    $dest_schema->name( $filename )
+      unless $dest_schema->name;
+  }
   foreach my $db (@$databases) {
-    $sqlt->reset;
-    $sqlt->{schema} = $sqlt_schema;
-    $sqlt->producer($db);
-
-    my $prefilename = $self->_ddl_schema_produce_filename($db, $from_version, $dir);
-    unless(-e $prefilename) {
-      carp("No previous schema file found ($prefilename)");
-      next;
-    }
-    my $diff_file_method = "_ddl_schema_${direction}_produce_filename";
     my $diff_file = $self->$diff_file_method($db, $version_set, $dir );
     if(-e $diff_file) {
       carp("Overwriting existing $direction-diff file - $diff_file");
       unlink $diff_file;
-    }
-
-    my $source_schema;
-    {
-      my $t = SQL::Translator->new({
-         %{$sqltargs},
-         debug => 0,
-         trace => 0,
-      });
-
-      $t->parser( $db ) # could this really throw an exception?
-        or croak($t->error);
-
-      my $out = $t->translate( $prefilename )
-        or croak($t->error);
-
-      $source_schema = $t->schema;
-
-      $source_schema->name( $prefilename )
-        unless  $source_schema->name;
-    }
-
-    # The "new" style of producers have sane normalization and can support
-    # diffing a SQL file against a DBIC->SQLT schema. Old style ones don't
-    # And we have to diff parsed SQL against parsed SQL.
-    my $dest_schema = $sqlt_schema;
-
-    unless ( "SQL::Translator::Producer::$db"->can('preprocess_schema') ) {
-      my $t = SQL::Translator->new({
-         %{$sqltargs},
-         debug => 0,
-         trace => 0,
-      });
-
-      $t->parser( $db ) # could this really throw an exception?
-        or croak($t->error);
-
-      my $filename = $self->_ddl_schema_produce_filename($db, $to_version, $dir);
-      my $out = $t->translate( $filename )
-        or croak($t->error);
-
-      $dest_schema = $t->schema;
-
-      $dest_schema->name( $filename )
-        unless $dest_schema->name;
     }
 
     my $diff = SQL::Translator::Diff::schema_diff(
@@ -533,14 +517,18 @@ sub upgrade_single_step {
 
 sub _generate_protoschema {
   my $self      = shift;
+  my $sqltargs  = { %{$self->sql_translator_args}, %{shift @_} };
+  my $to_file   = shift;
   my $filename
-    = $self->_ddl_protoschema_produce_filename($self->schema_version);
+    = $self->$to_file($self->schema_version);
 
+  # we do this because the code that uses this sets parser args,
+  # so we just need to merge in the package
+  $sqltargs->{parser_args}{package} = $self->schema;
   my $sqlt = SQL::Translator->new({
     parser                  => 'SQL::Translator::Parser::DBIx::Class',
     producer                => 'SQL::Translator::Producer::YAML',
-    parser_args             => { package => $self->schema },
-    %{ $self->sql_translator_args }
+    %{ $sqltargs },
   });
 
   my $yml = $sqlt->translate;
@@ -568,13 +556,12 @@ __END__
 
 =head1 DESCRIPTION
 
-This class is the meat of L<DBIx::Class::DeploymentHandler>.  It takes
-care of generating serialized sql files representing schemata as well
-as serialized sql files to move from one version of a schema to the rest.
-One of the hallmark features of this class is that it allows for multiple sql
-files for deploy and upgrade, allowing developers to fine tune deployment.
-In addition it also allows for perl files to be run
-at any stage of the process.
+This class is the meat of L<DBIx::Class::DeploymentHandler>.  It takes care
+of generating serialized schemata  as well as sql files to move from one
+version of a schema to the rest.  One of the hallmark features of this class
+is that it allows for multiple sql files for deploy and upgrade, allowing
+developers to fine tune deployment.  In addition it also allows for perl
+files to be run at any stage of the process.
 
 For basic usage see L<DBIx::Class::DeploymentHandler::HandlesDeploy>.  What's
 documented here is extra fun stuff or private methods.
@@ -590,15 +577,15 @@ like the best way to describe the layout is with the following example:
  |- SQLite
  |  |- down
  |  |  `- 2-1
- |  |     `- 001-auto.sql-json
+ |  |     `- 001-auto.sql
  |  |- schema
  |  |  `- 1
- |  |     `- 001-auto.sql-json
+ |  |     `- 001-auto.sql
  |  `- up
  |     |- 1-2
- |     |  `- 001-auto.sql-json
+ |     |  `- 001-auto.sql
  |     `- 2-3
- |        `- 001-auto.sql-json
+ |        `- 001-auto.sql
  |- _common
  |  |- down
  |  |  `- 2-1
@@ -609,39 +596,39 @@ like the best way to describe the layout is with the following example:
  |- _generic
  |  |- down
  |  |  `- 2-1
- |  |     `- 001-auto.sql-json
+ |  |     `- 001-auto.sql
  |  |- schema
  |  |  `- 1
- |  |     `- 001-auto.sql-json
+ |  |     `- 001-auto.sql
  |  `- up
  |     `- 1-2
- |        |- 001-auto.sql-json
+ |        |- 001-auto.sql
  |        `- 002-create-stored-procedures.sql
  `- MySQL
     |- down
     |  `- 2-1
-    |     `- 001-auto.sql-json
+    |     `- 001-auto.sql
     |- preinstall
     |  `- 1
     |     |- 001-create_database.pl
     |     `- 002-create_users_and_permissions.pl
     |- schema
     |  `- 1
-    |     `- 001-auto.sql-json
+    |     `- 001-auto.sql
     `- up
        `- 1-2
-          `- 001-auto.sql-json
+          `- 001-auto.sql
 
 So basically, the code
 
  $dm->deploy(1)
 
 on an C<SQLite> database that would simply run
-C<$sql_migration_dir/SQLite/schema/1/001-auto.sql-json>.  Next,
+C<$sql_migration_dir/SQLite/schema/1/001-auto.sql>.  Next,
 
  $dm->upgrade_single_step([1,2])
 
-would run C<$sql_migration_dir/SQLite/up/1-2/001-auto.sql-json> followed by
+would run C<$sql_migration_dir/SQLite/up/1-2/001-auto.sql> followed by
 C<$sql_migration_dir/_common/up/1-2/002-generate-customers.pl>.
 
 C<.pl> files don't have to be in the C<_common> directory, but most of the time
@@ -656,22 +643,6 @@ just like the other steps in the process, but nothing is passed to them.
 Until people have used this more it will remain freeform, but a recommended use
 of preinstall is to have it prompt for username and password, and then call the
 appropriate C<< CREATE DATABASE >> commands etc.
-
-=head1 SERIALIZED SQL
-
-The SQL that this module generates and uses is serialized into an array of
-SQL statements.  The reason being that some databases handle multiple
-statements in a single execution differently.  Generally you do not need to
-worry about this as these are scripts generated for you.  If you find that
-you are editing them on a regular basis something is wrong and you either need
-to submit a bug or consider writing extra serialized SQL or Perl scripts to run
-before or after the automatically generated script.
-
-B<NOTE:> Currently the SQL is serialized into JSON.  I am willing to merge in
-patches that will allow more serialization formats if you want that feature,
-but if you do send me a patch for that realize that I do not want to add YAML
-support or whatever, I would rather add a generic method of adding any
-serialization format.
 
 =head1 PERL SCRIPTS
 
