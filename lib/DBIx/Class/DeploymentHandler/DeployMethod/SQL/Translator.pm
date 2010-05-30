@@ -358,7 +358,7 @@ sub prepare_resultsource_install {
 
   my $install_filename = $self->_resultsource_install_filename($source->source_name);
   my $proto_filename = $self->_resultsource_protoschema_filename($source->source_name);
-  $self->_generate_protoschema({
+  $self->prepare_protoschema({
       parser_args => { sources => [$source->source_name], }
   }, $proto_filename);
   $self->_prepare_install({}, $proto_filename, $install_filename);
@@ -367,7 +367,7 @@ sub prepare_resultsource_install {
 sub prepare_deploy {
   log_info { 'preparing deploy' };
   my $self = shift;
-  $self->_generate_protoschema({}, '_ddl_protoschema_produce_filename');
+  $self->prepare_protoschema({}, '_ddl_protoschema_produce_filename');
   $self->_prepare_install({}, '_ddl_protoschema_produce_filename', '_ddl_schema_produce_filename');
 }
 
@@ -515,7 +515,7 @@ sub upgrade_single_step {
   return ['', $sql];
 }
 
-sub _generate_protoschema {
+sub prepare_protoschema {
   my $self      = shift;
   my $sqltargs  = { %{$self->sql_translator_args}, %{shift @_} };
   my $to_file   = shift;
