@@ -25,6 +25,12 @@ use File::Spec::Functions;
 
 with 'DBIx::Class::DeploymentHandler::HandlesDeploy';
 
+has ignore_ddl => (
+  isa      => 'Bool',
+  is       => 'ro',
+  default  => undef,
+);
+
 has schema => (
   isa      => 'DBIx::Class::Schema',
   is       => 'ro',
@@ -228,15 +234,33 @@ method _run_sql_and_perl($filenames) {
   return $sql;
 }
 
+method _deploy($version) {
+  if (!$self->ignore_ddl) {
+     return $self->_run_sql_and_perl($self->_ddl_schema_consume_filenames(
+       $self->storage->sqlt_type,
+       $version,
+     ));
+  } else {
+     my $sqlt = SQL::Translator->new({
+       add_drop_table          => 1,
+       parser                  => 'SQL::Translator::Parser::YAML',
+       producer => $self->storage->sqlt_type;
+       %{$sqltargs},
+     });
+
+     my $yaml_filename = $self->$from_file($version);
+
+     my @sql = $sqlt->translate($yaml_filename);
+     croak("Failed to translate to $db, skipping. (" . $sqlt->error . ")")
+        unless $sql;
+  }
+}
+
 sub deploy {
   my $self = shift;
   my $version = (shift @_ || {})->{version} || $self->schema_version;
   log_info { "deploying version $version" };
-
-  return $self->_run_sql_and_perl($self->_ddl_schema_consume_filenames(
-    $self->storage->sqlt_type,
-    $version,
-  ));
+  $self->_deploy($version);
 }
 
 sub preinstall {
@@ -282,6 +306,8 @@ sub _prepare_install {
   my $databases = $self->databases;
   my $dir       = $self->script_directory;
   my $version   = $self->schema_version;
+
+  return if $self->ignore_ddl;
 
   my $sqlt = SQL::Translator->new({
     add_drop_table          => 1,
@@ -396,6 +422,8 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
   my $databases = $self->databases;
   my $dir       = $self->script_directory;
   my $sqltargs  = $self->sql_translator_args;
+
+  return if $self->ignore_ddl;
 
   my $schema_version = $self->schema_version;
 
