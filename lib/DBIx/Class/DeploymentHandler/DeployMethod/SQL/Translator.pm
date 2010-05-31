@@ -235,25 +235,10 @@ method _run_sql_and_perl($filenames) {
 }
 
 method _deploy($version) {
-  if (!$self->ignore_ddl) {
-     return $self->_run_sql_and_perl($self->_ddl_schema_consume_filenames(
-       $self->storage->sqlt_type,
-       $version,
-     ));
-  } else {
-     my $sqlt = SQL::Translator->new({
-       add_drop_table          => 1,
-       parser                  => 'SQL::Translator::Parser::YAML',
-       producer => $self->storage->sqlt_type;
-       %{$sqltargs},
-     });
-
-     my $yaml_filename = $self->$from_file($version);
-
-     my @sql = $sqlt->translate($yaml_filename);
-     croak("Failed to translate to $db, skipping. (" . $sqlt->error . ")")
-        unless $sql;
-  }
+  return $self->_run_sql_and_perl($self->_ddl_schema_consume_filenames(
+    $self->storage->sqlt_type,
+    $version,
+  ));
 }
 
 sub deploy {
@@ -297,43 +282,109 @@ sub preinstall {
   }
 }
 
+method _sqldiff_from_yaml($from_version, $to_version, $db) {
+  my $dir       = $self->script_directory;
+  my $sqltargs = {
+    add_drop_table => 1,
+    ignore_constraint_names => 1,
+    ignore_index_names => 1,
+    %{$self->sql_translator_args}
+  };
+
+  my $source_schema;
+  {
+    my $prefilename = $self->_ddl_protoschema_produce_filename($from_version, $dir);
+
+    # should probably be a croak
+    carp("No previous schema file found ($prefilename)")
+       unless -e $prefilename;
+
+    my $t = SQL::Translator->new({
+       %{$sqltargs},
+       debug => 0,
+       trace => 0,
+       parser => 'SQL::Translator::Parser::YAML',
+    });
+
+    my $out = $t->translate( $prefilename )
+      or croak($t->error);
+
+    $source_schema = $t->schema;
+
+    $source_schema->name( $prefilename )
+      unless  $source_schema->name;
+  }
+
+  my $dest_schema;
+  {
+    my $filename = $self->_ddl_protoschema_produce_filename($to_version, $dir);
+
+    # should probably be a croak
+    carp("No next schema file found ($filename)")
+       unless -e $filename;
+
+    my $t = SQL::Translator->new({
+       %{$sqltargs},
+       debug => 0,
+       trace => 0,
+       parser => 'SQL::Translator::Parser::YAML',
+    });
+
+    my $out = $t->translate( $filename )
+      or croak($t->error);
+
+    $dest_schema = $t->schema;
+
+    $dest_schema->name( $filename )
+      unless $dest_schema->name;
+  }
+  return [SQL::Translator::Diff::schema_diff(
+     $source_schema, $db,
+     $dest_schema,   $db,
+     $sqltargs
+  )];
+}
+
+method _sql_from_yaml($sqltargs, $from_file, $db) {
+  my $schema    = $self->schema;
+  my $version   = $self->schema_version;
+
+  my $sqlt = SQL::Translator->new({
+    add_drop_table          => 1,
+    parser                  => 'SQL::Translator::Parser::YAML',
+    %{$sqltargs},
+    producer => $db,
+  });
+
+  my $yaml_filename = $self->$from_file($version);
+
+  my @sql = $sqlt->translate($yaml_filename);
+  if(!@sql) {
+    carp("Failed to translate to $db, skipping. (" . $sqlt->error . ")");
+    return undef;
+  }
+  return \@sql;
+}
+
 sub _prepare_install {
   my $self      = shift;
   my $sqltargs  = { %{$self->sql_translator_args}, %{shift @_} };
   my $from_file = shift;
   my $to_file   = shift;
-  my $schema    = $self->schema;
-  my $databases = $self->databases;
   my $dir       = $self->script_directory;
+  my $databases = $self->databases;
   my $version   = $self->schema_version;
 
-  return if $self->ignore_ddl;
-
-  my $sqlt = SQL::Translator->new({
-    add_drop_table          => 1,
-    parser                  => 'SQL::Translator::Parser::YAML',
-    %{$sqltargs}
-  });
-
-  my $yaml_filename = $self->$from_file($version);
-
   foreach my $db (@$databases) {
-    $sqlt->reset;
-    $sqlt->producer($db);
+    my $sql = $self->_sql_from_yaml($sqltargs, $from_file, $db ) or next;
 
     my $filename = $self->$to_file($db, $version, $dir);
     if (-e $filename ) {
       carp "Overwriting existing DDL file - $filename";
       unlink $filename;
     }
-
-    my $sql = $sqlt->translate($yaml_filename);
-    if(!$sql) {
-      carp("Failed to translate to $db, skipping. (" . $sqlt->error . ")");
-      next;
-    }
     open my $file, q(>), $filename;
-    print {$file} $sql;
+    print {$file} join ";\n", @$sql;
     close $file;
   }
 }
@@ -421,67 +472,11 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
   my $schema    = $self->schema;
   my $databases = $self->databases;
   my $dir       = $self->script_directory;
-  my $sqltargs  = $self->sql_translator_args;
 
   return if $self->ignore_ddl;
 
   my $schema_version = $self->schema_version;
-
-  $sqltargs = {
-    add_drop_table => 1,
-    ignore_constraint_names => 1,
-    ignore_index_names => 1,
-    %{$sqltargs}
-  };
-
   my $diff_file_method = "_ddl_schema_${direction}_produce_filename";
-  my $source_schema;
-  {
-    my $prefilename = $self->_ddl_protoschema_produce_filename($from_version, $dir);
-
-    # should probably be a croak
-    carp("No previous schema file found ($prefilename)")
-       unless -e $prefilename;
-
-    my $t = SQL::Translator->new({
-       %{$sqltargs},
-       debug => 0,
-       trace => 0,
-       parser => 'SQL::Translator::Parser::YAML',
-    });
-
-    my $out = $t->translate( $prefilename )
-      or croak($t->error);
-
-    $source_schema = $t->schema;
-
-    $source_schema->name( $prefilename )
-      unless  $source_schema->name;
-  }
-
-  my $dest_schema;
-  {
-    my $filename = $self->_ddl_protoschema_produce_filename($to_version, $dir);
-
-    # should probably be a croak
-    carp("No next schema file found ($filename)")
-       unless -e $filename;
-
-    my $t = SQL::Translator->new({
-       %{$sqltargs},
-       debug => 0,
-       trace => 0,
-       parser => 'SQL::Translator::Parser::YAML',
-    });
-
-    my $out = $t->translate( $filename )
-      or croak($t->error);
-
-    $dest_schema = $t->schema;
-
-    $dest_schema->name( $filename )
-      unless $dest_schema->name;
-  }
   foreach my $db (@$databases) {
     my $diff_file = $self->$diff_file_method($db, $version_set, $dir );
     if(-e $diff_file) {
@@ -489,13 +484,8 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
       unlink $diff_file;
     }
 
-    my $diff = SQL::Translator::Diff::schema_diff(
-       $source_schema, $db,
-       $dest_schema,   $db,
-       $sqltargs
-    );
     open my $file, q(>), $diff_file;
-    print {$file} $diff;
+    print {$file} join ";\n", @{$self->_sqldiff_from_yaml($from_version, $to_version, $db)};
     close $file;
   }
 }
