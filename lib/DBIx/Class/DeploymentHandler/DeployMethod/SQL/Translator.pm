@@ -102,10 +102,17 @@ method __ddl_consume_with_prefix($type, $versions, $prefix) {
     croak "neither $main or $generic exist; please write/generate some SQL";
   }
 
-  opendir my($dh), $dir;
-  my %files = map { $_ => "$dir/$_" } grep { /\.(?:sql|pl|sql-\w+)$/ && -f "$dir/$_" } readdir $dh;
-  closedir $dh;
-
+  my %files;
+  try {
+     opendir my($dh), $dir;
+     %files =
+       map { $_ => "$dir/$_" }
+       grep { /\.(?:sql|pl|sql-\w+)$/ && -f "$dir/$_" }
+       readdir $dh;
+     closedir $dh;
+  } catch {
+    die $_ unless $self->ignore_ddl;
+  };
   if (-d $common) {
     opendir my($dh), $common;
     for my $filename (grep { /\.(?:sql|pl)$/ && -f catfile($common,$_) } readdir $dh) {
@@ -214,13 +221,18 @@ method _run_perl($filename) {
   }
 }
 
-method _run_sql_and_perl($filenames) {
+method _run_sql_and_perl($filenames, $sql_to_run) {
   my @files   = @{$filenames};
   my $guard   = $self->schema->txn_scope_guard if $self->txn_wrap;
 
-  my $sql = '';
+  $self->_run_sql_array($sql_to_run) if $self->ignore_ddl;
+
+  my $sql = ($sql_to_run)?join ";\n", @$sql_to_run:'';
+  FILENAME:
   for my $filename (@files) {
-    if ($filename =~ /\.sql$/) {
+    if ($self->ignore_ddl && $filename =~ /^[^_]*-auto.*\.sql$/) {
+      next FILENAME
+    } elsif ($filename =~ /\.sql$/) {
        $sql .= $self->_run_sql($filename)
     } elsif ( $filename =~ /\.pl$/ ) {
        $self->_run_perl($filename)
@@ -234,18 +246,21 @@ method _run_sql_and_perl($filenames) {
   return $sql;
 }
 
-method _deploy($version) {
-  return $self->_run_sql_and_perl($self->_ddl_schema_consume_filenames(
-    $self->storage->sqlt_type,
-    $version,
-  ));
-}
-
 sub deploy {
   my $self = shift;
   my $version = (shift @_ || {})->{version} || $self->schema_version;
   log_info { "deploying version $version" };
-  $self->_deploy($version);
+  my $sqlt_type = $self->storage->sqlt_type;
+  my $sql;
+  if ($self->ignore_ddl) {
+     $sql = $self->_sql_from_yaml({},
+       '_ddl_protoschema_produce_filename', $sqlt_type
+     );
+  }
+  return $self->_run_sql_and_perl($self->_ddl_schema_consume_filenames(
+    $sqlt_type,
+    $version,
+  ), $sql);
 }
 
 sub preinstall {
@@ -350,7 +365,7 @@ method _sql_from_yaml($sqltargs, $from_file, $db) {
   my $version   = $self->schema_version;
 
   my $sqlt = SQL::Translator->new({
-    add_drop_table          => 1,
+    add_drop_table          => 0,
     parser                  => 'SQL::Translator::Parser::YAML',
     %{$sqltargs},
     producer => $db,
@@ -473,8 +488,6 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
   my $databases = $self->databases;
   my $dir       = $self->script_directory;
 
-  return if $self->ignore_ddl;
-
   my $schema_version = $self->schema_version;
   my $diff_file_method = "_ddl_schema_${direction}_produce_filename";
   foreach my $db (@$databases) {
@@ -513,10 +526,17 @@ sub downgrade_single_step {
   my $version_set = (shift @_)->{version_set};
   Dlog_info { "downgrade_single_step'ing $_" } $version_set;
 
+  my $sqlt_type = $self->storage->sqlt_type;
+  my $sql_to_run;
+  if ($self->ignore_ddl) {
+     $sql_to_run = $self->_sqldiff_from_yaml(
+       $version_set->[0], $version_set->[1], $sqlt_type
+     );
+  }
   my $sql = $self->_run_sql_and_perl($self->_ddl_schema_down_consume_filenames(
-    $self->storage->sqlt_type,
+    $sqlt_type,
     $version_set,
-  ));
+  ), $sql_to_run);
 
   return ['', $sql];
 }
@@ -526,10 +546,17 @@ sub upgrade_single_step {
   my $version_set = (shift @_)->{version_set};
   Dlog_info { "upgrade_single_step'ing $_" } $version_set;
 
+  my $sqlt_type = $self->storage->sqlt_type;
+  my $sql_to_run;
+  if ($self->ignore_ddl) {
+     $sql_to_run = $self->_sqldiff_from_yaml(
+       $version_set->[0], $version_set->[1], $sqlt_type
+     );
+  }
   my $sql = $self->_run_sql_and_perl($self->_ddl_schema_up_consume_filenames(
-    $self->storage->sqlt_type,
+    $sqlt_type,
     $version_set,
-  ));
+  ), $sql_to_run);
   return ['', $sql];
 }
 
