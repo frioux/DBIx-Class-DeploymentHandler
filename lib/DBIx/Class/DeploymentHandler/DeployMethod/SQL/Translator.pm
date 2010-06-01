@@ -134,8 +134,36 @@ method _ddl_schema_consume_filenames($type, $version) {
   $self->__ddl_consume_with_prefix($type, [ $version ], 'schema')
 }
 
+method _ddl_protoschema_up_consume_filenames($versions) {
+  my $base_dir = $self->script_directory;
+
+  my $dir = catfile( $base_dir, '_protoschema', 'up', join q(-), @{$versions});
+
+  return [] unless -d $dir;
+
+  opendir my($dh), $dir;
+  my %files = map { $_ => "$dir/$_" } grep { /\.pl$/ && -f "$dir/$_" } readdir $dh;
+  closedir $dh;
+
+  return [@files{sort keys %files}]
+}
+
+method _ddl_protoschema_down_consume_filenames($versions) {
+  my $base_dir = $self->script_directory;
+
+  my $dir = catfile( $base_dir, '_protoschema', 'down', join q(-), @{$versions});
+
+  return [] unless -d $dir;
+
+  opendir my($dh), $dir;
+  my %files = map { $_ => "$dir/$_" } grep { /\.pl$/ && -f "$dir/$_" } readdir $dh;
+  closedir $dh;
+
+  return [@files{sort keys %files}]
+}
+
 method _ddl_protoschema_produce_filename($version) {
-  my $dirname = catfile( $self->script_directory, '_protoschema', $version );
+  my $dirname = catfile( $self->script_directory, '_protoschema', 'schema',  $version );
   mkpath($dirname) unless -d $dirname;
 
   return catfile( $dirname, '001-auto.yml' );
@@ -297,7 +325,7 @@ sub preinstall {
   }
 }
 
-method _sqldiff_from_yaml($from_version, $to_version, $db) {
+method _sqldiff_from_yaml($from_version, $to_version, $db, $direction) {
   my $dir       = $self->script_directory;
   my $sqltargs = {
     add_drop_table => 1,
@@ -353,6 +381,13 @@ method _sqldiff_from_yaml($from_version, $to_version, $db) {
     $dest_schema->name( $filename )
       unless $dest_schema->name;
   }
+
+  my $transform_files_method =  "_ddl_protoschema_${direction}_consume_filenames";
+  my $transforms = $self->_coderefs_per_files(
+    $self->$transform_files_method([$from_version, $to_version])
+  );
+  $_->($source_schema, $dest_schema) for @$transforms;
+
   return [SQL::Translator::Diff::schema_diff(
      $source_schema, $db,
      $dest_schema,   $db,
@@ -483,6 +518,11 @@ sub prepare_downgrade {
   );
 }
 
+method _coderefs_per_files($files) {
+  no warnings 'redefine';
+  [map eval do { local( @ARGV, $/ ) = $_; <> }, @$files]
+}
+
 method _prepare_changegrade($from_version, $to_version, $version_set, $direction) {
   my $schema    = $self->schema;
   my $databases = $self->databases;
@@ -498,7 +538,7 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
     }
 
     open my $file, q(>), $diff_file;
-    print {$file} join ";\n", @{$self->_sqldiff_from_yaml($from_version, $to_version, $db)};
+    print {$file} join ";\n", @{$self->_sqldiff_from_yaml($from_version, $to_version, $db, $direction)};
     close $file;
   }
 }
@@ -530,7 +570,7 @@ sub downgrade_single_step {
   my $sql_to_run;
   if ($self->ignore_ddl) {
      $sql_to_run = $self->_sqldiff_from_yaml(
-       $version_set->[0], $version_set->[1], $sqlt_type
+       $version_set->[0], $version_set->[1], $sqlt_type, 'down',
      );
   }
   my $sql = $self->_run_sql_and_perl($self->_ddl_schema_down_consume_filenames(
@@ -550,7 +590,7 @@ sub upgrade_single_step {
   my $sql_to_run;
   if ($self->ignore_ddl) {
      $sql_to_run = $self->_sqldiff_from_yaml(
-       $version_set->[0], $version_set->[1], $sqlt_type
+       $version_set->[0], $version_set->[1], $sqlt_type, 'up',
      );
   }
   my $sql = $self->_run_sql_and_perl($self->_ddl_schema_up_consume_filenames(
