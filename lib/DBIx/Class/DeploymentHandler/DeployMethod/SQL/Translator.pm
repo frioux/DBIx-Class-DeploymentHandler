@@ -121,6 +121,13 @@ method _ddl_schema_consume_filenames($type, $version) {
   $self->__ddl_consume_with_prefix($type, [ $version ], 'schema')
 }
 
+method _ddl_protoschema_produce_filename($version) {
+  my $dirname = catfile( $self->script_directory, '_protoschema', $version );
+  mkpath($dirname) unless -d $dirname;
+
+  return catfile( $dirname, '001-auto.yml' );
+}
+
 method _ddl_schema_produce_filename($type, $version) {
   my $dirname = catfile( $self->script_directory, $type, 'schema', $version );
   mkpath($dirname) unless -d $dirname;
@@ -294,18 +301,14 @@ sub _prepare_install {
 
   my $sqlt = SQL::Translator->new({
     add_drop_table          => 1,
-    ignore_constraint_names => 1,
-    ignore_index_names      => 1,
-    parser                  => 'SQL::Translator::Parser::DBIx::Class',
+    parser                  => 'SQL::Translator::Parser::YAML',
     %{$sqltargs}
   });
 
-  my $sqlt_schema = $sqlt->translate( data => $schema )
-    or croak($sqlt->error);
+  my $yaml_filename = $self->_ddl_protoschema_produce_filename($version);
 
   foreach my $db (@$databases) {
     $sqlt->reset;
-    $sqlt->{schema} = $sqlt_schema;
     $sqlt->producer($db);
 
     my $filename = $self->$to_file($db, $version, $dir);
@@ -314,13 +317,13 @@ sub _prepare_install {
       unlink $filename;
     }
 
-    my $output = $sqlt->translate;
-    if(!$output) {
+    my $sql = $sqlt->translate($yaml_filename);
+    if(!$sql) {
       carp("Failed to translate to $db, skipping. (" . $sqlt->error . ")");
       next;
     }
     open my $file, q(>), $filename;
-    print {$file} $output;
+    print {$file} $sql;
     close $file;
   }
 }
@@ -367,6 +370,7 @@ sub prepare_resultsource_install {
 sub prepare_deploy {
   log_info { 'preparing deploy' };
   my $self = shift;
+  $self->_generate_protoschema;
   $self->_prepare_install({}, '_ddl_schema_produce_filename');
 }
 
@@ -525,6 +529,33 @@ sub upgrade_single_step {
     $version_set,
   ));
   return ['', $sql];
+}
+
+sub _generate_protoschema {
+  my $self      = shift;
+  my $filename
+    = $self->_ddl_protoschema_produce_filename($self->schema_version);
+
+  my $sqlt = SQL::Translator->new({
+    parser                  => 'SQL::Translator::Parser::DBIx::Class',
+    producer                => 'SQL::Translator::Producer::YAML',
+    parser_args             => { package => $self->schema },
+    %{ $self->sql_translator_args }
+  });
+
+  my $yml = $sqlt->translate;
+
+  croak("Failed to translate to YAML: " . $sqlt->error)
+    unless $yml;
+
+  if (-e $filename ) {
+    carp "Overwriting existing DDL-YML file - $filename";
+    unlink $filename;
+  }
+
+  open my $file, q(>), $filename;
+  print {$file} $yml;
+  close $file;
 }
 
 __PACKAGE__->meta->make_immutable;
