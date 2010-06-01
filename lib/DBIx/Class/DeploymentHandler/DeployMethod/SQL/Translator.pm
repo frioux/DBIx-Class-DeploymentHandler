@@ -659,6 +659,14 @@ modifications, so even if you are familiar with it, please read this.  I feel
 like the best way to describe the layout is with the following example:
 
  $sql_migration_dir
+ |- _protoschema
+ |  |- schema
+ |     |- 1
+ |     |  `- 001-auto.yml
+ |     |- 2
+ |     |  `- 001-auto.yml
+ |     `- 3
+ |        `- 001-auto.yml
  |- SQLite
  |  |- down
  |  |  `- 2-1
@@ -728,6 +736,36 @@ just like the other steps in the process, but nothing is passed to them.
 Until people have used this more it will remain freeform, but a recommended use
 of preinstall is to have it prompt for username and password, and then call the
 appropriate C<< CREATE DATABASE >> commands etc.
+
+=head2 Directory Specification
+
+The following subdirectories are recognized by this DeployMethod:
+
+=over 2
+
+=item C<_protoschema> This directory can have the following subdirs:
+
+=over 2
+
+=item C<down> This directory merely contains directories named after
+migrations, which are of the form C<$from_version-$to_version>.  Inside of
+these directories you may put Perl scripts which are to return a subref
+that takes the arguments C<< $from_schema, $to_schema >>, which are
+L<SQL::Translator::Schema> objects.
+
+=item C<up> This directory merely contains directories named after
+migrations, which are of the form C<$from_version-$to_version>.  Inside of
+these directories you may put Perl scripts which are to return a subref
+that takes the arguments C<< $from_schema, $to_schema >>, which are
+L<SQL::Translator::Schema> objects.
+
+=item C<schema> This directory merely contains directories named after schema
+versions, which in turn contain C<yaml> files that are serialized versions
+of the schema at that version.  These files are not for editing by hand.
+
+=back
+
+=back
 
 =head1 PERL SCRIPTS
 
