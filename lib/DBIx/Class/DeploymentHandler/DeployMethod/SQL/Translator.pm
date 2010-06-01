@@ -743,7 +743,7 @@ The following subdirectories are recognized by this DeployMethod:
 
 =over 2
 
-=item C<_protoschema> This directory can have the following subdirs:
+=item C<_protoschema> This directory can contain the following directories:
 
 =over 2
 
@@ -762,6 +762,42 @@ L<SQL::Translator::Schema> objects.
 =item C<schema> This directory merely contains directories named after schema
 versions, which in turn contain C<yaml> files that are serialized versions
 of the schema at that version.  These files are not for editing by hand.
+
+=back
+
+=item C<$storage_type> This is a set of scripts that gets run depending on
+what your storage type is.  If you are not sure what your storage type is,
+take a look at the producers listed for L<SQL::Translator>.  Also note,
+C<_generic> and C<_common> are special cases.  C<_generic> will get run if
+there is no directory for your given storage, and C<_common> will get merged
+into whatever other files (C<_generic> or your storage type) you already have.
+This directory can containt the following directories itself:
+
+=over 2
+
+=item C<preinstall> Gets run before the C<schema> is C<deploy>ed.  Has the
+same structure as the C<schema> subdirectory as well; that is, it has a
+directory for each schema version.  Unlike C<schema>, C<up>, and C<down>
+though, it can only run C<.pl> files, and the coderef in the perl files get
+no arguments passed to them.
+
+=item C<schema> Gets run when the schema is C<deploy>ed.  Structure is a
+directory per schema version, and then files are merged with C<_common> and run
+in filename order.  C<.sql> files are merely run, as expected.  C<.pl> files are
+run according to L</PERL SCRIPTS>.
+
+=item C<up> Gets run when the schema is C<upgrade>d.  Structure is a directory
+per upgrade step, (for example, C<1-2> for upgrading from version 1 to version
+2,) and then files are merged with C<_common> and run in filename order.
+C<.sql> files are merely run, as expected.  C<.pl> files are run according
+to L</PERL SCRIPTS>.
+
+=item C<down> Gets run when the schema is C<downgrade>d.  Structure is a directory
+per downgrade step, (for example, C<2-1> for downgrading from version 2 to version
+1,) and then files are merged with C<_common> and run in filename order.
+C<.sql> files are merely run, as expected.  C<.pl> files are run according
+to L</PERL SCRIPTS>.
+
 
 =back
 
