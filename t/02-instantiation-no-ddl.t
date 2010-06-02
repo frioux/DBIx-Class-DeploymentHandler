@@ -27,7 +27,7 @@ VERSION1: {
     ignore_ddl => 1,
     script_directory => $sql_dir,
     schema => $s,
-    databases => 'SQLite',
+    databases => [],
     sql_translator_args => { add_drop_table => 0 },
   });
 
@@ -61,7 +61,7 @@ VERSION2: {
     ignore_ddl => 1,
     script_directory => $sql_dir,
     schema => $s,
-    databases => 'SQLite',
+    databases => [],
   });
 
   ok($handler, 'DBIx::Class::DeploymentHandler w/2 instantiates correctly');
@@ -98,7 +98,7 @@ VERSION3: {
     ignore_ddl => 1,
     script_directory => $sql_dir,
     schema => $s,
-    databases => 'SQLite',
+    databases => [],
   });
 
   ok($handler, 'DBIx::Class::DeploymentHandler w/3 instantiates correctly');
@@ -131,7 +131,7 @@ DOWN2: {
     ignore_ddl => 1,
     script_directory => $sql_dir,
     schema => $s,
-    databases => 'SQLite',
+    databases => [],
   });
 
   ok($handler, 'DBIx::Class::DeploymentHandler w/2 instantiates correctly');

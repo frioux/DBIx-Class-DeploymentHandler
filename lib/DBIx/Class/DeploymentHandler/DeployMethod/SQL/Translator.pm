@@ -96,7 +96,11 @@ method __ddl_consume_with_prefix($type, $versions, $prefix) {
   if (-d $main) {
     $dir = catfile($main, $prefix, join q(-), @{$versions})
   } else {
-    croak "$main does not exist; please write/generate some SQL";
+    if ($self->ignore_ddl) {
+      return []
+    } else {
+      croak "$main does not exist; please write/generate some SQL"
+    }
   }
 
   my %files;
