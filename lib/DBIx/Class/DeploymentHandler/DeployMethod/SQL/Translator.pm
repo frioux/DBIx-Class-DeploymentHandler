@@ -89,17 +89,14 @@ method __ddl_consume_with_prefix($type, $versions, $prefix) {
   my $base_dir = $self->script_directory;
 
   my $main    = catfile( $base_dir, $type      );
-  my $generic = catfile( $base_dir, '_generic' );
   my $common  =
     catfile( $base_dir, '_common', $prefix, join q(-), @{$versions} );
 
   my $dir;
   if (-d $main) {
     $dir = catfile($main, $prefix, join q(-), @{$versions})
-  } elsif (-d $generic) {
-    $dir = catfile($generic, $prefix, join q(-), @{$versions});
   } else {
-    croak "neither $main or $generic exist; please write/generate some SQL";
+    croak "$main does not exist; please write/generate some SQL";
   }
 
   my %files;
@@ -686,17 +683,6 @@ like the best way to describe the layout is with the following example:
  |  `- up
  |     `- 1-2
  |        `- 002-generate-customers.pl
- |- _generic
- |  |- down
- |  |  `- 2-1
- |  |     `- 001-auto.sql
- |  |- schema
- |  |  `- 1
- |  |     `- 001-auto.sql
- |  `- up
- |     `- 1-2
- |        |- 001-auto.sql
- |        `- 002-create-stored-procedures.sql
  `- MySQL
     |- down
     |  `- 2-1
@@ -726,9 +712,6 @@ C<$sql_migration_dir/_common/up/1-2/002-generate-customers.pl>.
 
 C<.pl> files don't have to be in the C<_common> directory, but most of the time
 they should be, because perl scripts are generally be database independent.
-
-C<_generic> exists for when you for some reason are sure that your SQL is
-generic enough to run on all databases.  Good luck with that one.
 
 Note that unlike most steps in the process, C<preinstall> will not run SQL, as
 there may not even be an database at preinstall time.  It will run perl scripts
@@ -765,13 +748,11 @@ of the schema at that version.  These files are not for editing by hand.
 
 =back
 
-=item C<$storage_type> This is a set of scripts that gets run depending on
-what your storage type is.  If you are not sure what your storage type is,
-take a look at the producers listed for L<SQL::Translator>.  Also note,
-C<_generic> and C<_common> are special cases.  C<_generic> will get run if
-there is no directory for your given storage, and C<_common> will get merged
-into whatever other files (C<_generic> or your storage type) you already have.
-This directory can containt the following directories itself:
+=item C<$storage_type> This is a set of scripts that gets run depending on what
+your storage type is.  If you are not sure what your storage type is, take a
+look at the producers listed for L<SQL::Translator>.  Also note, C<_common>
+is a special case.  C<_common> will get merged into whatever other files you
+already have.  This directory can containt the following directories itself:
 
 =over 2
 

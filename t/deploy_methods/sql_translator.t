@@ -228,10 +228,6 @@ VERSION3: {
       -f catfile(qw( t sql SQLite up 1.0-2.0 001-auto.sql )),
       '2.0-3.0 diff gets generated properly'
    );
-   mkpath catfile(qw( t sql _generic up 2.0-3.0 ));
-   rename catfile(qw( t sql SQLite up 2.0-3.0 001-auto.sql )), catfile(qw( t sql _generic up 2.0-3.0 001-auto.sql ));
-   rmtree(catfile(qw( t sql SQLite )));
-   warn 'how can this be' if -d catfile(qw( t sql SQLite ));
    dies_ok {
       $s->resultset('Foo')->create({
             bar => 'frew',
@@ -246,9 +242,7 @@ VERSION3: {
          baz => 'frew',
          biff => 'frew',
       })
-   } 'schema is deployed using _generic';
-   rmtree(catfile(qw( t sql SQLite )));
-   rmtree(catfile(qw( t sql _generic )));
+   } 'schema is deployed';
    dies_ok {
       $dm->upgrade_single_step({ version_set => [qw( 2.0 3.0 )] });
    } 'dies when sql dir does not exist';
