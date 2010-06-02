@@ -1,6 +1,9 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - No more serialized SQL, we serialize the SQLT schema instead
+       - Completely reorganize the name of directories for more user friendlyness
+       - take out support for _generic since it's against my creed
 
 0.001000_12 2010-05-27 19:12:20 CST6CDT
        - Add missing dep

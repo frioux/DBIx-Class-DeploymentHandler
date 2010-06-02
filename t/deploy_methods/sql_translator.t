@@ -46,7 +46,7 @@ VERSION1: {
    }
 
    ok(
-      -f catfile(qw( t sql SQLite schema 1.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite deploy 1.0 001-auto.sql )),
       '1.0 schema gets generated properly'
    );
 
@@ -81,10 +81,10 @@ VERSION2: {
    $version = $s->schema_version();
    $dm->prepare_deploy;
    ok(
-      -f catfile(qw( t sql SQLite schema 2.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite deploy 2.0 001-auto.sql )),
       '2.0 schema gets generated properly'
    );
-   mkpath(catfile(qw( t sql SQLite up 1.0-2.0 )));
+   mkpath(catfile(qw( t sql SQLite upgrade 1.0-2.0 )));
    $dm->prepare_upgrade({
      from_version => '1.0',
      to_version => '2.0',
@@ -102,17 +102,17 @@ VERSION2: {
       ok( $warned, 'prepare_upgrade with a bogus preversion warns' );
    }
    ok(
-      -f catfile(qw( t sql SQLite up 1.0-2.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite upgrade 1.0-2.0 001-auto.sql )),
       '1.0-2.0 diff gets generated properly and default start and end versions get set'
    );
-   mkpath(catfile(qw( t sql SQLite down 2.0-1.0 )));
+   mkpath(catfile(qw( t sql SQLite downgrade 2.0-1.0 )));
    $dm->prepare_downgrade({
      from_version => $version,
      to_version => '1.0',
      version_set => [$version, '1.0']
    });
    ok(
-      -f catfile(qw( t sql SQLite down 2.0-1.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite downgrade 2.0-1.0 001-auto.sql )),
       '2.0-1.0 diff gets generated properly'
    );
    dies_ok {
@@ -128,14 +128,14 @@ VERSION2: {
       })
    } 'schema not uppgrayyed';
 
-   mkpath catfile(qw( t sql _common up 1.0-2.0 ));
+   mkpath catfile(qw( t sql _common upgrade 1.0-2.0 ));
    open my $common, '>',
-      catfile(qw( t sql _common up 1.0-2.0 002-semiautomatic.sql ));
+      catfile(qw( t sql _common upgrade 1.0-2.0 002-semiautomatic.sql ));
    print {$common} qq<INSERT INTO Foo (bar, baz) VALUES ("hello", "world");\n\n>;
    close $common;
 
    open my $common_pl, '>',
-      catfile(qw( t sql _common up 1.0-2.0 003-semiautomatic.pl ));
+      catfile(qw( t sql _common upgrade 1.0-2.0 003-semiautomatic.pl ));
    print {$common_pl} q|
       sub {
          my $schema = shift;
@@ -188,7 +188,7 @@ VERSION3: {
    $version = $s->schema_version();
    $dm->prepare_deploy;
    ok(
-      -f catfile(qw( t sql SQLite schema 3.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite deploy 3.0 001-auto.sql )),
       '2.0 schema gets generated properly'
    );
    $dm->prepare_downgrade({
@@ -197,7 +197,7 @@ VERSION3: {
      version_set => [$version, '1.0']
    });
    ok(
-      -f catfile(qw( t sql SQLite down 3.0-1.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite downgrade 3.0-1.0 001-auto.sql )),
       '3.0-1.0 diff gets generated properly'
    );
    $dm->prepare_upgrade({
@@ -206,7 +206,7 @@ VERSION3: {
      version_set => ['1.0', $version]
    });
    ok(
-      -f catfile(qw( t sql SQLite up 1.0-3.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite upgrade 1.0-3.0 001-auto.sql )),
       '1.0-3.0 diff gets generated properly'
    );
    $dm->prepare_upgrade({
@@ -225,7 +225,7 @@ VERSION3: {
       ok( $warned, 'prepare_upgrade warns if you clobber an existing upgrade file' );
    }
    ok(
-      -f catfile(qw( t sql SQLite up 1.0-2.0 001-auto.sql )),
+      -f catfile(qw( t sql SQLite upgrade 1.0-2.0 001-auto.sql )),
       '2.0-3.0 diff gets generated properly'
    );
    dies_ok {

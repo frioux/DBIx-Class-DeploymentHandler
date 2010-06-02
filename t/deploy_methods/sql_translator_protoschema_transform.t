@@ -42,9 +42,9 @@ VERSION2: {
 
    $version = $s->schema_version();
    $dm->prepare_deploy;
-   mkpath(catfile(qw( t sql _protoschema up 1.0-2.0 )));
+   mkpath(catfile(qw( t sql _preprocess_schema upgrade 1.0-2.0 )));
    open my $prerun, '>',
-      catfile(qw( t sql _protoschema up 1.0-2.0 003-semiautomatic.pl ));
+      catfile(qw( t sql _preprocess_schema upgrade 1.0-2.0 003-semiautomatic.pl ));
    print {$prerun}
       'sub {
          use File::Touch;

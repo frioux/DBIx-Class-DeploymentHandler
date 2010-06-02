@@ -128,13 +128,13 @@ method _ddl_preinstall_consume_filenames($type, $version) {
 }
 
 method _ddl_schema_consume_filenames($type, $version) {
-  $self->__ddl_consume_with_prefix($type, [ $version ], 'schema')
+  $self->__ddl_consume_with_prefix($type, [ $version ], 'deploy')
 }
 
-method _ddl_protoschema_up_consume_filenames($versions) {
+method _ddl_protoschema_upgrade_consume_filenames($versions) {
   my $base_dir = $self->script_directory;
 
-  my $dir = catfile( $base_dir, '_protoschema', 'up', join q(-), @{$versions});
+  my $dir = catfile( $base_dir, '_preprocess_schema', 'upgrade', join q(-), @{$versions});
 
   return [] unless -d $dir;
 
@@ -145,10 +145,10 @@ method _ddl_protoschema_up_consume_filenames($versions) {
   return [@files{sort keys %files}]
 }
 
-method _ddl_protoschema_down_consume_filenames($versions) {
+method _ddl_protoschema_downgrade_consume_filenames($versions) {
   my $base_dir = $self->script_directory;
 
-  my $dir = catfile( $base_dir, '_protoschema', 'down', join q(-), @{$versions});
+  my $dir = catfile( $base_dir, '_preprocess_schema', 'downgrade', join q(-), @{$versions});
 
   return [] unless -d $dir;
 
@@ -160,38 +160,38 @@ method _ddl_protoschema_down_consume_filenames($versions) {
 }
 
 method _ddl_protoschema_produce_filename($version) {
-  my $dirname = catfile( $self->script_directory, '_protoschema', 'schema',  $version );
+  my $dirname = catfile( $self->script_directory, '_source', 'deploy',  $version );
   mkpath($dirname) unless -d $dirname;
 
   return catfile( $dirname, '001-auto.yml' );
 }
 
 method _ddl_schema_produce_filename($type, $version) {
-  my $dirname = catfile( $self->script_directory, $type, 'schema', $version );
+  my $dirname = catfile( $self->script_directory, $type, 'deploy', $version );
   mkpath($dirname) unless -d $dirname;
 
   return catfile( $dirname, '001-auto.sql' );
 }
 
-method _ddl_schema_up_consume_filenames($type, $versions) {
-  $self->__ddl_consume_with_prefix($type, $versions, 'up')
+method _ddl_schema_upgrade_consume_filenames($type, $versions) {
+  $self->__ddl_consume_with_prefix($type, $versions, 'upgrade')
 }
 
-method _ddl_schema_down_consume_filenames($type, $versions) {
-  $self->__ddl_consume_with_prefix($type, $versions, 'down')
+method _ddl_schema_downgrade_consume_filenames($type, $versions) {
+  $self->__ddl_consume_with_prefix($type, $versions, 'downgrade')
 }
 
-method _ddl_schema_up_produce_filename($type, $versions) {
+method _ddl_schema_upgrade_produce_filename($type, $versions) {
   my $dir = $self->script_directory;
 
-  my $dirname = catfile( $dir, $type, 'up', join q(-), @{$versions});
+  my $dirname = catfile( $dir, $type, 'upgrade', join q(-), @{$versions});
   mkpath($dirname) unless -d $dirname;
 
   return catfile( $dirname, '001-auto.sql' );
 }
 
-method _ddl_schema_down_produce_filename($type, $versions, $dir) {
-  my $dirname = catfile( $dir, $type, 'down', join q(-), @{$versions} );
+method _ddl_schema_downgrade_produce_filename($type, $versions, $dir) {
+  my $dirname = catfile( $dir, $type, 'downgrade', join q(-), @{$versions} );
   mkpath($dirname) unless -d $dirname;
 
   return catfile( $dirname, '001-auto.sql');
@@ -440,7 +440,7 @@ sub _resultsource_install_filename {
   my ($self, $source_name) = @_;
   return sub {
     my ($self, $type, $version) = @_;
-    my $dirname = catfile( $self->script_directory, $type, 'schema', $version );
+    my $dirname = catfile( $self->script_directory, $type, 'deploy', $version );
     mkpath($dirname) unless -d $dirname;
 
     return catfile( $dirname, "001-auto-$source_name.sql" );
@@ -451,7 +451,7 @@ sub _resultsource_protoschema_filename {
   my ($self, $source_name) = @_;
   return sub {
     my ($self, $version) = @_;
-    my $dirname = catfile( $self->script_directory, '_protoschema', $version );
+    my $dirname = catfile( $self->script_directory, '_source', $version );
     mkpath($dirname) unless -d $dirname;
 
     return catfile( $dirname, "001-auto-$source_name.yml" );
@@ -501,7 +501,7 @@ sub prepare_upgrade {
      "preparing upgrade from $args->{from_version} to $args->{to_version}"
   };
   $self->_prepare_changegrade(
-    $args->{from_version}, $args->{to_version}, $args->{version_set}, 'up'
+    $args->{from_version}, $args->{to_version}, $args->{version_set}, 'upgrade'
   );
 }
 
@@ -511,7 +511,7 @@ sub prepare_downgrade {
      "preparing downgrade from $args->{from_version} to $args->{to_version}"
   };
   $self->_prepare_changegrade(
-    $args->{from_version}, $args->{to_version}, $args->{version_set}, 'down'
+    $args->{from_version}, $args->{to_version}, $args->{version_set}, 'downgrade'
   );
 }
 
@@ -567,10 +567,10 @@ sub downgrade_single_step {
   my $sql_to_run;
   if ($self->ignore_ddl) {
      $sql_to_run = $self->_sqldiff_from_yaml(
-       $version_set->[0], $version_set->[1], $sqlt_type, 'down',
+       $version_set->[0], $version_set->[1], $sqlt_type, 'downgrade',
      );
   }
-  my $sql = $self->_run_sql_and_perl($self->_ddl_schema_down_consume_filenames(
+  my $sql = $self->_run_sql_and_perl($self->_ddl_schema_downgrade_consume_filenames(
     $sqlt_type,
     $version_set,
   ), $sql_to_run);
@@ -587,10 +587,10 @@ sub upgrade_single_step {
   my $sql_to_run;
   if ($self->ignore_ddl) {
      $sql_to_run = $self->_sqldiff_from_yaml(
-       $version_set->[0], $version_set->[1], $sqlt_type, 'up',
+       $version_set->[0], $version_set->[1], $sqlt_type, 'upgrade',
      );
   }
-  my $sql = $self->_run_sql_and_perl($self->_ddl_schema_up_consume_filenames(
+  my $sql = $self->_run_sql_and_perl($self->_ddl_schema_upgrade_consume_filenames(
     $sqlt_type,
     $version_set,
   ), $sql_to_run);
@@ -656,8 +656,8 @@ modifications, so even if you are familiar with it, please read this.  I feel
 like the best way to describe the layout is with the following example:
 
  $sql_migration_dir
- |- _protoschema
- |  |- schema
+ |- _source
+ |  |- deploy
  |     |- 1
  |     |  `- 001-auto.yml
  |     |- 2
@@ -665,36 +665,36 @@ like the best way to describe the layout is with the following example:
  |     `- 3
  |        `- 001-auto.yml
  |- SQLite
- |  |- down
+ |  |- downgrade
  |  |  `- 2-1
  |  |     `- 001-auto.sql
- |  |- schema
+ |  |- deploy
  |  |  `- 1
  |  |     `- 001-auto.sql
- |  `- up
+ |  `- upgrade
  |     |- 1-2
  |     |  `- 001-auto.sql
  |     `- 2-3
  |        `- 001-auto.sql
  |- _common
- |  |- down
+ |  |- downgrade
  |  |  `- 2-1
  |  |     `- 002-remove-customers.pl
- |  `- up
+ |  `- upgrade
  |     `- 1-2
  |        `- 002-generate-customers.pl
  `- MySQL
-    |- down
+    |- downgrade
     |  `- 2-1
     |     `- 001-auto.sql
     |- preinstall
     |  `- 1
     |     |- 001-create_database.pl
     |     `- 002-create_users_and_permissions.pl
-    |- schema
+    |- deploy
     |  `- 1
     |     `- 001-auto.sql
-    `- up
+    `- upgrade
        `- 1-2
           `- 001-auto.sql
 
@@ -703,12 +703,12 @@ So basically, the code
  $dm->deploy(1)
 
 on an C<SQLite> database that would simply run
-C<$sql_migration_dir/SQLite/schema/1/001-auto.sql>.  Next,
+C<$sql_migration_dir/SQLite/deploy/1/001-auto.sql>.  Next,
 
  $dm->upgrade_single_step([1,2])
 
-would run C<$sql_migration_dir/SQLite/up/1-2/001-auto.sql> followed by
-C<$sql_migration_dir/_common/up/1-2/002-generate-customers.pl>.
+would run C<$sql_migration_dir/SQLite/upgrade/1-2/001-auto.sql> followed by
+C<$sql_migration_dir/_common/upgrade/1-2/002-generate-customers.pl>.
 
 C<.pl> files don't have to be in the C<_common> directory, but most of the time
 they should be, because perl scripts are generally be database independent.
@@ -726,23 +726,23 @@ The following subdirectories are recognized by this DeployMethod:
 
 =over 2
 
-=item C<_protoschema> This directory can contain the following directories:
+=item C<_source> This directory can contain the following directories:
 
 =over 2
 
-=item C<down> This directory merely contains directories named after
+=item C<downgrade> This directory merely contains directories named after
 migrations, which are of the form C<$from_version-$to_version>.  Inside of
 these directories you may put Perl scripts which are to return a subref
 that takes the arguments C<< $from_schema, $to_schema >>, which are
 L<SQL::Translator::Schema> objects.
 
-=item C<up> This directory merely contains directories named after
+=item C<upgrade> This directory merely contains directories named after
 migrations, which are of the form C<$from_version-$to_version>.  Inside of
 these directories you may put Perl scripts which are to return a subref
 that takes the arguments C<< $from_schema, $to_schema >>, which are
 L<SQL::Translator::Schema> objects.
 
-=item C<schema> This directory merely contains directories named after schema
+=item C<deploy> This directory merely contains directories named after schema
 versions, which in turn contain C<yaml> files that are serialized versions
 of the schema at that version.  These files are not for editing by hand.
 
@@ -756,24 +756,24 @@ already have.  This directory can containt the following directories itself:
 
 =over 2
 
-=item C<preinstall> Gets run before the C<schema> is C<deploy>ed.  Has the
-same structure as the C<schema> subdirectory as well; that is, it has a
-directory for each schema version.  Unlike C<schema>, C<up>, and C<down>
+=item C<preinstall> Gets run before the C<deploy> is C<deploy>ed.  Has the
+same structure as the C<deploy> subdirectory as well; that is, it has a
+directory for each schema version.  Unlike C<deploy>, C<upgrade>, and C<downgrade>
 though, it can only run C<.pl> files, and the coderef in the perl files get
 no arguments passed to them.
 
-=item C<schema> Gets run when the schema is C<deploy>ed.  Structure is a
+=item C<deploy> Gets run when the schema is C<deploy>ed.  Structure is a
 directory per schema version, and then files are merged with C<_common> and run
 in filename order.  C<.sql> files are merely run, as expected.  C<.pl> files are
 run according to L</PERL SCRIPTS>.
 
-=item C<up> Gets run when the schema is C<upgrade>d.  Structure is a directory
+=item C<upgrade> Gets run when the schema is C<upgrade>d.  Structure is a directory
 per upgrade step, (for example, C<1-2> for upgrading from version 1 to version
 2,) and then files are merged with C<_common> and run in filename order.
 C<.sql> files are merely run, as expected.  C<.pl> files are run according
 to L</PERL SCRIPTS>.
 
-=item C<down> Gets run when the schema is C<downgrade>d.  Structure is a directory
+=item C<downgrade> Gets run when the schema is C<downgrade>d.  Structure is a directory
 per downgrade step, (for example, C<2-1> for downgrading from version 2 to version
 1,) and then files are merged with C<_common> and run in filename order.
 C<.sql> files are merely run, as expected.  C<.pl> files are run according
@@ -841,7 +841,7 @@ C<< $self->schema->schema_version >>.
 
 =head2 __ddl_consume_with_prefix
 
- $dm->__ddl_consume_with_prefix( 'SQLite', [qw( 1.00 1.01 )], 'up' )
+ $dm->__ddl_consume_with_prefix( 'SQLite', [qw( 1.00 1.01 )], 'upgrade' )
 
 This is the meat of the multi-file upgrade/deploy stuff.  It returns a list of
 files in the order that they should be run for a generic "type" of upgrade.
@@ -916,12 +916,12 @@ to store the sql in.
 
 =head2 _prepare_changegrade
 
- $dm->_prepare_changegrade('1.00', '1.01', [qw( 1.00 1.01)], 'up')
+ $dm->_prepare_changegrade('1.00', '1.01', [qw( 1.00 1.01)], 'upgrade')
 
 Generates the sql file for migrating from one schema version to another.  First
 arg is the version to start from, second is the version to go to, third is the
 L<version set|DBIx::Class::DeploymentHandler/VERSION SET>, and last is the
-direction of the changegrade, be it 'up' or 'down'.
+direction of the changegrade, be it 'upgrade' or 'downgrade'.
 
 =head2 _read_sql_file
 
