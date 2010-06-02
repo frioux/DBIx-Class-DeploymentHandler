@@ -654,10 +654,11 @@ documented here is extra fun stuff or private methods.
 
 =head1 DIRECTORY LAYOUT
 
-Arguably this is the best feature of L<DBIx::Class::DeploymentHandler>.  It's
-heavily based upon L<DBIx::Migration::Directories>, but has some extensions and
-modifications, so even if you are familiar with it, please read this.  I feel
-like the best way to describe the layout is with the following example:
+Arguably this is the best feature of L<DBIx::Class::DeploymentHandler>.
+It's spiritually based upon L<DBIx::Migration::Directories>, but has a
+lot of extensions and modifications, so even if you are familiar with it,
+please read this.  I feel like the best way to describe the layout is with
+the following example:
 
  $sql_migration_dir
  |- _source
@@ -715,7 +716,7 @@ would run C<$sql_migration_dir/SQLite/upgrade/1-2/001-auto.sql> followed by
 C<$sql_migration_dir/_common/upgrade/1-2/002-generate-customers.pl>.
 
 C<.pl> files don't have to be in the C<_common> directory, but most of the time
-they should be, because perl scripts are generally be database independent.
+they should be, because perl scripts are generally database independent.
 
 Note that unlike most steps in the process, C<preinstall> will not run SQL, as
 there may not even be an database at preinstall time.  It will run perl scripts
@@ -734,6 +735,17 @@ The following subdirectories are recognized by this DeployMethod:
 
 =over 2
 
+=item C<deploy> This directory merely contains directories named after schema
+versions, which in turn contain C<yaml> files that are serialized versions
+of the schema at that version.  These files are not for editing by hand.
+
+=back
+
+=item C<_preprocess_schema> This directory can contain the following
+directories:
+
+=over 2
+
 =item C<downgrade> This directory merely contains directories named after
 migrations, which are of the form C<$from_version-$to_version>.  Inside of
 these directories you may put Perl scripts which are to return a subref
@@ -745,10 +757,6 @@ migrations, which are of the form C<$from_version-$to_version>.  Inside of
 these directories you may put Perl scripts which are to return a subref
 that takes the arguments C<< $from_schema, $to_schema >>, which are
 L<SQL::Translator::Schema> objects.
-
-=item C<deploy> This directory merely contains directories named after schema
-versions, which in turn contain C<yaml> files that are serialized versions
-of the schema at that version.  These files are not for editing by hand.
 
 =back
 
@@ -807,6 +815,14 @@ A very basic perl script might look like:
      password => 'root',
    })
  }
+
+=attr ignore_ddl
+
+This attribute will, when set to true (default is false), cause the DM to use
+L<SQL::Translator> to use the C<_source>'s serialized SQL::Translator::Schema
+instead of any pregenerated SQL.  If you have a development server this is
+probably the best plan of action as you will not be putting as many generated
+files in your version control.  Goes well with with C<databases> of C<[]>.
 
 =attr schema
 
