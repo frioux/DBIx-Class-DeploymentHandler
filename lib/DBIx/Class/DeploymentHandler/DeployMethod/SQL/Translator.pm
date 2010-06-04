@@ -127,8 +127,8 @@ method __ddl_consume_with_prefix($type, $versions, $prefix) {
   return [@files{sort keys %files}]
 }
 
-method _ddl_preinstall_consume_filenames($type, $version) {
-  $self->__ddl_consume_with_prefix($type, [ $version ], 'preinstall')
+method _ddl_initialize_consume_filenames($type, $version) {
+  $self->__ddl_consume_with_prefix($type, [ $version ], 'initialize')
 }
 
 method _ddl_schema_consume_filenames($type, $version) {
@@ -292,14 +292,14 @@ sub deploy {
   ), $sql);
 }
 
-sub preinstall {
+sub initialize {
   my $self         = shift;
   my $args         = shift;
   my $version      = $args->{version}      || $self->schema_version;
-  log_info { "preinstalling version $version" };
+  log_info { "initializing version $version" };
   my $storage_type = $args->{storage_type} || $self->storage->sqlt_type;
 
-  my @files = @{$self->_ddl_preinstall_consume_filenames(
+  my @files = @{$self->_ddl_initialize_consume_filenames(
     $storage_type,
     $version,
   )};
@@ -321,7 +321,7 @@ sub preinstall {
         carp "$filename should define an anonymous sub but it didn't!";
       }
     } else {
-      croak "A file ($filename) got to preinstall_scripts that wasn't sql or perl!";
+      croak "A file ($filename) got to initialize_scripts that wasn't sql or perl!";
     }
   }
 }
@@ -692,7 +692,7 @@ the following example:
     |- downgrade
     |  `- 2-1
     |     `- 001-auto.sql
-    |- preinstall
+    |- initialize
     |  `- 1
     |     |- 001-create_database.pl
     |     `- 002-create_users_and_permissions.pl
@@ -718,11 +718,11 @@ C<$sql_migration_dir/_common/upgrade/1-2/002-generate-customers.pl>.
 C<.pl> files don't have to be in the C<_common> directory, but most of the time
 they should be, because perl scripts are generally database independent.
 
-Note that unlike most steps in the process, C<preinstall> will not run SQL, as
-there may not even be an database at preinstall time.  It will run perl scripts
+Note that unlike most steps in the process, C<initialize> will not run SQL, as
+there may not even be an database at initialize time.  It will run perl scripts
 just like the other steps in the process, but nothing is passed to them.
 Until people have used this more it will remain freeform, but a recommended use
-of preinstall is to have it prompt for username and password, and then call the
+of initialize is to have it prompt for username and password, and then call the
 appropriate C<< CREATE DATABASE >> commands etc.
 
 =head2 Directory Specification
@@ -768,7 +768,7 @@ already have.  This directory can containt the following directories itself:
 
 =over 2
 
-=item C<preinstall> Gets run before the C<deploy> is C<deploy>ed.  Has the
+=item C<initialize> Gets run before the C<deploy> is C<deploy>ed.  Has the
 same structure as the C<deploy> subdirectory as well; that is, it has a
 directory for each schema version.  Unlike C<deploy>, C<upgrade>, and C<downgrade>
 though, it can only run C<.pl> files, and the coderef in the perl files get

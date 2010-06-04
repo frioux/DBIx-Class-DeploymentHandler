@@ -3,7 +3,7 @@ use Moose::Role;
 
 # ABSTRACT: Interface for deploy methods
 
-requires 'preinstall';
+requires 'initialize';
 
 requires 'prepare_deploy';
 requires 'deploy';
@@ -23,9 +23,9 @@ requires 'downgrade_single_step';
 
 __END__
 
-=method preinstall
+=method initialize
 
- $dh->preinstall({
+ $dh->initialize({
    version      => 1,
    storage_type => 'SQLite'
  });

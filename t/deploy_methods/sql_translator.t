@@ -29,12 +29,12 @@ VERSION1: {
 
    $dm->prepare_deploy;
 
-   mkpath(catfile(qw( t sql SQLite preinstall 1.0 )));
+   mkpath(catfile(qw( t sql SQLite initialize 1.0 )));
    open my $prerun, '>',
-      catfile(qw( t sql SQLite preinstall 1.0 003-semiautomatic.pl ));
+      catfile(qw( t sql SQLite initialize 1.0 003-semiautomatic.pl ));
    print {$prerun} "sub {use File::Touch; touch(q(foobar));}";
    close $prerun;
-   $dm->preinstall({ version => '1.0' });
+   $dm->initialize({ version => '1.0' });
 
    ok -e 'foobar';
 

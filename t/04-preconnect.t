@@ -33,8 +33,8 @@ VERSION1: {
   ok !$s->storage->connected, 'creating handler did not connect';
   ok($handler, 'DBIx::Class::DeploymentHandler w/1 instantiates correctly');
 
-  mkpath('t/sql/SQLite/preinstall/1');
-  $handler->preinstall({ version => 1, storage_type => 'SQLite' });
+  mkpath('t/sql/SQLite/initialize/1');
+  $handler->initialize({ version => 1, storage_type => 'SQLite' });
   ok !$s->storage->connected, 'creating schema did not connect';
 }
 done_testing;

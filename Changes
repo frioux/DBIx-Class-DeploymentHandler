@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Rename preinstall to initialize
 
 0.001000_13 2010-06-01 23:30:15 CST6CDT
        - No more serialized SQL, we serialize the SQLT schema instead
