@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.001000  2010-06-10 21:55:40 CST6CDT
        - Use package logger instead of default logger
 
 0.001000_14 2010-06-03 20:17:03 CST6CDT
