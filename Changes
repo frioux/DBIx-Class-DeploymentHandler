@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Use package logger instead of default logger
 
 0.001000_14 2010-06-03 20:17:03 CST6CDT
        - Rename preinstall to initialize

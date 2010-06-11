@@ -1,7 +1,7 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Standard;
 use Moose;
 use DBIx::Class::DeploymentHandler::Logger;
-use Log::Contextual ':log', -default_logger =>
+use Log::Contextual ':log', -package_logger =>
   DBIx::Class::DeploymentHandler::Logger->new({
     env_prefix => 'DBICDH'
   });
