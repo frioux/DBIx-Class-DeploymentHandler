@@ -221,7 +221,7 @@ method _run_sql_array($sql) {
     }
     catch {
       die "$_ (running line '$line')"
-    }
+    };
     $storage->_query_end($line);
   }
   return join "\n", @$sql
