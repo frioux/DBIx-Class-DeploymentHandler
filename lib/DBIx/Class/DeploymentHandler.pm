@@ -31,17 +31,17 @@ with 'DBIx::Class::DeploymentHandler::WithReasonableDefaults';
 sub prepare_version_storage_install {
   my $self = shift;
 
-  $self->prepare_resultsource_install(
-    $self->version_storage->version_rs->result_source
-  );
+  $self->prepare_resultsource_install({
+    result_source => $self->version_storage->version_rs->result_source
+  });
 }
 
 sub install_version_storage {
   my $self = shift;
 
-  $self->install_resultsource(
-    $self->version_storage->version_rs->result_source
-  );
+  $self->install_resultsource({
+    result_source => $self->version_storage->version_rs->result_source
+  });
 }
 
 sub prepare_install {
