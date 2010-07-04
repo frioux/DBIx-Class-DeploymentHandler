@@ -1,14 +1,21 @@
-=head1 NAME
+package DBIx::Class::DeploymentHandler::Manual::Intro
 
-DBIx::Class::DeploymentHandler::Intro - Introduction to DBIx::Class::DeploymentHandler
+# ABSTRACT: Introduction to DBIx::Class::DeploymentHandler
 
-=head1 Why DBIx::Class::DeploymentHandler is worth using
+=pod
 
+=head1 Why is DBIx::Class::DeploymentHandler worth using?
 
-=head1 Our Sample database
+The most obvious reasons for using DBIx::Class::DeploymentHandler are
+that it can run multiple SQL scripts as well as Perl scripts, unlike
+DBIx::Class::Schema::Versioned, which only allows for a single SQL script.
+It is also extremely extensible, and is an opportunity for a break from
+backwards compatibility, so some regrettable decisions are avoided.
 
-Follow L<DBIx::Class::Manual::Intro> except for the parts setting up the database.
-After you are done, You should have the following files.
+=head1 Sample database
+
+Follow L<DBIx::Class::Manual::Intro> except for the parts setting up the
+database.  After you are done, You should have the following files.
 
  MyDatabase/
  |-- Main
@@ -18,6 +25,18 @@ After you are done, You should have the following files.
  |   |   `-- Track.pm
  |   `-- ResultSet
  `-- Main.pm
+
+Add a line like the following in your MyDatabase::Main file:
+
+ our $VERSION = 1;
+
+or if you are using a newer Perl you can use the prettier syntax:
+
+ package MyDatabase::Main 1;
+
+By default DBIx::Class::DeploymentHandler only uses integers for versions,
+this makes versioning much simpler for figuring out what version is next
+(or previous.)
 
 =head1 install.pl
 
@@ -38,11 +57,10 @@ in the database.
       script_directory    => "$FindBin::Bin/dbicdh",
       databases           => 'SQLite',
       sql_translator_args => { add_drop_table => 0 },
-      schema_version      => 1,
  });
 
  $dh->prepare_install;
- $dh->install({ version => 1 });
+ $dh->install;
 
 =head2 dbicdh - Our migration scripts
 
@@ -67,6 +85,22 @@ that is suitable for SQLite
 
 This contains all of the raw information about our schema that is then
 translated into the sql.
+
+=head3 Population
+
+To truly take advantage of all DBIx::Class::DeploymentHandler offers, you
+should probably be using it for population.  To do that all you need to do
+is create a file called C<dbicdh/_common/install/1/create_artists.pl>:
+
+ sub {
+    my $schema = shift;
+    $schema->resultset('User')->populate([
+       ['name'],
+       ['Marillion'],
+       ['The Moutain Goats'],
+       ['Ladyhawke'],
+    ]);
+ };
 
 =head1 Upgrading
 
@@ -127,4 +161,7 @@ Our script directory now looks like:
 The new C<deploy/001-auto.sql> and C<deploy/001-auto.yml> files are the
 state of the db as at that version.  The C<upgrade/1-2/001-auto.sql> file
 is the most interesting one; it is what gets your database from version 1 to 2.
+
+And again, you can create a Perl file like we did previously with the
+deploy stage.
 
