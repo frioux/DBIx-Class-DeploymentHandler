@@ -1,6 +1,9 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - install should now work in all cases, previously had a really bad bug
+         where it would try to install the version storage table twice, which
+         breaks everything
 
 0.001001  2010-06-26 10:46:03 CST6CDT
        - Fix bad parameters in version_storage install methods
