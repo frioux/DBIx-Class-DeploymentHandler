@@ -10,107 +10,100 @@ DBIx::Class::DeploymentHandler::Intro - Introduction to DBIx::Class::DeploymentH
 Follow L<DBIx::Class::Manual::Intro> except for the parts setting up the database.
 After you are done, You should have the following files.
 
-  MyDatabase/
-  |-- Main
-  |   |-- Result
-  |   |   |-- Artist.pm
-  |   |   |-- Cd.pm
-  |   |   `-- Track.pm
-  |   `-- ResultSet
-  `-- Main.pm
+ MyDatabase/
+ |-- Main
+ |   |-- Result
+ |   |   |-- Artist.pm
+ |   |   |-- Cd.pm
+ |   |   `-- Track.pm
+ |   `-- ResultSet
+ `-- Main.pm
 
-=head1 preinstall.pl
+=head1 install.pl
 
-Our first script, preinstall.pl reads our schema file and creates the tables in the database.
+Our first script, C<install.pl> reads our schema file and creates the tables
+in the database.
 
-  use aliased 'DBIx::Class::DeploymentHandler' => 'DH';
-  use FindBin;
-  use lib "$FindBin::Bin/../lib";
-  use MyDatabase::Main;
-  my $schema       = MyDatabase::Main->connect('dbi:SQLite:mydb');
+ #!perl
+ use strict;
+ use warnings;
+ use aliased 'DBIx::Class::DeploymentHandler' => 'DH';
+ use FindBin;
+ use lib "$FindBin::Bin/../lib";
+ use MyDatabase::Main;
+ my $schema = MyDatabase::Main->connect('dbi:SQLite:mydb');
 
-  my $dh = DH->new(
-      {
-          schema           => $schema,
-          script_directory => "$FindBin::Bin/dbicdh",
-          databases        => 'SQLite',
-          sql_translator_args => { add_drop_table => 0 },
-          schema_version   => 1,
-      }
-  );
+ my $dh = DH->new({
+      schema              => $schema,
+      script_directory    => "$FindBin::Bin/dbicdh",
+      databases           => 'SQLite',
+      sql_translator_args => { add_drop_table => 0 },
+      schema_version      => 1,
+ });
 
-  $dh->prepare_install;
-  $dh->install({version => 1});
-
-TODO TODO TODO TODO
-
-Someone really ought to fix the bug causing dbicdh/SQLite/deploy/1/001-auto.sql to have the dbix_class_deploymenthandler_versions
-
-Right now, you need to comment out the version table crap in the sql file , then run install, then uncomment it.
-
-TODO TODO TODO TODO
+ $dh->prepare_install;
+ $dh->install({ version => 1 });
 
 =head2 dbicdh - Our migration scripts
 
-Running preinstall.pl should create the following:
+Running C<install.pl> should create the following:
 
-  dbicdh/
-  |-- SQLite
-  |   `-- deploy
-  |       `-- 1
-  |           `-- 001-auto.sql
-  `-- _source
-      `-- deploy
-          `-- 1
-              `-- 001-auto.yml
+ dbicdh/
+ |-- SQLite
+ |   `-- deploy
+ |       `-- 1
+ |           `-- 001-auto.sql
+ `-- _source
+     `-- deploy
+         `-- 1
+             `-- 001-auto.yml
 
 =head3 001-auto.sql
 
-DBIx::Class::DeploymentHandler automatically generates SQL from our schema that is suitable for SQLite
+DBIx::Class::DeploymentHandler automatically generates SQL from our schema
+that is suitable for SQLite
 
 =head3 001-auto.yml
 
-This contains all of the raw information about our schema that is then translated into the sql.
+This contains all of the raw information about our schema that is then
+translated into the sql.
 
 =head1 Upgrading
 
 Add a line to MyDatabase/Main/Result/Cd.pm below
 
-    __PACKAGE__->add_columns(qw/ cdid artist title /);
+ __PACKAGE__->add_columns(qw/ cdid artist title /);
 
 with
 
-    __PACKAGE__->add_column("isbn" => { is_nullable => 1 });
+ __PACKAGE__->add_column(isbn => { is_nullable => 1 });
 
-(We need it to either be nullable, or have a default - merely adding it to the add_columns line will not work)
+Aside: It must be nullable or have a default - otherwise the upgrade will
+fail for logical reasons.  To be clear, if you add a column to a database and
+it is not nullable and has no default, what will the existing rows contain
+for that column?
 
-Then run the following script:
+So here is our next script, C<upgrade.pl>:
 
-  use strict;
-  use warnings;
-  use aliased 'DBIx::Class::DeploymentHandler' => 'DH';
-  use FindBin;
-  use lib "$FindBin::Bin/../lib";
-  use MyDatabase::Main;
-  my $schema       = MyDatabase::Main->connect('dbi:SQLite:mydb');
+ #!perl
+ use strict;
+ use warnings;
+ use aliased 'DBIx::Class::DeploymentHandler' => 'DH';
+ use FindBin;
+ use lib "$FindBin::Bin/../lib";
+ use MyDatabase::Main;
+ my $schema = MyDatabase::Main->connect('dbi:SQLite:mydb');
 
-  my $dh = DH->new(
-      {
-          schema           => $schema,
-          script_directory => "$FindBin::Bin/dbicdh",
-          databases        => 'SQLite',
-          sql_translator_args => { add_drop_table => 0 },
-     schema_version => 2,
-     from_version => 1,
-     to_version => 2,
-      }
-  );
+ my $dh = DH->new({
+    schema              => $schema,
+    script_directory    => "$FindBin::Bin/dbicdh",
+    databases           => 'SQLite',
+    sql_translator_args => { add_drop_table => 0 },
+ });
 
-  $dh->prepare_deploy;
-  $dh->prepare_upgrade({ from_version => 1, to_version => 2});
-  $dh->upgrade;
-
-
+ $dh->prepare_deploy;
+ $dh->prepare_upgrade({ from_version => 1, to_version => 2});
+ $dh->upgrade;
 
 Our script directory now looks like:
 
@@ -131,17 +124,7 @@ Our script directory now looks like:
           `-- 2
               `-- 001-auto.yml
 
-The new deploy/001-auto.sql and deploy/001-auto.yml files are the state of the db as at that version.  The upgrade/1-2/001-auto.sql file is the most interesting one
-
-  -- Convert schema '/home/jdobbie/Projects/intro/dbicdh/_source/deploy/1/001-auto.yml' to '/home/jdobbie/Projects/intro/dbicdh/_source/deploy/2/001-auto.yml':;
-
-  ;
-  BEGIN;
-
-  ;
-  ALTER TABLE cd ADD COLUMN isbn;
-
-  ;
-
-  COMMIT;
+The new C<deploy/001-auto.sql> and C<deploy/001-auto.yml> files are the
+state of the db as at that version.  The C<upgrade/1-2/001-auto.sql> file
+is the most interesting one; it is what gets your database from version 1 to 2.
 
