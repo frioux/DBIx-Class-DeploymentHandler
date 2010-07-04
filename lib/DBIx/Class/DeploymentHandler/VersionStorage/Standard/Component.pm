@@ -20,7 +20,7 @@ sub connection  {
 
   $self->attach_version_storage;
 
-  my $args = $_[3] || {};
+  my $args = $self->storage->_dbic_connect_attributes;
 
   unless ( $args->{ignore_version} || $ENV{DBIC_NO_VERSION_CHECK}) {
     my $versions = $self->resultset('__VERSION');
