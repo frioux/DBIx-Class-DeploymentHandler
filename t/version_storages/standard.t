@@ -11,8 +11,8 @@ use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
 
 use DBICVersion_v1;
 use DBIx::Class::DeploymentHandler;
-my $db = 'dbi:SQLite:db.db';
-my @connection = ($db, '', '', { ignore_version => 1 });
+my $dbh = DBI->connect('dbi:SQLite::memory:');
+my @connection = (sub { $dbh }, { ignore_version => 1 });
 my $sql_dir = 't/sql';
 
 my $s = DBICVersion::Schema->connect(@connection);
@@ -76,11 +76,12 @@ ok(
    'adding another version works correctly'
 );
 
+my $u;
 {
    my $warning;
    local $SIG{__WARN__} = sub {$warning = shift};
-   my $u = DBICVersion::Schema->connect($db, '', '');
-   like( $warning, qr/Versions out of sync. This is 1.0, your database contains version 2.0, please call upgrade on your Schema./, 'warning when database/schema mismatch');
+   $u = DBICVersion::Schema->connect(sub { $dbh });
+   like( $warning, qr/Versions out of sync. This is 1\.0, your database contains version 2\.0, please call upgrade on your Schema\./, 'warning when database/schema mismatch');
 }
 
 

@@ -11,11 +11,11 @@ use aliased 'DBIx::Class::DeploymentHandler', 'DH';
 use File::Path 'remove_tree';
 use Test::More;
 use Test::Exception;
+use DBI;
 
 DBICDHTest::ready;
-
-my $db = 'dbi:SQLite:db.db';
-my @connection = ($db, '', '', { ignore_version => 1 });
+my $dbh = DBI->connect('dbi:SQLite::memory:');
+my @connection = (sub { $dbh }, { ignore_version => 1 });
 my $sql_dir = 't/sql';
 
 VERSION1: {

@@ -14,8 +14,8 @@ use Test::Exception;
 
 DBICDHTest::ready;
 
-my $db = 'dbi:SQLite:db.db';
-my @connection = ($db, '', '', { ignore_version => 1, }, { on_connect_do => sub { die }});
+my $db = 'dbi:SQLite::memory:';
+my @connection = ($db, '', '', { ignore_version => 1, on_connect_do => sub { die }});
 my $sql_dir = 't/sql';
 
 VERSION1: {

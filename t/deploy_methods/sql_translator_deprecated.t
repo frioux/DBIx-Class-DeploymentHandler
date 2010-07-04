@@ -10,8 +10,8 @@ use aliased
 
 use File::Spec::Functions;
 
-my $db = 'dbi:SQLite:db.db';
-my @connection = ($db, '', '', { ignore_version => 1 });
+my $dbh = DBI->connect('dbi:SQLite::memory:');
+my @connection = (sub { $dbh }, { ignore_version => 1 });
 my $sql_dir = 't/sql';
 
 DBICDHTest::ready;
@@ -65,9 +65,9 @@ VERSION2: {
    $version = $s->schema_version;
    $dm->prepare_deploy;
    $dm->prepare_upgrade({
-	  from_version => '1.0',
-	  to_version => $version,
-	  version_set => ['1.0', $version]
+     from_version => '1.0',
+     to_version => $version,
+     version_set => ['1.0', $version]
    });
    dies_ok {
       $s->resultset('Foo')->create({

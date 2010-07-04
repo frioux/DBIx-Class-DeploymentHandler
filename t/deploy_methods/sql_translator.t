@@ -9,8 +9,8 @@ use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
 use File::Spec::Functions;
 use File::Path qw(rmtree mkpath);
 
-my $db = 'dbi:SQLite:db.db';
-my @connection = ($db, '', '', { ignore_version => 1 });
+my $dbh = DBI->connect('dbi:SQLite::memory:');
+my @connection = (sub { $dbh }, { ignore_version => 1 });
 my $sql_dir = 't/sql';
 
 DBICDHTest::ready;
