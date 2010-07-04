@@ -33,7 +33,7 @@ VERSION1: {
   ok($handler, 'DBIx::Class::DeploymentHandler w/1 instantiates correctly');
 
   my $version = $s->schema_version;
-  $handler->prepare_deploy;
+  $handler->prepare_install;
 
   dies_ok {
     $s->resultset('Foo')->create({
@@ -65,7 +65,7 @@ VERSION2: {
   ok($handler, 'DBIx::Class::DeploymentHandler w/2 instantiates correctly');
 
   my $version = $s->schema_version();
-  $handler->prepare_deploy();
+  $handler->prepare_install;
   $handler->prepare_upgrade({ from_version => 1, to_version => $version });
   dies_ok {
     $s->resultset('Foo')->create({
@@ -102,7 +102,7 @@ VERSION3: {
   ok($handler, 'DBIx::Class::DeploymentHandler w/3 instantiates correctly');
 
   my $version = $s->schema_version();
-  $handler->prepare_deploy;
+  $handler->prepare_install;
   $handler->prepare_upgrade({ from_version => 2, to_version => $version });
   dies_ok {
     $s->resultset('Foo')->create({
