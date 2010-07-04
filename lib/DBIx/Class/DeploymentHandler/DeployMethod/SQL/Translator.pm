@@ -135,6 +135,19 @@ method _ddl_schema_consume_filenames($type, $version) {
   $self->__ddl_consume_with_prefix($type, [ $version ], 'deploy')
 }
 
+method _ddl_protoschema_deploy_consume_filenames($version) {
+  my $base_dir = $self->script_directory;
+
+  my $dir = catfile( $base_dir, '_source', 'deploy', $version);
+  return [] unless -d $dir;
+
+  opendir my($dh), $dir;
+  my %files = map { $_ => "$dir/$_" } grep { /\.yml$/ && -f "$dir/$_" } readdir $dh;
+  closedir $dh;
+
+  return [@files{sort keys %files}]
+}
+
 method _ddl_protoschema_upgrade_consume_filenames($versions) {
   my $base_dir = $self->script_directory;
 
