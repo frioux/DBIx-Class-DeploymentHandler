@@ -296,7 +296,7 @@ sub deploy {
   my $sql;
   if ($self->ignore_ddl) {
      $sql = $self->_sql_from_yaml({},
-       '_ddl_protoschema_produce_filename', $sqlt_type
+       '_ddl_protoschema_deploy_consume_filenames', $sqlt_type
      );
   }
   return $self->_run_sql_and_perl($self->_ddl_schema_consume_filenames(
@@ -413,19 +413,25 @@ method _sql_from_yaml($sqltargs, $from_file, $db) {
   my $schema    = $self->schema;
   my $version   = $self->schema_version;
 
-  my $sqlt = SQL::Translator->new({
-    add_drop_table          => 0,
-    parser                  => 'SQL::Translator::Parser::YAML',
-    %{$sqltargs},
-    producer => $db,
-  });
+  my @sql;
 
-  my $yaml_filename = $self->$from_file($version);
+  my $actual_file = $self->$from_file($version);
+  for my $yaml_filename (@{
+     DlogS_trace { "generating SQL from Serialized SQL Files: $_" }
+        (ref $actual_file?$actual_file:[$actual_file])
+  }) {
+     my $sqlt = SQL::Translator->new({
+       add_drop_table          => 0,
+       parser                  => 'SQL::Translator::Parser::YAML',
+       %{$sqltargs},
+       producer => $db,
+     });
 
-  my @sql = $sqlt->translate($yaml_filename);
-  if(!@sql) {
-    carp("Failed to translate to $db, skipping. (" . $sqlt->error . ")");
-    return undef;
+     push @sql, $sqlt->translate($yaml_filename);
+     if(!@sql) {
+       carp("Failed to translate to $db, skipping. (" . $sqlt->error . ")");
+       return undef;
+     }
   }
   return \@sql;
 }
