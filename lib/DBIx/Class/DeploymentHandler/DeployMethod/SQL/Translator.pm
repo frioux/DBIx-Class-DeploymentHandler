@@ -455,7 +455,7 @@ sub _resultsource_protoschema_filename {
   my ($self, $source_name) = @_;
   return sub {
     my ($self, $version) = @_;
-    my $dirname = catfile( $self->script_directory, '_source', $version );
+    my $dirname = catfile( $self->script_directory, '_source', 'deploy', $version );
     mkpath($dirname) unless -d $dirname;
 
     return catfile( $dirname, "001-auto-$source_name.yml" );
