@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Add basic intro (norkakn)
        - install should now work in all cases, previously had a really bad bug
          where it would try to install the version storage table twice, which
          breaks everything
