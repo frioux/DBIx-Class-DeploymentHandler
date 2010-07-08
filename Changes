@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.001002  2010-07-07 21:11:45 CST6CDT
        - Add basic intro (norkakn)
        - install should now work in all cases, previously had a really bad bug
          where it would try to install the version storage table twice, which
