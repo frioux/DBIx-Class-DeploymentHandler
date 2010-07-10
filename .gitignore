@@ -1,5 +1,4 @@
 *.swp
-db.db
 t/sql
 DBIx-Class-DeploymentHandler-*
 .build
