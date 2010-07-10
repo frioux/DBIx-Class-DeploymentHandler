@@ -1,0 +1,204 @@
+package DBIx::Class::DeploymentHandler::Manual::CatalystIntro
+
+# ABSTRACT: Introduction to using DBIx::Class::DeploymentHandler with a new Catalyst Project
+
+
+__END__
+=pod
+
+=head1 NAME
+
+DBIx::Class::DeploymentHandler::Manual::CatalystIntro - Introduction to using DBIx::Class::DeploymentHandler with a new Catalyst Project
+
+=head1 Background
+
+This introduction will use PostgreSQL and Catalyst.  Background information on using PostgreSQL with Catalyst can be found at L<Catalyst::Manual::Tutorial::10_Appendices>.  This guide will assume that you have some understanding of Catalyst.  Please go through the Catalyst tutorials first, if you have not yet done so.
+
+=head1 Database Setup
+
+Start by creating a user catalyst, with password catalyst
+
+    $ sudo -u postgres createuser -P catalyst
+    Enter password for new role: <catalyst>
+    Enter it again: <catalyst>
+    Shall the new role be a superuser? (y/n) n
+    Shall the new role be allowed to create databases? (y/n) n
+    Shall the new role be allowed to create more new roles? (y/n) n
+
+Then create a new database, deploymentintro
+
+    sudo -u postgres createdb -O catalyst deploymentintro
+
+=head1 Create the project
+
+    $ catalyst.pl DeploymentIntro
+    $ cd DeploymentIntro
+    $ perl Makefile.PL
+
+=head1 Create the Schema
+
+    $ script/deploymentintro_create.pl model DB DBIC::Schema DeploymentIntro::Schema \
+        create=static 'dbi:Pg:dbname=deploymentintro' 'catalyst' 'catalyst' '{ AutoCommit => 1 }'
+
+    $ mkdir lib/Schema
+    $ mkdir lib/Schema/Result
+
+Edit out the following from lib/DeploymentIntro/Model/DB.pm:
+
+    __PACKAGE__->config(
+        schema_class => 'DeploymentIntro::Schema',
+
+        connect_info => {
+            dsn => 'dbi:Pg:dbname=deploymentintro',
+            user => 'catalyst',
+            password => 'catalyst',
+            AutoCommit => q{1},
+        }
+    );
+
+Remove deploymentintro.conf and create a new file, deploymentintro_local.pl with the following:
+
+    {
+        name => "DeploymentIntro",
+
+        "Model::DB" => {
+            schema_class => 'DeploymentIntro::Schema',
+
+            connect_info => {
+                dsn        => 'dbi:Pg:dbname=deploymentintro',
+                user       => 'catalyst',
+                password   => 'catalyst',
+                AutoCommit => q{1},
+            }
+        }
+    }
+
+Copy the following program into scripts, under the name deploymentintro_dbicdh.pl
+
+    #!/usr/bin/env perl
+    use strict;
+    use warnings;
+    use feature ":5.10";
+    use aliased 'DBIx::Class::DeploymentHandler' => 'DH';
+    use FindBin;
+    use lib "$FindBin::Bin/../lib";
+    use DeploymentIntro::Schema;
+    use Config::JFDI;
+    my $config = Config::JFDI->new( name => 'DeploymentIntro' );
+    my $config_hash  = $config->get;
+    my $connect_info = $config_hash->{"Model::DB"}{"connect_info"};
+    my $schema       = DeploymentIntro::Schema->connect($connect_info);
+
+    my $dh = DH->new(
+        {
+            schema           => $schema,
+            script_directory => "$FindBin::Bin/../dbicdh",
+            databases        => 'PostgreSQL',
+        }
+    );
+
+    sub install {
+        $dh->prepare_install;
+        $dh->install;
+    }
+
+    sub upgrade {
+        die "Please set the version in Schema.pm"
+            unless $dh->schema->schema_version;
+        die "Please update the version in Schema.pm"
+            if ( $dh->version_storage->version_rs->search({version => $dh->schema_version})->count );
+        die "We only support positive integers for versions around these parts."
+            unless $dh->schema_version =~ /^\d+$/;
+
+        $dh->prepare_deploy;
+        $dh->prepare_upgrade;
+        $dh->upgrade;
+    }
+
+    sub current_version {
+        print $dh->database_version. "\n";
+    }
+
+    sub help {
+
+    print qq/
+    usage:
+        install
+        upgrade
+        upgrade-to [version]
+        downgrade-to [version]
+        current-version
+    /;
+
+    }
+
+    help unless $ARGV[0];
+
+    given ( $ARGV[0] ) {
+        when ("install")         { install(); }
+        when ("upgrade")         { upgrade(); }
+        when ("current-version") { current_version(); }
+    }
+
+Copy the following files into lib/DeploymentIntro/Schema/Result
+
+Cd.pm
+
+    package DeploymentIntro::Schema::Result::Cd;
+    use base qw/DBIx::Class::Core/;
+    __PACKAGE__->load_components(qw/InflateColumn::DateTime/);
+    __PACKAGE__->table('cd');
+    __PACKAGE__->add_columns(
+        'cdid',   { data_type => 'integer' },
+        'artist', { data_type => 'integer' },
+        'title',  { data_type => 'text' }
+    );
+    __PACKAGE__->set_primary_key('cdid');
+    __PACKAGE__->belongs_to(
+        'artist' => 'DeploymentIntro::Schema::Result::Artist' );
+    __PACKAGE__->has_many( 'tracks' => 'DeploymentIntro::Schema::Result::Track' );
+
+    1;
+
+
+Artist.pm
+
+    package DeploymentIntro::Schema::Result::Artist;
+    use base qw/DBIx::Class::Core/;
+    __PACKAGE__->table('artist');
+    __PACKAGE__->add_columns(
+        'artistid', { data_type => 'integer' },
+        'name',     { data_type => 'text' }
+    );
+    __PACKAGE__->set_primary_key('artistid');
+    __PACKAGE__->has_many( 'cds' => 'DeploymentIntro::Schema::Result::Cd' );
+
+    1;
+
+
+Track.pm
+
+    package DeploymentIntro::Schema::Result::Track;
+    use base qw/DBIx::Class::Core/;
+    __PACKAGE__->table('track');
+    __PACKAGE__->add_columns(
+        'trackid', { data_type => 'integer' },
+        'cd',      { data_type => 'integer' },
+        'title',   { data_type => 'text' }
+    );
+    __PACKAGE__->set_primary_key('trackid');
+    __PACKAGE__->belongs_to( 'cd' => 'DeploymentIntro::Schema::Result::Cd' );
+
+    1;
+
+
+And then edit lib/DeploymentIntro/Schema.pm and add the following above the 1 at the bottom
+
+   use vars qw($VERSION);
+   $VERSION = "1";
+
+
+Now it is just a matter of running
+
+    ./script/deploymentintro_dbicdh.pl  install
+
