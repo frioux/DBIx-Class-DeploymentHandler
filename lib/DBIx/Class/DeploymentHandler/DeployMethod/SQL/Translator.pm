@@ -31,6 +31,12 @@ has ignore_ddl => (
   default  => undef,
 );
 
+has force_overwrite => (
+  isa      => 'Bool',
+  is       => 'ro',
+  default  => undef,
+);
+
 has schema => (
   isa      => 'DBIx::Class::Schema',
   is       => 'ro',
@@ -450,8 +456,12 @@ sub _prepare_install {
 
     my $filename = $self->$to_file($db, $version, $dir);
     if (-e $filename ) {
-      carp "Overwriting existing DDL file - $filename";
-      unlink $filename;
+      if ($self->force_overwrite) {
+         carp "Overwriting existing DDL file - $filename";
+         unlink $filename;
+      } else {
+         die "Cannot overwrite '$filename', either enable force_overwrite or delete it"
+      }
     }
     open my $file, q(>), $filename;
     print {$file} join ";\n", @$sql;
@@ -556,8 +566,12 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
   foreach my $db (@$databases) {
     my $diff_file = $self->$diff_file_method($db, $version_set, $dir );
     if(-e $diff_file) {
-      carp("Overwriting existing $direction-diff file - $diff_file");
-      unlink $diff_file;
+      if ($self->force_overwrite) {
+         carp("Overwriting existing $direction-diff file - $diff_file");
+         unlink $diff_file;
+      } else {
+         die "Cannot overwrite '$diff_file', either enable force_overwrite or delete it"
+      }
     }
 
     open my $file, q(>), $diff_file;
@@ -645,8 +659,12 @@ sub prepare_protoschema {
     unless $yml;
 
   if (-e $filename ) {
-    carp "Overwriting existing DDL-YML file - $filename";
-    unlink $filename;
+    if ($self->force_overwrite) {
+       carp "Overwriting existing DDL-YML file - $filename";
+       unlink $filename;
+    } else {
+       die "Cannot overwrite '$filename', either enable force_overwrite or delete it"
+    }
   }
 
   open my $file, q(>), $filename;
@@ -845,6 +863,12 @@ L<SQL::Translator> to use the C<_source>'s serialized SQL::Translator::Schema
 instead of any pregenerated SQL.  If you have a development server this is
 probably the best plan of action as you will not be putting as many generated
 files in your version control.  Goes well with with C<databases> of C<[]>.
+
+=attr force_overwrite
+
+When this attribute is true generated files will be overwritten when the
+methods which create such files are run again.  The default is false, in which
+case the program will die with a message saying which file needs to be deleted.
 
 =attr schema
 
