@@ -43,7 +43,7 @@ this makes versioning much simpler for figuring out what version is next
 Our first script, C<install.pl> reads our schema file and creates the tables
 in the database.
 
- #!perl
+ #!/usr/bin/env perl
  use strict;
  use warnings;
  use aliased 'DBIx::Class::DeploymentHandler' => 'DH';
@@ -125,7 +125,7 @@ want to remember the earlier advice about integer version numbers.
 
 So here is our next script, C<upgrade.pl>:
 
- #!perl
+ #!/usr/bin/env perl
  use strict;
  use warnings;
  use aliased 'DBIx::Class::DeploymentHandler' => 'DH';
