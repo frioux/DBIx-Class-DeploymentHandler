@@ -1,5 +1,8 @@
 #!perl
 
+use strict;
+use warnings;
+
 use Test::More;
 use Test::Exception;
 
@@ -40,7 +43,6 @@ VERSION2: {
       txn_wrap          => 1,
    });
 
-   $version = $s->schema_version();
    $dm->prepare_deploy;
    mkpath(catfile(qw( t sql _preprocess_schema upgrade 1.0-2.0 )));
    open my $prerun, '>',

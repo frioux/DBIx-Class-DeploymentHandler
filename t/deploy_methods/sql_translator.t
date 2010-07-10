@@ -1,5 +1,8 @@
 #!perl
 
+use strict;
+use warnings;
+
 use Test::More;
 use Test::Exception;
 
@@ -73,7 +76,7 @@ VERSION2: {
 
    ok( $dm, 'DBIC::DH::SQL::Translator w/2.0 instantiates correctly');
 
-   $version = $s->schema_version();
+   my $version = $s->schema_version();
    $dm->prepare_deploy;
    ok(
       -f catfile(qw( t sql SQLite deploy 2.0 001-auto.sql )),
@@ -180,7 +183,7 @@ VERSION3: {
 
    ok( $dm, 'DBIC::DH::SQL::Translator w/3.0 instantiates correctly');
 
-   $version = $s->schema_version();
+   my $version = $s->schema_version();
    $dm->prepare_deploy;
    ok(
       -f catfile(qw( t sql SQLite deploy 3.0 001-auto.sql )),
