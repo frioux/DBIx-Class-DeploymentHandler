@@ -117,6 +117,12 @@ fail for logical reasons.  To be clear, if you add a column to a database and
 it is not nullable and has no default, what will the existing rows contain
 for that column?
 
+Now you need to modify the schema version in your MyDatabase::Main file to
+tell DBIx::Class::DeploymentHandler the new schema version number. You will
+want to remember the earlier advice about integer version numbers.
+
+ our $VERSION = 2;
+
 So here is our next script, C<upgrade.pl>:
 
  #!perl
