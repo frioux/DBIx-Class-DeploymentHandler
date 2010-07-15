@@ -100,10 +100,9 @@ C<deploymentintro_dbicdh.pl>
  }
 
  sub upgrade {
-   die "Please set the version in Schema.pm"
-     unless $dh->schema->schema_version;
    die "Please update the version in Schema.pm"
      if ( $dh->version_storage->version_rs->search({version => $dh->schema_version})->count );
+
    die "We only support positive integers for versions around these parts."
      unless $dh->schema_version =~ /^\d+$/;
 
