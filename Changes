@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - fix bug caused by install_version_storage not passing a required param
        - add force_overwrite attribute to SQLTDM
 
 0.001002  2010-07-07 21:11:45 CST6CDT

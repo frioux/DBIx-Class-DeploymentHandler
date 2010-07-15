@@ -39,8 +39,11 @@ sub prepare_version_storage_install {
 sub install_version_storage {
   my $self = shift;
 
+  my $version = (shift||{})->{version} || $self->schema_version;
+
   $self->install_resultsource({
-    result_source => $self->version_storage->version_rs->result_source
+    result_source => $self->version_storage->version_rs->result_source,
+    version       => $version,
   });
 }
 

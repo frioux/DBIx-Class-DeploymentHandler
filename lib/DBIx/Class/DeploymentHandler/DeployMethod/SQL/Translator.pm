@@ -493,8 +493,10 @@ sub _resultsource_protoschema_filename {
 
 sub install_resultsource {
   my ($self, $args) = @_;
-  my $source          = $args->{result_source};
-  my $version         = $args->{version};
+  my $source          = $args->{result_source}
+    or die 'result_source must be passed to install_resultsource';
+  my $version         = $args->{version}
+    or die 'version must be passed to install_resultsource';
   log_info { 'installing_resultsource ' . $source->source_name . ", version $version" };
   my $rs_install_file =
     $self->_resultsource_install_filename($source->source_name);
