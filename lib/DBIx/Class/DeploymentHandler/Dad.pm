@@ -7,6 +7,7 @@ use Method::Signatures::Simple;
 require DBIx::Class::Schema;    # loaded for type constraint
 use Carp::Clan '^DBIx::Class::DeploymentHandler';
 use DBIx::Class::DeploymentHandler::Logger;
+use DBIx::Class::DeploymentHandler::Types;
 use Log::Contextual ':log', -package_logger =>
   DBIx::Class::DeploymentHandler::Logger->new({
     env_prefix => 'DBICDH'
@@ -34,7 +35,7 @@ sub _build_to_version { $_[0]->schema_version }
 
 has schema_version => (
   is         => 'ro',
-  isa        => 'Str',
+  isa        => 'StrSchemaVersion',
   lazy_build => 1,
 );
 
