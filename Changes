@@ -1,6 +1,9 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.001003  2010-07-15 20:30:37 CST6CDT
+       - Add Catalyst-y intro (norkakn)
        - fix bug caused by install_version_storage not passing a required param
        - add force_overwrite attribute to SQLTDM
 
