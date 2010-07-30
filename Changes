@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Fix incorrect POD in SYNOPSIS
        - Add missing attribute to DBIx::Class::DeploymentHandler (force_overwrite)
 
 0.001003  2010-07-15 20:30:37 CST6CDT
