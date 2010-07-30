@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Add missing attribute to DBIx::Class::DeploymentHandler (force_overwrite)
 
 0.001003  2010-07-15 20:30:37 CST6CDT
        - Add Catalyst-y intro (norkakn)

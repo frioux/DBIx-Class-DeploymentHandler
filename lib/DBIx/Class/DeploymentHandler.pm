@@ -12,7 +12,9 @@ with 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     class_name           => 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator',
     delegate_name        => 'deploy_method',
     attributes_to_assume => [qw(schema schema_version)],
-    attributes_to_copy   => [qw( ignore_ddl databases script_directory sql_translator_args )],
+    attributes_to_copy   => [qw(
+      ignore_ddl databases script_directory sql_translator_args force_overwrite
+    )],
   },
   'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
