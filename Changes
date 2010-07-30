@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.001004  2010-07-29 22:09:10 CST6CDT
        - Fix incorrect POD in SYNOPSIS
        - Add missing attribute to DBIx::Class::DeploymentHandler (force_overwrite)
 
