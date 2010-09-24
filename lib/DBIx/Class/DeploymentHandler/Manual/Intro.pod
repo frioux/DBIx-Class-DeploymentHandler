@@ -92,15 +92,15 @@ To truly take advantage of all DBIx::Class::DeploymentHandler offers, you
 should probably be using it for population.  To do that all you need to do
 is create a file called C<dbicdh/_common/deploy/1/create_artists.pl>:
 
- sub {
-    my $schema = shift;
-    $schema->resultset('Artist')->populate([
-       ['name'],
-       ['Marillion'],
-       ['The Moutain Goats'],
-       ['Ladyhawke'],
-    ]);
- };
+  sub {
+     my $schema = shift;
+     $schema->resultset('Artist')->populate([
+        ['artistid', 'name'],
+        [1,          'Marillion'],
+        [2,          'The Moutain Goats'],
+        [3,          'Ladyhawke'],
+     ]);
+  };
 
 =head1 Upgrading
 
