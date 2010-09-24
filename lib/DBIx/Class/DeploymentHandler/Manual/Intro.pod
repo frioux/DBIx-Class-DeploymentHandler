@@ -94,7 +94,7 @@ is create a file called C<dbicdh/_common/deploy/1/create_artists.pl>:
 
  sub {
     my $schema = shift;
-    $schema->resultset('User')->populate([
+    $schema->resultset('Artist')->populate([
        ['name'],
        ['Marillion'],
        ['The Moutain Goats'],
