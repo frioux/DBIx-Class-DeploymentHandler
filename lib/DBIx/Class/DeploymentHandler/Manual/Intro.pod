@@ -88,6 +88,10 @@ Running C<install.pl> should create the following:
          `-- 1
              `-- 001-auto.yml
 
+You may wish to turn on L<debug logging|DBIx::Class::DeploymentHandler/"LOGGING"> 
+before running this script by setting the environment variable C<DBICDH_TRACE> to
+C<1>.
+
 =head3 001-auto.sql
 
 DBIx::Class::DeploymentHandler automatically generates SQL from our schema
