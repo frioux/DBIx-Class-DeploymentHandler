@@ -90,7 +90,7 @@ translated into the sql.
 
 To truly take advantage of all DBIx::Class::DeploymentHandler offers, you
 should probably be using it for population.  To do that all you need to do
-is create a file called C<dbicdh/_common/install/1/create_artists.pl>:
+is create a file called C<dbicdh/_common/deploy/1/create_artists.pl>:
 
  sub {
     my $schema = shift;
