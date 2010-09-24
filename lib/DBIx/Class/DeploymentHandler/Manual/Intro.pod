@@ -152,7 +152,7 @@ So here is our next script, C<upgrade.pl>:
 
  my $dh = DH->new({
     schema              => $schema,
-    script_directory    => "$FindBin::Bin/dbicdh",
+    script_directory    => "$FindBin::Bin/../dbicdh",
     databases           => 'SQLite',
     sql_translator_args => { add_drop_table => 0 },
  });
