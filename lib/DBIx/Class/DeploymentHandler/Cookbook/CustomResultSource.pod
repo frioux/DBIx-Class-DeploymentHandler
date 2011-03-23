@@ -94,3 +94,9 @@ table being set on the original result.
  __PACKAGE__->meta->make_immutable;
  1;
 
+Note: if you are using decimal numbers for versioning, you should ammend
+this DeploymentHandler package, setting it's VersionHandler class_name from
+Monotonic ( which handles integer only version numbers ) to ExplicitVersions
+or DatabaseToSchemaVersions, as these handle version numbers as strings
+instead of integers.
+

@@ -36,7 +36,12 @@ or if you are using a newer Perl you can use the prettier syntax:
 
 By default DBIx::Class::DeploymentHandler only uses integers for versions,
 this makes versioning much simpler for figuring out what version is next
-(or previous.)
+(or previous.) However, if you are using decimal numbers for versioning,
+you will need to create a separate DeploymentHandler class, as per
+L<DBIx::Class::DeploymentHandler::Cookbook::CustomResultSource>, and
+set the VersionHandler class_name from Monotonic to ExplicitVersions or
+DatabaseToSchemaVersions, as these handle version numbers as strings instead
+of integers.
 
 =head1 install.pl
 
