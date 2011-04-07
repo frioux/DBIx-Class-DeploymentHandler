@@ -98,6 +98,9 @@ method __ddl_consume_with_prefix($type, $versions, $prefix) {
   my $common  =
     catfile( $base_dir, '_common', $prefix, join q(-), @{$versions} );
 
+  my $common_any  =
+    catfile( $base_dir, '_common', $prefix, '_any' );
+
   my $dir;
   if (-d $main) {
     $dir = catfile($main, $prefix, join q(-), @{$versions})
@@ -108,6 +111,7 @@ method __ddl_consume_with_prefix($type, $versions, $prefix) {
       croak "$main does not exist; please write/generate some SQL"
     }
   }
+  my $dir_any = catfile($main, $prefix, '_any');
 
   my %files;
   try {
@@ -120,11 +124,11 @@ method __ddl_consume_with_prefix($type, $versions, $prefix) {
   } catch {
     die $_ unless $self->ignore_ddl;
   };
-  if (-d $common) {
-    opendir my($dh), $common;
-    for my $filename (grep { /\.(?:sql|pl)$/ && -f catfile($common,$_) } readdir $dh) {
+  for my $dirname (grep { -d $_ } $common, $common_any, $dir_any) {
+    opendir my($dh), $dirname;
+    for my $filename (grep { /\.(?:sql|pl)$/ && -f catfile($dirname,$_) } readdir $dh) {
       unless ($files{$filename}) {
-        $files{$filename} = catfile($common,$filename);
+        $files{$filename} = catfile($dirname,$filename);
       }
     }
     closedir $dh;
@@ -251,7 +255,7 @@ method _run_sql($filename) {
   return $self->_run_sql_array($self->_read_sql_file($filename));
 }
 
-method _run_perl($filename) {
+method _run_perl($filename, $versions) {
   log_debug { "Running Perl from $filename" };
   my $filedata = do { local( @ARGV, $/ ) = $filename; <> };
 
@@ -263,13 +267,13 @@ method _run_perl($filename) {
   if ($@) {
     carp "$filename failed to compile: $@";
   } elsif (ref $fn eq 'CODE') {
-    $fn->($self->schema)
+    $fn->($self->schema, $versions)
   } else {
     carp "$filename should define an anonymouse sub that takes a schema but it didn't!";
   }
 }
 
-method _run_sql_and_perl($filenames, $sql_to_run) {
+method _run_sql_and_perl($filenames, $sql_to_run, $versions) {
   my @files   = @{$filenames};
   my $guard   = $self->schema->txn_scope_guard if $self->txn_wrap;
 
@@ -283,7 +287,7 @@ method _run_sql_and_perl($filenames, $sql_to_run) {
     } elsif ($filename =~ /\.sql$/) {
        $sql .= $self->_run_sql($filename)
     } elsif ( $filename =~ /\.pl$/ ) {
-       $self->_run_perl($filename)
+       $self->_run_perl($filename, $versions)
     } else {
       croak "A file ($filename) got to deploy that wasn't sql or perl!";
     }
@@ -308,7 +312,7 @@ sub deploy {
   return $self->_run_sql_and_perl($self->_ddl_schema_consume_filenames(
     $sqlt_type,
     $version,
-  ), $sql);
+  ), $sql, [$version]);
 }
 
 sub initialize {
@@ -507,7 +511,7 @@ sub install_resultsource {
       $version,
     )
   ];
-  $self->_run_sql_and_perl($files);
+  $self->_run_sql_and_perl($files, '', [$version]);
 }
 
 sub prepare_resultsource_install {
@@ -615,7 +619,7 @@ sub downgrade_single_step {
   my $sql = $self->_run_sql_and_perl($self->_ddl_schema_downgrade_consume_filenames(
     $sqlt_type,
     $version_set,
-  ), $sql_to_run);
+  ), $sql_to_run, $version_set);
 
   return ['', $sql];
 }
@@ -635,7 +639,7 @@ sub upgrade_single_step {
   my $sql = $self->_run_sql_and_perl($self->_ddl_schema_upgrade_consume_filenames(
     $sqlt_type,
     $version_set,
-  ), $sql_to_run);
+  ), $sql_to_run, $version_set);
   return ['', $sql];
 }
 
@@ -729,7 +733,9 @@ the following example:
  |  |     `- 002-remove-customers.pl
  |  `- upgrade
  |     `- 1-2
- |        `- 002-generate-customers.pl
+ |     |  `- 002-generate-customers.pl
+ |     `- _any
+ |        `- 999-bump-action.pl
  `- MySQL
     |- downgrade
     |  `- 2-1
@@ -755,7 +761,9 @@ C<$sql_migration_dir/SQLite/deploy/1/001-auto.sql>.  Next,
  $dm->upgrade_single_step([1,2])
 
 would run C<$sql_migration_dir/SQLite/upgrade/1-2/001-auto.sql> followed by
-C<$sql_migration_dir/_common/upgrade/1-2/002-generate-customers.pl>.
+C<$sql_migration_dir/_common/upgrade/1-2/002-generate-customers.pl>, and
+finally punctuated by
+C<$sql_migration_dir/_common/upgrade/_any/999-bump-action.pl>.
 
 C<.pl> files don't have to be in the C<_common> directory, but most of the time
 they should be, because perl scripts are generally database independent.
@@ -806,7 +814,7 @@ L<SQL::Translator::Schema> objects.
 your storage type is.  If you are not sure what your storage type is, take a
 look at the producers listed for L<SQL::Translator>.  Also note, C<_common>
 is a special case.  C<_common> will get merged into whatever other files you
-already have.  This directory can containt the following directories itself:
+already have.  This directory can contain the following directories itself:
 
 =over 2
 
@@ -838,10 +846,17 @@ to L</PERL SCRIPTS>.
 
 =back
 
+Note that there can be an C<_any> in the place of any of the versions (like
+C<1-2> or C<1>), which means those scripts will be run B<every> time.  So if
+you have an C<_any> in C<_common/upgrade>, that script will get run for every
+upgrade.
+
 =head1 PERL SCRIPTS
 
 A perl script for this tool is very simple.  It merely needs to contain an
-anonymous sub that takes a L<DBIx::Class::Schema> as it's only argument.
+anonymous sub that takes a L<DBIx::Class::Schema> and the version set as it's
+arguments.
+
 A very basic perl script might look like:
 
  #!perl
@@ -851,6 +866,9 @@ A very basic perl script might look like:
 
  sub {
    my $schema = shift;
+
+   # [1] for deploy, [1,2] for upgrade or downgrade, probably used with _any
+   my $versions = shift;
 
    $schema->resultset('Users')->create({
      name => 'root',

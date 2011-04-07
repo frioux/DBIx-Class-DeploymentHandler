@@ -17,6 +17,23 @@ my @connection = (sub { $dbh }, { ignore_version => 1 });
 my $sql_dir = 't/sql';
 
 DBICDHTest::ready;
+unlink 'stuffthatran';
+
+for (qw(initialize upgrade downgrade deploy)) {
+   mkpath(catfile(qw( t sql _common),  $_, '_any' ));
+   open my $fh, '>',
+      catfile(qw( t sql _common), $_, qw(_any 000-win.pl ));
+   print {$fh} 'sub {open my $fh, ">>", "stuffthatran"; use Data::Dumper::Concise; print {$fh} join(",", @{$_[1]||[]}) . "\n";  }';
+   close $fh;
+}
+
+for (qw(initialize upgrade downgrade deploy)) {
+   mkpath(catfile(qw( t sql SQLite),  $_, '_any' ));
+   open my $fh, '>',
+      catfile(qw( t sql SQLite), $_, qw(_any 000-win2.pl ));
+   print {$fh} 'sub {open my $fh, ">>", "stuffthatran"; use Data::Dumper::Concise; print {$fh} join(",", @{$_[1]||[]}) . "\n";  }';
+   close $fh;
+}
 
 VERSION1: {
    use_ok 'DBICVersion_v1';
@@ -39,7 +56,7 @@ VERSION1: {
    close $prerun;
    $dm->initialize({ version => '1.0' });
 
-   ok -e 'foobar';
+   ok -e 'foobar', 'code got run in preinit';
 
    dies_ok {$dm->prepare_deploy} 'prepare_deploy dies if you run it twice' ;
 
@@ -243,5 +260,24 @@ VERSION3: {
       $dm->upgrade_single_step({ version_set => [qw( 2.0 3.0 )] });
    } 'dies when sql dir does not exist';
 }
+
+my $stuff_that_ran = do { local( @ARGV, $/ ) = 'stuffthatran'; <> };
+is $stuff_that_ran,
+'
+
+1.0
+1.0
+1.0,2.0
+1.0,2.0
+2.0,1.0
+2.0,1.0
+1.0,2.0
+1.0,2.0
+2.0,3.0
+2.0,3.0
+2.0,3.0
+2.0,3.0
+', '_any got ran the right amount of times with the right args';
+
 done_testing;
 #vim: ts=2 sw=2 expandtab
