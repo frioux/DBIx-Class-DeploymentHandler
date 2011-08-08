@@ -75,7 +75,7 @@ sub upgrade {
 }
 
 sub downgrade {
-  log_info { 'upgrading' };
+  log_info { 'downgrading' };
   my $self = shift;
   my $ran_once = 0;
   while ( my $version_list = $self->previous_version_set ) {
@@ -83,7 +83,7 @@ sub downgrade {
     $self->downgrade_single_step({ version_set => $version_list });
 
     # do we just delete a row here?  I think so but not sure
-    $self->delete_database_version({ version => $version_list->[-1] });
+    $self->delete_database_version({ version => $version_list->[0] });
   }
   log_warn { 'no version to run downgrade' } unless $ran_once;
 }
