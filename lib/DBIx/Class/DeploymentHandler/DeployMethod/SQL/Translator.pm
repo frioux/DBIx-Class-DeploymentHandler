@@ -265,11 +265,11 @@ method _run_perl($filename, $versions) {
   Dlog_trace { "Running Perl $_" } $fn;
 
   if ($@) {
-    carp "$filename failed to compile: $@";
+    croak "$filename failed to compile: $@";
   } elsif (ref $fn eq 'CODE') {
     $fn->($self->schema, $versions)
   } else {
-    carp "$filename should define an anonymouse sub that takes a schema but it didn't!";
+    croak "$filename should define an anonymouse sub that takes a schema but it didn't!";
   }
 }
 
@@ -337,11 +337,11 @@ sub initialize {
       use warnings;
 
       if ($@) {
-        carp "$filename failed to compile: $@";
+        croak "$filename failed to compile: $@";
       } elsif (ref $fn eq 'CODE') {
         $fn->()
       } else {
-        carp "$filename should define an anonymous sub but it didn't!";
+        croak "$filename should define an anonymous sub but it didn't!";
       }
     } else {
       croak "A file ($filename) got to initialize_scripts that wasn't sql or perl!";

@@ -2,6 +2,7 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
        - Stop warning all the time (ribasushi)
+       - croak on a couple errors that should be fatal
        - Stop deleting the wrong version (for downgrades)
        - Fix documentation for in the Cookbook (moltar)
 
