@@ -91,7 +91,7 @@ sub downgrade {
 sub backup {
   my $self = shift;
   log_info { 'backing up' };
-  $self->storage->backup($self->backup_directory)
+  $self->schema->storage->backup($self->backup_directory)
 }
 
 __PACKAGE__->meta->make_immutable;

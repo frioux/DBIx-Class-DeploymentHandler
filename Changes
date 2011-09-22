@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Fix the backup method to use storage, not schema (jnap)
        - Fix the reasonable defaults for downgrading (jnap)
        - Stop warning all the time (ribasushi)
        - croak on a couple errors that should be fatal
