@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Fix the reasonable defaults for downgrading (jnap)
        - Stop warning all the time (ribasushi)
        - croak on a couple errors that should be fatal
        - Stop deleting the wrong version (for downgrades)
