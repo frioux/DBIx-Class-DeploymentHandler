@@ -24,8 +24,8 @@ around prepare_downgrade => sub {
 
   my $args = shift || {};
 
-  $args->{from_version} ||= $self->database_version;
-  $args->{to_version}   ||= $self->schema_version;
+  $args->{to_version} ||= $self->database_version;
+  $args->{from_version}   ||= $self->schema_version;
   $args->{version_set}  ||= [$args->{from_version}, $args->{to_version}];
 
   $self->$orig($args);
