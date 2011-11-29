@@ -223,13 +223,7 @@ method _ddl_schema_downgrade_produce_filename($type, $versions, $dir) {
 method _run_sql_array($sql) {
   my $storage = $self->storage;
 
-  $sql = [grep {
-    $_ && # remove blank lines
-    !/^(BEGIN|BEGIN TRANSACTION|COMMIT)/ # strip txn's
-  } map {
-    s/^\s+//; s/\s+$//; # trim whitespace
-    join '', grep { !/^--/ } split /\n/ # remove comments
-  } @$sql];
+  $sql = [ _split_sql_chunk( @$sql ) ];
 
   Dlog_trace { "Running SQL $_" } $sql;
   foreach my $line (@{$sql}) {
@@ -244,6 +238,30 @@ method _run_sql_array($sql) {
     $storage->_query_end($line);
   }
   return join "\n", @$sql
+}
+
+# split a chunk o' SQL into statements
+sub _split_sql_chunk {
+    my @sql = map { split /;\n/, $_ } @_;
+
+    for ( @sql ) {
+        # strip transactions
+        s/^(?:BEGIN|BEGIN TRANSACTION|COMMIT).*//mgi;
+
+        # trim whitespaces
+        s/^\s+|\s+$//mg;
+
+        # remove comments
+        s/^--.*//gm;
+
+        # remove blank lines
+        s/^\n//mg;
+
+        # put on single line
+        s/\n/ /g;
+    }
+
+    return @sql;
 }
 
 method _run_sql($filename) {
@@ -585,19 +603,10 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
 method _read_sql_file($file) {
   return unless $file;
 
+   local $/ = undef;  #sluuuuuurp
+
   open my $fh, '<', $file;
-  my @data = split /;\n/, join '', <$fh>;
-  close $fh;
-
-  @data = grep {
-    $_ && # remove blank lines
-    !/^(BEGIN|BEGIN TRANSACTION|COMMIT)/ # strip txn's
-  } map {
-    s/^\s+//; s/\s+$//; # trim whitespace
-    join '', grep { !/^--/ } split /\n/ # remove comments
-  } @data;
-
-  return \@data;
+  return [ _split_sql_chunk( <$fh> ) ];
 }
 
 sub downgrade_single_step {
