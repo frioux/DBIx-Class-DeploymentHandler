@@ -25,6 +25,14 @@ use File::Spec::Functions;
 
 with 'DBIx::Class::DeploymentHandler::HandlesDeploy';
 
+with 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
+    interface_role       => 'DBIx::Class::DeploymentHandler::HandlesProvideSchema',
+    class_name           => 'DBIx::Class::DeploymentHandler::ProvideSchema::SchemaLoader',
+    delegate_name        => 'schema_provider',
+    attributes_to_assume => ['schema'],
+    attributes_to_copy   => [qw( schema )],
+  };
+
 has ignore_ddl => (
   isa      => 'Bool',
   is       => 'ro',
@@ -281,7 +289,7 @@ method _run_perl($filename) {
   if ($@) {
     carp "$filename failed to compile: $@";
   } elsif (ref $fn eq 'CODE') {
-    $fn->($self->schema)
+    $fn->($self->schema_for_run_files)
   } else {
     carp "$filename should define an anonymouse sub that takes a schema but it didn't!";
   }
