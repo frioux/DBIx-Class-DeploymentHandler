@@ -46,7 +46,7 @@ method install {
   croak 'Install not possible as versions table already exists in database'
     if $self->version_storage_is_installed;
 
-  my $ddl = $self->deploy;
+  my $ddl = $self->deploy({version=>$self->to_version});
 
   $self->add_database_version({
     version     => $self->to_version,
