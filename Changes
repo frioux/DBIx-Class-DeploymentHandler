@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Fix install to allow you to deploy to a given version (jnap)
        - Fix the backup method to use storage, not schema (jnap)
        - Fix the reasonable defaults for downgrading (jnap)
        - Stop warning all the time (ribasushi)
