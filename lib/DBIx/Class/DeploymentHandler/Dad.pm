@@ -46,7 +46,7 @@ method install {
   croak 'Install not possible as versions table already exists in database'
     if $self->version_storage_is_installed;
 
-  my $ddl = $self->deploy;
+  my $ddl = $self->deploy({version=>$self->to_version});
 
   $self->add_database_version({
     version     => $self->to_version,
@@ -75,7 +75,7 @@ sub upgrade {
 }
 
 sub downgrade {
-  log_info { 'upgrading' };
+  log_info { 'downgrading' };
   my $self = shift;
   my $ran_once = 0;
   while ( my $version_list = $self->previous_version_set ) {
@@ -83,14 +83,14 @@ sub downgrade {
     $self->downgrade_single_step({ version_set => $version_list });
 
     # do we just delete a row here?  I think so but not sure
-    $self->delete_database_version({ version => $version_list->[-1] });
+    $self->delete_database_version({ version => $version_list->[0] });
   }
   log_warn { 'no version to run downgrade' } unless $ran_once;
 }
 
 method backup {
   log_info { 'backing up' };
-  $self->storage->backup($self->backup_directory)
+  $self->schema->storage->backup($self->backup_directory)
 }
 
 __PACKAGE__->meta->make_immutable;

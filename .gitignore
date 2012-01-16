@@ -2,3 +2,4 @@
 t/sql
 DBIx-Class-DeploymentHandler-*
 .build
+*\.DS_Store

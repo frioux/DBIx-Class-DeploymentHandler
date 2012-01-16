@@ -85,7 +85,7 @@ The version set uniquely identifies the migration.
 
 Takes two versions and a version set.  This basically is supposed to generate
 the needed C<SQL> to migrate down from the first version to the second version.
-The version set uniquely identifies the migration and should match it's
+The version set uniquely identifies the migration and should match its
 respective upgrade version set.
 
 =method upgrade_single_step
