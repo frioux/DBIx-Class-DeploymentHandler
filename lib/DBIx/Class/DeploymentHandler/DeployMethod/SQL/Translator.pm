@@ -11,7 +11,6 @@ use Log::Contextual qw(:log :dlog), -package_logger =>
     env_prefix => 'DBICDH'
   });
 
-use Method::Signatures::Simple;
 use Try::Tiny;
 
 use SQL::Translator;
@@ -49,7 +48,8 @@ has storage => (
   lazy_build => 1,
 );
 
-method _build_storage {
+sub _build_storage {
+  my $self = shift;
   my $s = $self->schema->storage;
   $s->_determine_driver;
   $s
@@ -89,9 +89,13 @@ has schema_version => (
 # this will probably never get called as the DBICDH
 # will be passing down a schema_version normally, which
 # is built the same way, but we leave this in place
-method _build_schema_version { $self->schema->schema_version }
+sub _build_schema_version { 
+  my $self = shift;
+  $self->schema->schema_version 
+}
 
-method __ddl_consume_with_prefix($type, $versions, $prefix) {
+sub __ddl_consume_with_prefix {
+  my ($self, $type, $versions, $prefix) = @_;
   my $base_dir = $self->script_directory;
 
   my $main    = catfile( $base_dir, $type      );
@@ -137,15 +141,18 @@ method __ddl_consume_with_prefix($type, $versions, $prefix) {
   return [@files{sort keys %files}]
 }
 
-method _ddl_initialize_consume_filenames($type, $version) {
+sub _ddl_initialize_consume_filenames {
+  my ($self, $type, $version) = @_;
   $self->__ddl_consume_with_prefix($type, [ $version ], 'initialize')
 }
 
-method _ddl_schema_consume_filenames($type, $version) {
+sub _ddl_schema_consume_filenames {
+  my ($self, $type, $version) = @_;
   $self->__ddl_consume_with_prefix($type, [ $version ], 'deploy')
 }
 
-method _ddl_protoschema_deploy_consume_filenames($version) {
+sub _ddl_protoschema_deploy_consume_filenames {
+  my ($self, $version) = @_;
   my $base_dir = $self->script_directory;
 
   my $dir = catfile( $base_dir, '_source', 'deploy', $version);
@@ -158,7 +165,8 @@ method _ddl_protoschema_deploy_consume_filenames($version) {
   return [@files{sort keys %files}]
 }
 
-method _ddl_protoschema_upgrade_consume_filenames($versions) {
+sub _ddl_protoschema_upgrade_consume_filenames {
+  my ($self, $versions) = @_;
   my $base_dir = $self->script_directory;
 
   my $dir = catfile( $base_dir, '_preprocess_schema', 'upgrade', join q(-), @{$versions});
@@ -172,7 +180,8 @@ method _ddl_protoschema_upgrade_consume_filenames($versions) {
   return [@files{sort keys %files}]
 }
 
-method _ddl_protoschema_downgrade_consume_filenames($versions) {
+sub _ddl_protoschema_downgrade_consume_filenames {
+  my ($self, $versions) = @_;
   my $base_dir = $self->script_directory;
 
   my $dir = catfile( $base_dir, '_preprocess_schema', 'downgrade', join q(-), @{$versions});
@@ -186,29 +195,34 @@ method _ddl_protoschema_downgrade_consume_filenames($versions) {
   return [@files{sort keys %files}]
 }
 
-method _ddl_protoschema_produce_filename($version) {
+sub _ddl_protoschema_produce_filename {
+  my ($self, $version) = @_;
   my $dirname = catfile( $self->script_directory, '_source', 'deploy',  $version );
   mkpath($dirname) unless -d $dirname;
 
   return catfile( $dirname, '001-auto.yml' );
 }
 
-method _ddl_schema_produce_filename($type, $version) {
+sub _ddl_schema_produce_filename {
+  my ($self, $type, $version) = @_;
   my $dirname = catfile( $self->script_directory, $type, 'deploy', $version );
   mkpath($dirname) unless -d $dirname;
 
   return catfile( $dirname, '001-auto.sql' );
 }
 
-method _ddl_schema_upgrade_consume_filenames($type, $versions) {
+sub _ddl_schema_upgrade_consume_filenames {
+  my ($self, $type, $versions) = @_;
   $self->__ddl_consume_with_prefix($type, $versions, 'upgrade')
 }
 
-method _ddl_schema_downgrade_consume_filenames($type, $versions) {
+sub _ddl_schema_downgrade_consume_filenames {
+  my ($self, $type, $versions) = @_;
   $self->__ddl_consume_with_prefix($type, $versions, 'downgrade')
 }
 
-method _ddl_schema_upgrade_produce_filename($type, $versions) {
+sub _ddl_schema_upgrade_produce_filename {
+  my ($self, $type, $versions) = @_;
   my $dir = $self->script_directory;
 
   my $dirname = catfile( $dir, $type, 'upgrade', join q(-), @{$versions});
@@ -217,14 +231,16 @@ method _ddl_schema_upgrade_produce_filename($type, $versions) {
   return catfile( $dirname, '001-auto.sql' );
 }
 
-method _ddl_schema_downgrade_produce_filename($type, $versions, $dir) {
+sub _ddl_schema_downgrade_produce_filename {
+  my ($self, $type, $versions, $dir) = @_;
   my $dirname = catfile( $dir, $type, 'downgrade', join q(-), @{$versions} );
   mkpath($dirname) unless -d $dirname;
 
   return catfile( $dirname, '001-auto.sql');
 }
 
-method _run_sql_array($sql) {
+sub _run_sql_array {
+  my ($self, $sql) = @_;
   my $storage = $self->storage;
 
   $sql = [grep {
@@ -250,12 +266,14 @@ method _run_sql_array($sql) {
   return join "\n", @$sql
 }
 
-method _run_sql($filename) {
+sub _run_sql {
+  my ($self, $filename) = @_;
   log_debug { "Running SQL from $filename" };
   return $self->_run_sql_array($self->_read_sql_file($filename));
 }
 
-method _run_perl($filename, $versions) {
+sub _run_perl {
+  my ($self, $filename, $versions) = @_;
   log_debug { "Running Perl from $filename" };
   my $filedata = do { local( @ARGV, $/ ) = $filename; <> };
 
@@ -273,7 +291,8 @@ method _run_perl($filename, $versions) {
   }
 }
 
-method _run_sql_and_perl($filenames, $sql_to_run, $versions) {
+sub _run_sql_and_perl {
+  my ($self, $filenames, $sql_to_run, $versions) = @_;
   my @files   = @{$filenames};
   my $guard   = $self->schema->txn_scope_guard if $self->txn_wrap;
 
@@ -349,7 +368,8 @@ sub initialize {
   }
 }
 
-method _sqldiff_from_yaml($from_version, $to_version, $db, $direction) {
+sub _sqldiff_from_yaml {
+  my ($self, $from_version, $to_version, $db, $direction) = @_;
   my $dir       = $self->script_directory;
   my $sqltargs = {
     add_drop_table => 1,
@@ -419,7 +439,8 @@ method _sqldiff_from_yaml($from_version, $to_version, $db, $direction) {
   )];
 }
 
-method _sql_from_yaml($sqltargs, $from_file, $db) {
+sub _sql_from_yaml {
+  my ($self, $sqltargs, $from_file, $db) = @_;
   my $schema    = $self->schema;
   my $version   = $self->schema_version;
 
@@ -557,12 +578,14 @@ sub prepare_downgrade {
   );
 }
 
-method _coderefs_per_files($files) {
+sub _coderefs_per_files {
+  my ($self, $files) = @_;
   no warnings 'redefine';
   [map eval do { local( @ARGV, $/ ) = $_; <> }, @$files]
 }
 
-method _prepare_changegrade($from_version, $to_version, $version_set, $direction) {
+sub _prepare_changegrade {
+  my ($self, $from_version, $to_version, $version_set, $direction) = @_;
   my $schema    = $self->schema;
   my $databases = $self->databases;
   my $dir       = $self->script_directory;
@@ -586,7 +609,8 @@ method _prepare_changegrade($from_version, $to_version, $version_set, $direction
   }
 }
 
-method _read_sql_file($file) {
+sub _read_sql_file {
+  my ($self, $file)  = @_;
   return unless $file;
 
   open my $fh, '<', $file;

@@ -3,7 +3,6 @@ package DBIx::Class::DeploymentHandler::Dad;
 # ABSTRACT: Parent class for DeploymentHandlers
 
 use Moose;
-use Method::Signatures::Simple;
 require DBIx::Class::Schema;    # loaded for type constraint
 use Carp::Clan '^DBIx::Class::DeploymentHandler';
 use DBIx::Class::DeploymentHandler::Logger;
@@ -41,7 +40,8 @@ has schema_version => (
 
 sub _build_schema_version { $_[0]->schema->schema_version }
 
-method install {
+sub install {
+  my $self = shift;
   log_info { 'installing version ' . $self->to_version };
   croak 'Install not possible as versions table already exists in database'
     if $self->version_storage_is_installed;
@@ -88,7 +88,8 @@ sub downgrade {
   log_warn { 'no version to run downgrade' } unless $ran_once;
 }
 
-method backup {
+sub backup {
+  my $self = shift;
   log_info { 'backing up' };
   $self->storage->backup($self->backup_directory)
 }

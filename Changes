@@ -5,6 +5,7 @@ Revision history for {{$dist->name}}
        - croak on a couple errors that should be fatal
        - Stop deleting the wrong version (for downgrades)
        - Fix documentation for in the Cookbook (moltar)
+       - removed Method::Signatures::Simple stuff (dhoss)
 
 0.001005  2011-04-13 15:21:08 CST6CDT
        - Add _any "version" for running code for all versions
