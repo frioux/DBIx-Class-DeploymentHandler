@@ -1,7 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
-       - Stop deleting the wrong version
+       - Stop warning all the time (ribasushi)
+       - Stop deleting the wrong version (for downgrades)
        - Fix documentation for in the Cookbook (moltar)
 
 0.001005  2011-04-13 15:21:08 CST6CDT

@@ -12,7 +12,7 @@ use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
 use File::Spec::Functions;
 use File::Path qw(rmtree mkpath);
 
-my $dbh = DBI->connect('dbi:SQLite::memory:');
+my $dbh = DBICDHTest::dbh();
 my @connection = (sub { $dbh }, { ignore_version => 1 });
 my $sql_dir = 't/sql';
 

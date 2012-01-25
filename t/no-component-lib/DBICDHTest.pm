@@ -14,4 +14,8 @@ sub ready {
    }
 }
 
+sub dbh {
+  DBI->connect('dbi:SQLite::memory:', undef, undef, { RaiseError => 1 })
+}
+
 1;
