@@ -25,8 +25,8 @@ use File::Spec::Functions;
 with 'DBIx::Class::DeploymentHandler::HandlesDeploy';
 
 with 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
-    interface_role       => 'DBIx::Class::DeploymentHandler::HandlesProvideSchema',
-    class_name           => 'DBIx::Class::DeploymentHandler::ProvideSchema::SchemaLoader',
+    interface_role       => 'DBIx::Class::DeploymentHandler::HandlesMigrationSchema',
+    class_name           => 'DBIx::Class::DeploymentHandler::MigrationSchema::SchemaLoader',
     delegate_name        => 'schema_provider',
     attributes_to_assume => ['schema'],
     attributes_to_copy   => [qw( schema )],

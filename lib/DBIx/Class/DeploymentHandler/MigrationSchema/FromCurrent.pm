@@ -1,7 +1,7 @@
-package DBIx::Class::DeploymentHandler::ProvideSchema::SQL::FromCurrent;
+package DBIx::Class::DeploymentHandler::MigrationSchema::FromCurrent;
 
 use Moose;
-with 'DBIx::Class::DeploymentHandler::HandlesProvideSchema';
+with 'DBIx::Class::DeploymentHandler::HandlesMigrationSchema';
 
 has schema => (is=>'ro', required=>1);
 
@@ -13,9 +13,9 @@ sub migration_schema { shift->schema }
 
 __END__
 
-=method schema_for_run_files
+=method migration_schema
 
-  my $schema = $dh->schema_for_run_files;
+  my $schema = $dh->migration_schema;
 
 Provides a L<DBIx::Class::Schema> object that we can pass to the Perl deploy
 scripts.  We just return whatever C<$schema> you passed when you instantiated

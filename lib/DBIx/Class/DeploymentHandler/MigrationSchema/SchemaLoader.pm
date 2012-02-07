@@ -1,9 +1,9 @@
-package DBIx::Class::DeploymentHandler::ProvideSchema::SchemaLoader;
+package DBIx::Class::DeploymentHandler::MigrationSchema::SchemaLoader;
 
 use Moose;
 use DBIx::Class::Schema::Loader;
 
-with 'DBIx::Class::DeploymentHandler::HandlesProvideSchema';
+with 'DBIx::Class::DeploymentHandler::HandlesMigrationSchema';
 
 has schema => (is=>'ro', required=>1);
 
@@ -27,9 +27,9 @@ sub migration_schema {
 
 __END__
 
-=method schema_for_run_files
+=method migration_schema
 
-  my $schema = $dh->schema_for_run_files;
+  my $schema = $dh->migration_schema;
 
 Provides a L<DBIx::Class::Schema> object that we can pass to the Perl deploy
 scripts.  We reverse engineer a C<$schema> from whatever is currently deployed

@@ -1,4 +1,4 @@
-package DBIx::Class::DeploymentHandler::HandlesProvideSchema;
+package DBIx::Class::DeploymentHandler::HandlesMigrationSchema;
 use Moose::Role;
 
 # ABSTRACT: Interface for providing a $schema to the deployment scripts
@@ -11,9 +11,9 @@ requires 'migration_schema';
 
 __END__
 
-=method schema_for_run_files
+=method migration_schema
 
-  my $schema = $dh->schema_for_run_files;
+  my $schema = $dh->migration_schema;
 
 Provides a L<DBIx::Class::Schema> object that we can pass to the Perl deploy
 scripts.
@@ -24,11 +24,11 @@ scripts.
 
 =item *
 
-L<DBIx::Class::DeploymentHandler::ProvideSchema::FromCurrent>
+L<DBIx::Class::DeploymentHandler::MigrationSchema::FromCurrent>
 
 =item *
 
-L<DBIx::Class::DeploymentHandler::ProvideSchema::SQL::SchemaLoader>
+L<DBIx::Class::DeploymentHandler::MigrationSchema::SQL::SchemaLoader>
 
 =back
 
