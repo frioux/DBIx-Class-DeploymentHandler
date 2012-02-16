@@ -2,6 +2,9 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.001007  2012-02-16 08:58:30 CST6CDT
+       - removed the rest of the references to Method::Signatures::Simple
+
 0.001006  2012-02-01 21:18:38 CST6CDT
        - Fix install to allow you to deploy to a given version (jnap)
        - Fix the backup method to use storage, not schema (jnap)
