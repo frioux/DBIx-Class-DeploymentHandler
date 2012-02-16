@@ -3,8 +3,6 @@ use Moose;
 
 # ABSTRACT: Go straight from Database to Schema version
 
-use Method::Signatures::Simple;
-
 with 'DBIx::Class::DeploymentHandler::HandlesVersioning';
 
 has schema_version => (

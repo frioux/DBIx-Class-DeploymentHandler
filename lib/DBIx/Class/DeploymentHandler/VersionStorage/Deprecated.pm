@@ -9,8 +9,6 @@ use Log::Contextual ':log', -package_logger =>
 
 # ABSTRACT: (DEPRECATED) Use this if you are stuck in the past
 
-use Method::Signatures::Simple;
-
 has schema => (
   isa      => 'DBIx::Class::Schema',
   is       => 'ro',
