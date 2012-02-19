@@ -2,6 +2,9 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.001008  2012-02-19 10:12:34 CST6CDT
+       - Added dep on parent, bump dep on DBD::SQLite to avoid silly failures
+
 0.001007  2012-02-16 08:58:30 CST6CDT
        - removed the rest of the references to Method::Signatures::Simple
 
