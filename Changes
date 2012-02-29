@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002000  2012-02-28 21:20:48 CST6CDT
        - Added DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::ScriptHelpers,
          ALL users who use perl scripts during migrations are encouraged to use
          schema_from_schema_loader from that package.
