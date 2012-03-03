@@ -42,11 +42,13 @@ sub _build_schema_version { $_[0]->schema->schema_version }
 
 sub install {
   my $self = shift;
-  log_info { 'installing version ' . $self->to_version };
+
+  my $version = (shift @_ || {})->{version} || $self->to_version;
+  log_info { "installing version $version" };
   croak 'Install not possible as versions table already exists in database'
     if $self->version_storage_is_installed;
 
-  my $ddl = $self->deploy({version=>$self->to_version});
+  my $ddl = $self->deploy({ version=> $version });
 
   $self->add_database_version({
     version     => $self->to_version,
@@ -126,8 +128,12 @@ The version (defaults to schema's version) to migrate the database to
 
  $dh->install
 
-Deploys the current schema into the database.  Populates C<version_storage> with
-C<version> and C<ddl>.
+or
+
+ $dh->install({ version => 1 })
+
+Deploys the requested version into the database  Version defaults to
+L</schema_version>.  Populates C<version_storage> with C<version> and C<ddl>.
 
 B<Note>: you typically need to call C<< $dh->prepare_deploy >> before you call
 this method.

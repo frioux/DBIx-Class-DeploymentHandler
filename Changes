@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Allow user to specify version of schema to install
        - Added better sandboxing (stolen straight from Plack::Util) for coderefs
          to avoid accidental leakage
        - Sandboxing also makes $0 and thus FindBin et al work in perl scripts
