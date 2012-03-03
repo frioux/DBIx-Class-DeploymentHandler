@@ -10,6 +10,7 @@ use Log::Contextual qw(:log :dlog), -package_logger =>
   DBIx::Class::DeploymentHandler::Logger->new({
     env_prefix => 'DBICDH'
   });
+use Context::Preserve;
 
 use Try::Tiny;
 
@@ -325,30 +326,37 @@ sub _run_perl {
   }
 }
 
+sub txn_do {
+   my ( $self, $code ) = @_;
+   return $code->() unless $self->txn_wrap;
+
+   my $guard = $self->schema->txn_scope_guard;
+
+   return preserve_context { $code->() } after => sub { $guard->commit };
+}
+
 sub _run_sql_and_perl {
   my ($self, $filenames, $sql_to_run, $versions) = @_;
   my @files   = @{$filenames};
-  my $guard   = $self->schema->txn_scope_guard if $self->txn_wrap;
+  $self->txn_do(sub {
+     $self->_run_sql_array($sql_to_run) if $self->ignore_ddl;
 
-  $self->_run_sql_array($sql_to_run) if $self->ignore_ddl;
+     my $sql = ($sql_to_run)?join ";\n", @$sql_to_run:'';
+     FILENAME:
+     for my $filename (@files) {
+       if ($self->ignore_ddl && $filename =~ /^[^_]*-auto.*\.sql$/) {
+         next FILENAME
+       } elsif ($filename =~ /\.sql$/) {
+          $sql .= $self->_run_sql($filename)
+       } elsif ( $filename =~ /\.pl$/ ) {
+          $self->_run_perl($filename, $versions)
+       } else {
+         croak "A file ($filename) got to deploy that wasn't sql or perl!";
+       }
+     }
 
-  my $sql = ($sql_to_run)?join ";\n", @$sql_to_run:'';
-  FILENAME:
-  for my $filename (@files) {
-    if ($self->ignore_ddl && $filename =~ /^[^_]*-auto.*\.sql$/) {
-      next FILENAME
-    } elsif ($filename =~ /\.sql$/) {
-       $sql .= $self->_run_sql($filename)
-    } elsif ( $filename =~ /\.pl$/ ) {
-       $self->_run_perl($filename, $versions)
-    } else {
-      croak "A file ($filename) got to deploy that wasn't sql or perl!";
-    }
-  }
-
-  $guard->commit if $self->txn_wrap;
-
-  return $sql;
+     return $sql;
+  });
 }
 
 sub deploy {

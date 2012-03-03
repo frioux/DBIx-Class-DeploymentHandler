@@ -17,6 +17,8 @@ requires 'upgrade_single_step';
 requires 'prepare_downgrade';
 requires 'downgrade_single_step';
 
+requires 'txn_do';
+
 1;
 
 # vim: ts=2 sw=2 expandtab
@@ -107,6 +109,12 @@ Call a single downgrade migration.  Takes a version set as an argument.
 Optionally return C<< [ $ddl, $upgrade_sql ] >> where C<$ddl> is the DDL for
 that version of the schema and C<$upgrade_sql> is the SQL that was run to
 upgrade the database.
+
+=method txn_do
+
+ $dh->txn_do(sub { ... })
+
+Wrap the passed coderef in a transaction (if transactions are enabled.)
 
 =head1 KNOWN IMPLEMENTATIONS
 

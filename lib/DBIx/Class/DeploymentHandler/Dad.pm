@@ -48,11 +48,13 @@ sub install {
   croak 'Install not possible as versions table already exists in database'
     if $self->version_storage_is_installed;
 
-  my $ddl = $self->deploy({ version=> $version });
+  $self->txn_do(sub {
+     my $ddl = $self->deploy({ version=> $version });
 
-  $self->add_database_version({
-    version     => $self->to_version,
-    ddl         => $ddl,
+     $self->add_database_version({
+       version     => $self->to_version,
+       ddl         => $ddl,
+     });
   });
 }
 
@@ -60,18 +62,20 @@ sub upgrade {
   log_info { 'upgrading' };
   my $self = shift;
   my $ran_once = 0;
-  while ( my $version_list = $self->next_version_set ) {
-    $ran_once = 1;
-    my ($ddl, $upgrade_sql) = @{
-      $self->upgrade_single_step({ version_set => $version_list })
-    ||[]};
+  $self->txn_do(sub {
+     while ( my $version_list = $self->next_version_set ) {
+       $ran_once = 1;
+       my ($ddl, $upgrade_sql) = @{
+         $self->upgrade_single_step({ version_set => $version_list })
+       ||[]};
 
-    $self->add_database_version({
-      version     => $version_list->[-1],
-      ddl         => $ddl,
-      upgrade_sql => $upgrade_sql,
-    });
-  }
+       $self->add_database_version({
+         version     => $version_list->[-1],
+         ddl         => $ddl,
+         upgrade_sql => $upgrade_sql,
+       });
+     }
+  });
 
   log_warn { 'no need to run upgrade' } unless $ran_once;
 }
@@ -80,13 +84,15 @@ sub downgrade {
   log_info { 'downgrading' };
   my $self = shift;
   my $ran_once = 0;
-  while ( my $version_list = $self->previous_version_set ) {
-    $ran_once = 1;
-    $self->downgrade_single_step({ version_set => $version_list });
+  $self->txn_do(sub {
+     while ( my $version_list = $self->previous_version_set ) {
+       $ran_once = 1;
+       $self->downgrade_single_step({ version_set => $version_list });
 
-    # do we just delete a row here?  I think so but not sure
-    $self->delete_database_version({ version => $version_list->[0] });
-  }
+       # do we just delete a row here?  I think so but not sure
+       $self->delete_database_version({ version => $version_list->[0] });
+     }
+  });
   log_warn { 'no version to run downgrade' } unless $ran_once;
 }
 
@@ -198,6 +204,10 @@ See L<DBIx::Class::DeploymentHandler::HandlesDeploy/upgrade_single_step>.
 =head2 downgrade_single_step
 
 See L<DBIx::Class::DeploymentHandler::HandlesDeploy/downgrade_single_step>.
+
+=head2 txn_do
+
+See L<DBIx::Class::DeploymentHandler::HandlesDeploy/txn_do>.
 
 =head1 ORTHODOX METHODS
 
