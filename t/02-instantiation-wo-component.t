@@ -40,7 +40,7 @@ VERSION1: {
       bar => 'frew',
     })
   } 'schema not deployed';
-  $handler->install;
+  $handler->install({ version => 1 });
   dies_ok {
     $handler->install;
   } 'cannot install twice';
