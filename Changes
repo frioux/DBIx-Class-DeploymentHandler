@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002100  2012-03-03 17:09:21 CST6CDT
        - Wrap upgrades, downgrades, and installs in a transaction, as a failure
          to add a version to the version table should cause a rollback
        - Allow user to specify version of schema to install
