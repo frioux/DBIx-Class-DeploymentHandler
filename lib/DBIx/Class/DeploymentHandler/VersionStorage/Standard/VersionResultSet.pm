@@ -11,7 +11,7 @@ use Try::Tiny;
 
 sub version_storage_is_installed {
   my $self = shift;
-  try { $self->next; 1 } catch { undef }
+  try { $self->count; 1 } catch { undef }
 }
 
 sub database_version {
