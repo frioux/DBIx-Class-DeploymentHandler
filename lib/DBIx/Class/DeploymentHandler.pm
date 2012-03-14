@@ -193,7 +193,7 @@ Then you'll want to just install the version_storage:
 
 Then set your database version:
 
- $dh->add_database_version({ version => $s->version });
+ $dh->add_database_version({ version => $s->schema_version });
 
 Now you should be able to use C<DBIx::Class::DeploymentHandler> like normal!
 
