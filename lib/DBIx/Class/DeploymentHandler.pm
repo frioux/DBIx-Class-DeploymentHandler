@@ -180,7 +180,7 @@ You started your project and weren't using C<DBIx::Class::DeploymentHandler>?
 Lucky for you I had you in mind when I wrote this doc.
 
 First,
-L<define the version|DBIx::Class::DeploymentHandler::Intro/Sample_database>
+L<define the version|DBIx::Class::DeploymentHandler::Manual::Intro/Sample_database>
 in your main schema file (maybe using C<$VERSION>).
 
 Then you'll want to just install the version_storage:
