@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002110  2012-03-14 21:22:36 America/Chicago
        - Use ->count instead of ->next to check if version storage is deployed
          (->next caused issues on MSSQL due to length of DDL)
        - Fix a couple stupid documentation issues (Phillip Smith)
