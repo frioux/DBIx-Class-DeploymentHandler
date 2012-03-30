@@ -84,3 +84,8 @@ new Standard VersionStorage:
  $dh->version_storage->add_database_vesion({ version => $_ })
    for @versions;
 
+=head1 SEE ALSO
+
+This class is an implementation of
+L<DBIx::Class::DeploymentHandler::HandlesVersionStorage>.  Pretty much all the
+documentation is there.

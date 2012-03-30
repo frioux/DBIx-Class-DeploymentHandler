@@ -106,3 +106,8 @@ L<DBIx::Class::DeployMethod::SQL::Translator/_ddl_schema_up_consume_filenames>
 
 =back
 
+=head1 SEE ALSO
+
+This class is an implementation of
+L<DBIx::Class::DeploymentHandler::HandlesDeploy>.  Pretty much all the
+documentation is there.

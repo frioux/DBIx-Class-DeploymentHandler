@@ -987,3 +987,9 @@ transaction.
 
 The version the schema on your harddrive is at.  Defaults to
 C<< $self->schema->schema_version >>.
+
+=head1 SEE ALSO
+
+This class is an implementation of
+L<DBIx::Class::DeploymentHandler::HandlesDeploy>.  Pretty much all the
+documentation is there.

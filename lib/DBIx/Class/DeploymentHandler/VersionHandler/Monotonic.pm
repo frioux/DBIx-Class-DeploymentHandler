@@ -74,3 +74,8 @@ __PACKAGE__->meta->make_immutable;
 
 __END__
 
+=head1 SEE ALSO
+
+This class is an implementation of
+L<DBIx::Class::DeploymentHandler::HandlesVersioning>.  Pretty much all the
+documentation is there.
