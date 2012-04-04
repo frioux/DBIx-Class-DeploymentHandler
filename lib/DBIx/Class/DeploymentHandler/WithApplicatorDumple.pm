@@ -1,50 +1,29 @@
 package DBIx::Class::DeploymentHandler::WithApplicatorDumple;
 
-use MooseX::Role::Parameterized;
-use Module::Runtime 'use_module';
-use namespace::autoclean;
-use DBIx::Class::DeploymentHandler::Types -all;
+use strict;
+use warnings;
 
-# this is at least a little ghetto and not super well
-# thought out.  Take a look at the following at some
-# point to clean it all up:
-#
-# http://search.cpan.org/~jjnapiork/MooseX-Role-BuildInstanceOf-0.06/lib/MooseX/Role/BuildInstanceOf.pm
-# http://github.com/rjbs/role-subsystem/blob/master/lib/Role/Subsystem.pm
+use Package::Variant
+  importing => {
+     'Module::Runtime' => ['use_module'],
+     'Moo::Role' => ['has'],
+  },
+  subs => [qw(has use_module)];
 
-parameter interface_role => (
-  isa      => Str,
-  required => 1,
-);
+sub make_variant {
+  my ($class, $target, %args) = @_;
 
-parameter class_name => (
-  isa      => Str,
-  required => 1,
-);
+  my $interface_role = $args{interface_role}
+    or die 'interface_role is required!';
 
-parameter delegate_name => (
-  isa      => Str,
-  required => 1,
-);
+  my $class_name = $args{class_name}
+    or die 'class_name is required!';
 
-parameter attributes_to_copy => (
-  isa => ArrayRef[Str],
-  default => sub {[]},
-);
+  my $delegate_name = $args{delegate_name}
+    or die 'delegate_name is required!';
 
-parameter attributes_to_assume => (
-  isa => ArrayRef[Str],
-  default => sub {[]},
-);
-
-role {
-  my $p = shift;
-
-  my $class_name = $p->class_name;
-  my $delegate_name = $p->delegate_name;
-  my $interface_role = $p->interface_role;
-  my $attributes_to_assume = $p->attributes_to_assume;
-  my $attributes_to_copy = $p->attributes_to_copy;
+  my $attributes_to_copy = $args{attributes_to_copy} || [];
+  my $attributes_to_assume = $args{attributes_to_assume} || [];
 
   use_module($class_name);
 
@@ -60,7 +39,7 @@ role {
     handles    => $interface_role,
   );
 
-  method '_build_'.$delegate_name => sub {
+  install '_build_'.$delegate_name => sub {
     my $self = shift;
 
     $class_name->new({
