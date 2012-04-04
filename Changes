@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002112  2012-04-03 21:11:19 America/Chicago
        - Handle errors in Perl Scripts better
        - Stop supporting FindBin by localizing $0, just use Dir::Self if you
          need that
