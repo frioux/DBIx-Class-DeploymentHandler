@@ -309,7 +309,7 @@ END_EVAL
 
   croak $@ if $@;
 
-  croak "$_file should define an anonymouse sub that takes a schema but it didn't!"
+  croak "$_file should define an anonymous sub that takes a schema but it didn't!"
      unless ref $fn && ref $fn eq 'CODE';
 
   return $fn;
