@@ -291,39 +291,39 @@ sub _run_sql {
   return $self->_run_sql_array($self->_read_sql_file($filename));
 }
 
-# stolen from Plack::Util::_load_sandbox
 sub _load_sandbox {
   my $_file = shift;
 
   my $_package = $_file;
-  $_package =~ s/([^A-Za-z0-9_])/sprintf("_%2x", unpack("C", $1))/eg;
+  $_package =~ s/([^A-Za-z0-9_])/sprintf("_%2x", ord($1))/eg;
 
-  local $0 = $_file; # so FindBin etc. works
-
-  return eval sprintf <<'END_EVAL', $_package;
+  my $fn = eval sprintf <<'END_EVAL', $_package;
 package DBICDH::Sandbox::%s;
 {
-  my $app = do $_file;
+  our $app;
+  $app ||= require $_file;
   if ( !$app && ( my $error = $@ || $! )) { die $error; }
   $app;
 }
 END_EVAL
+
+  croak $@ if $@;
+
+  croak "$_file should define an anonymouse sub that takes a schema but it didn't!"
+     unless ref $fn && ref $fn eq 'CODE';
+
+  return $fn;
 }
 
 sub _run_perl {
   my ($self, $filename, $versions) = @_;
   log_debug { "Running Perl from $filename" };
-  my $filedata = do { local( @ARGV, $/ ) = $filename; <> };
 
   my $fn = _load_sandbox($filename);
 
   Dlog_trace { "Running Perl $_" } $fn;
 
-  if (ref $fn eq 'CODE') {
-    $fn->($self->schema, $versions)
-  } else {
-    croak "$filename should define an anonymouse sub that takes a schema but it didn't!";
-  }
+  $fn->($self->schema, $versions)
 }
 
 sub txn_do {
