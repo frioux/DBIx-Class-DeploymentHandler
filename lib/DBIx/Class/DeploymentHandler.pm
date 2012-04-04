@@ -108,7 +108,7 @@ or for upgrades:
 C<DBIx::Class::DeploymentHandler> is, as its name suggests, a tool for
 deploying and upgrading databases with L<DBIx::Class>.  It is designed to be
 much more flexible than L<DBIx::Class::Schema::Versioned>, hence the use of
-L<Moose> and lots of roles.
+L<Moo> and lots of roles.
 
 C<DBIx::Class::DeploymentHandler> itself is just a recommended set of roles
 that we think will not only work well for everyone, but will also yield the
@@ -151,7 +151,7 @@ all the details.
 This is just a "stub" section to make clear
 that the bulk of implementation is documented in
 L<DBIx::Class::DeploymentHandler::Dad>. Since that is implemented using
-L<Moose> class, see L<DBIx::Class::DeploymentHandler::Dad/ATTRIBUTES>
+L<Moo> class, see L<DBIx::Class::DeploymentHandler::Dad/ATTRIBUTES>
 and L<DBIx::Class::DeploymentHandler::Dad/"ORTHODOX METHODS"> for
 available attributes to pass to C<new>, and methods callable on the
 resulting object.

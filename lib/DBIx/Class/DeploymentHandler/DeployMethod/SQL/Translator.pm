@@ -1,6 +1,6 @@
 package DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator;
 
-use Moose;
+use Moo;
 
 # ABSTRACT: Manage your SQL and Perl migrations in nicely laid out directories
 
@@ -9,15 +9,10 @@ use Carp qw( carp croak );
 use DBIx::Class::DeploymentHandler::LogImporter qw(:log :dlog);
 use Context::Preserve;
 use Digest::MD5;
-
 use Try::Tiny;
-
 use SQL::Translator;
 require SQL::Translator::Diff;
-
-require DBIx::Class::Storage;   # loaded for type constraint
 use DBIx::Class::DeploymentHandler::Types -all;
-
 use Path::Class qw(file dir);
 
 with 'DBIx::Class::DeploymentHandler::HandlesDeploy';
@@ -41,8 +36,7 @@ has schema => (
 
 has storage => (
   isa        => InstanceOf['DBIx::Class::Storage'],
-  is         => 'ro',
-  lazy_build => 1,
+  is         => 'lazy',
 );
 
 has version_source => (
@@ -62,6 +56,7 @@ has sql_translator_args => (
   is  => 'ro',
   default => sub { {} },
 );
+
 has script_directory => (
   isa      => Str,
   is       => 'ro',
@@ -85,8 +80,7 @@ has txn_wrap => (
 has schema_version => (
   coerce  => 1,
   isa     => VersionNonObj,
-  is => 'ro',
-  lazy_build => 1,
+  is      => 'lazy',
 );
 
 # this will probably never get called as the DBICDH
@@ -774,9 +768,7 @@ sub _prepare_changegrade {
 sub _read_sql_file {
   my ($self, $file)  = @_;
   return unless $file;
-
-   local $/ = undef;  #sluuuuuurp
-
+  local $/ = undef;  #sluuuuuurp
   open my $fh, '<', $file;
   return [ $self->_split_sql_chunk( <$fh> ) ];
 }

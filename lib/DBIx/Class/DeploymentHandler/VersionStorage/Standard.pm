@@ -1,6 +1,6 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Standard;
 
-use Moose;
+use Moo;
 use DBIx::Class::DeploymentHandler::LogImporter ':log';
 use DBIx::Class::DeploymentHandler::Types -all;
 
@@ -26,9 +26,7 @@ has version_class => (
 
 has version_rs => (
   isa        => InstanceOf['DBIx::Class::ResultSet'],
-  is         => 'ro',
-  lazy       => 1,
-  builder    => '_build_version_rs',
+  is         => 'lazy',
   handles    => [qw( database_version version_storage_is_installed )],
 );
 

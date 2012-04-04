@@ -2,6 +2,7 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
  - convert to Type::Tiny
+ - Mostly port to Moo
 
 0.002224  2019-03-09 05:16:47+00:00 Europe/London
  - binmode on all filehandles so lines always end LF - thanks @wchristian

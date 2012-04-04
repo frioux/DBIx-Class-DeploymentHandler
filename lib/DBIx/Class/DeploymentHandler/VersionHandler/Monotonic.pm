@@ -1,6 +1,6 @@
 package DBIx::Class::DeploymentHandler::VersionHandler::Monotonic;
 
-use Moose;
+use Moo;
 use DBIx::Class::DeploymentHandler::Types -all;
 
 # ABSTRACT: Obvious version progressions
@@ -25,8 +25,7 @@ has initial_version => (
 has to_version => (
   isa        => VersionNonObj,
   coerce     => 1,
-  is         => 'ro',
-  lazy_build => 1,
+  is         => 'lazy',
 );
 
 sub _build_to_version {
@@ -37,7 +36,8 @@ sub _build_to_version {
 has _version => (
   is         => 'rw',
   isa        => Int,
-  lazy_build => 1,
+  builder    => \&_build__version,
+  lazy       => 1,
 );
 
 sub _inc_version { $_[0]->_version($_[0]->_version + 1 ) }

@@ -1,6 +1,6 @@
 package DBIx::Class::DeploymentHandler::WithReasonableDefaults;
 
-use Moose::Role;
+use Moo::Role;
 
 # ABSTRACT: Make default arguments to a few methods sensible
 
