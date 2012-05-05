@@ -11,7 +11,6 @@ use Log::Contextual ':log', -package_logger =>
 use DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResult;
 
 has schema => (
-  isa      => 'DBIx::Class::Schema',
   is       => 'ro',
   required => 1,
 );

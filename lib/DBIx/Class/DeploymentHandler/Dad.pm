@@ -13,7 +13,6 @@ use Log::Contextual ':log', -package_logger =>
   });
 
 has schema => (
-  isa      => 'DBIx::Class::Schema',
   is       => 'ro',
   required => 1,
 );

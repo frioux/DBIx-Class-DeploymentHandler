@@ -10,7 +10,6 @@ use Log::Contextual ':log', -package_logger =>
 # ABSTRACT: (DEPRECATED) Use this if you are stuck in the past
 
 has schema => (
-  isa      => 'DBIx::Class::Schema',
   is       => 'ro',
   required => 1,
 );

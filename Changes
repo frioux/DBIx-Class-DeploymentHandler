@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Remove isa check on schema attributes so that you may pass the schema
+         class instead of the schema object
 
 0.002112  2012-04-03 21:11:19 America/Chicago
        - Handle errors in Perl Scripts better

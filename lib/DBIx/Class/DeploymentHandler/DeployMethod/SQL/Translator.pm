@@ -38,7 +38,6 @@ has force_overwrite => (
 );
 
 has schema => (
-  isa      => 'DBIx::Class::Schema',
   is       => 'ro',
   required => 1,
 );
