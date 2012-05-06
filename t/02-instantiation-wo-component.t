@@ -55,6 +55,20 @@ VERSION2: {
   use_ok 'DBICVersion_v2';
   my $s = DBICVersion::Schema->connect(@connection);
   $DBICVersion::Schema::VERSION = 2;
+  subtest 'bug deploying first version' => sub {
+    my $dbh = DBICDHTest::dbh();
+    my @connection = (sub { $dbh }, { ignore_version => 1 });
+    my $s = DBICVersion::Schema->connect(@connection);
+
+    my $handler = DH->new({
+      script_directory => $sql_dir,
+      schema => $s,
+      databases => 'SQLite',
+    });
+    $handler->install({ version => 1 });
+    is($handler->database_version, 1, 'correctly set version to 1');
+  };
+
   ok($s, 'DBICVersion::Schema 2 instantiates correctly');
   my $handler = DH->new({
     script_directory => $sql_dir,

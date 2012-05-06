@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Correctly set the version deployed to the version requested on install
+         instead of just the current schema version
 
 0.002113  2012-05-05 23:09:33 America/Chicago
        - Remove isa check on schema attributes so that you may pass the schema

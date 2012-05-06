@@ -51,7 +51,7 @@ sub install {
      my $ddl = $self->deploy({ version=> $version });
 
      $self->add_database_version({
-       version     => $self->to_version,
+       version     => $version,
        ddl         => $ddl,
      });
   });
