@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002113  2012-05-05 23:09:33 America/Chicago
        - Remove isa check on schema attributes so that you may pass the schema
          class instead of the schema object
 
