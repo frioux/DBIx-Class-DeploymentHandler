@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002114  2012-05-07 08:05:20 America/Chicago
        - Correctly set the version deployed to the version requested on install
          instead of just the current schema version
 
