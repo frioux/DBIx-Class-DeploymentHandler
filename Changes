@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Make tests use actual temp files to make certain systems stop failing tests
        - Remove dep on File::Touch
 
 0.002114  2012-05-07 08:05:20 America/Chicago

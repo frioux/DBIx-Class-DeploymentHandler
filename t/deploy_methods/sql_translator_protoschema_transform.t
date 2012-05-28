@@ -11,6 +11,7 @@ use DBICDHTest;
 use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
 use File::Spec::Functions;
 use File::Path qw(rmtree mkpath);
+use File::Temp 'tempfile';
 
 my $dbh = DBICDHTest::dbh();
 my @connection = (sub { $dbh }, { ignore_version => 1 });
@@ -47,19 +48,20 @@ VERSION2: {
    mkpath(catfile(qw( t sql _preprocess_schema upgrade 1.0-2.0 )));
    open my $prerun, '>',
       catfile(qw( t sql _preprocess_schema upgrade 1.0-2.0 003-semiautomatic.pl ));
+   my (undef, $fn) = tempfile(OPEN => 0);
    print {$prerun}
-      'sub {
-         open my $fh, ">", q(robotparty)
-            if $_[0]->isa("SQL::Translator::Schema")
-            && $_[1]->isa("SQL::Translator::Schema");
-      }';
+      qq^sub {
+         open my \$fh, ">", '$fn'
+            if \$_[0]->isa("SQL::Translator::Schema")
+            && \$_[1]->isa("SQL::Translator::Schema");
+      }^;
    close $prerun;
    $dm->prepare_upgrade({
      from_version => '1.0',
      to_version => '2.0',
      version_set => [qw(1.0 2.0)]
    });
-   ok -e 'robotparty', 'intermediate script ran with the right args';
+   ok -e $fn, 'intermediate script ran with the right args';
    $dm->upgrade_single_step({ version_set => [qw( 1.0 2.0 )] });
 }
 done_testing;

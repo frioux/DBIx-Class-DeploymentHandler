@@ -11,19 +11,20 @@ use DBICDHTest;
 use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
 use File::Spec::Functions;
 use File::Path qw(rmtree mkpath);
+use File::Temp 'tempfile';
 
 my $dbh = DBICDHTest::dbh();
 my @connection = (sub { $dbh }, { ignore_version => 1 });
 my $sql_dir = 't/sql';
+my (undef, $stuffthatran_fn) = tempfile(OPEN => 0);
 
 DBICDHTest::ready;
-unlink 'stuffthatran';
 
 for (qw(initialize upgrade downgrade deploy)) {
    mkpath(catfile(qw( t sql _common),  $_, '_any' ));
    open my $fh, '>',
       catfile(qw( t sql _common), $_, qw(_any 000-win.pl ));
-   print {$fh} 'sub {open my $fh, ">>", "stuffthatran"; use Data::Dumper::Concise; print {$fh} join(",", @{$_[1]||[]}) . "\n";  }';
+   print {$fh} qq^sub {open my \$fh, ">>", '$stuffthatran_fn'; use Data::Dumper::Concise; print {\$fh} join(",", \@{\$_[1]||[]}) . "\\n";  }^;
    close $fh;
 }
 
@@ -31,7 +32,7 @@ for (qw(initialize upgrade downgrade deploy)) {
    mkpath(catfile(qw( t sql SQLite),  $_, '_any' ));
    open my $fh, '>',
       catfile(qw( t sql SQLite), $_, qw(_any 000-win2.pl ));
-   print {$fh} 'sub {open my $fh, ">>", "stuffthatran"; use Data::Dumper::Concise; print {$fh} join(",", @{$_[1]||[]}) . "\n";  }';
+   print {$fh} qq^sub {open my \$fh, ">>", '$stuffthatran_fn'; use Data::Dumper::Concise; print {\$fh} join(",", \@{\$_[1]||[]}) . "\\n";  }^;
    close $fh;
 }
 
@@ -52,11 +53,12 @@ VERSION1: {
    mkpath(catfile(qw( t sql SQLite initialize 1.0 )));
    open my $prerun, '>',
       catfile(qw( t sql SQLite initialize 1.0 003-semiautomatic.pl ));
-   print {$prerun} "sub { open my \$fh, '>', q(foobar);}";
+   my (undef, $fn) = tempfile(OPEN => 0);
+   print {$prerun} "sub { open my \$fh, '>', '$fn'}";
    close $prerun;
    $dm->initialize({ version => '1.0' });
 
-   ok -e 'foobar', 'code got run in preinit';
+   ok -e $fn, 'code got run in preinit';
 
    dies_ok {$dm->prepare_deploy} 'prepare_deploy dies if you run it twice' ;
 
@@ -261,7 +263,7 @@ VERSION3: {
    } 'dies when sql dir does not exist';
 }
 
-my $stuff_that_ran = do { local( @ARGV, $/ ) = 'stuffthatran'; <> };
+my $stuff_that_ran = do { local( @ARGV, $/ ) = $stuffthatran_fn; <> };
 is $stuff_that_ran,
 '
 
