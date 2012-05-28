@@ -52,7 +52,7 @@ VERSION1: {
    mkpath(catfile(qw( t sql SQLite initialize 1.0 )));
    open my $prerun, '>',
       catfile(qw( t sql SQLite initialize 1.0 003-semiautomatic.pl ));
-   print {$prerun} "sub {use File::Touch; touch(q(foobar));}";
+   print {$prerun} "sub { open my \$fh, '>', q(foobar);}";
    close $prerun;
    $dm->initialize({ version => '1.0' });
 

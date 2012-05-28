@@ -49,8 +49,7 @@ VERSION2: {
       catfile(qw( t sql _preprocess_schema upgrade 1.0-2.0 003-semiautomatic.pl ));
    print {$prerun}
       'sub {
-         use File::Touch;
-         touch(q(robotparty))
+         open my $fh, ">", q(robotparty)
             if $_[0]->isa("SQL::Translator::Schema")
             && $_[1]->isa("SQL::Translator::Schema");
       }';
