@@ -10,12 +10,13 @@ use lib 't/lib';
 use DBICDHTest;
 use aliased 'DBIx::Class::DeploymentHandler::VersionStorage::Standard';
 use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
+use File::Temp 'tempdir';
 
 use DBICVersion_v1;
 use DBIx::Class::DeploymentHandler;
 my $dbh = DBICDHTest::dbh();
 my @connection = (sub { $dbh }, { ignore_version => 1 });
-my $sql_dir = 't/sql';
+my $sql_dir = tempdir( CLEANUP => 1 );
 
 my $s = DBICVersion::Schema->connect(@connection);
 {
@@ -24,8 +25,6 @@ my $s = DBICVersion::Schema->connect(@connection);
    my $t = DBICVersion::Schema->connect('frewfrew', '', '');
    like( $warning, qr/Your DB is currently unversioned. Please call upgrade on your schema to sync the DB/, 'warning when database is unversioned');
 }
-
-DBICDHTest::ready;
 
 my $dm = Translator->new({
    schema            => $s,

@@ -10,13 +10,12 @@ use aliased 'DBIx::Class::DeploymentHandler', 'DH';
 
 use File::Path qw(remove_tree mkpath);
 use Test::More;
+use File::Temp 'tempdir';
 use Test::Exception;
-
-DBICDHTest::ready;
 
 my $db = 'dbi:SQLite::memory:';
 my @connection = ($db, '', '', { ignore_version => 1, on_connect_do => sub { die }});
-my $sql_dir = 't/sql';
+my $sql_dir = tempdir( CLEANUP => 1 );
 
 VERSION1: {
   use_ok 'DBICVersion_v1';
@@ -33,7 +32,7 @@ VERSION1: {
   ok !$s->storage->connected, 'creating handler did not connect';
   ok($handler, 'DBIx::Class::DeploymentHandler w/1 instantiates correctly');
 
-  mkpath('t/sql/SQLite/initialize/1');
+  mkpath("$sql_dir/SQLite/initialize/1");
   $handler->initialize({ version => 1, storage_type => 'SQLite' });
   ok !$s->storage->connected, 'creating schema did not connect';
 }

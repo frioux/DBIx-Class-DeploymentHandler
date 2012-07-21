@@ -6,20 +6,22 @@ use warnings;
 use Test::More;
 use Test::Exception;
 use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
-use File::Temp;
+use File::Temp 'tempdir';
 
 use lib 't/lib';
 
 use DBICDHTest;
 
 my $dbh = DBICDHTest::dbh();
+my $sql_dir = tempdir( CLEANUP => 1 );
 my @connection = (sub { $dbh }, { ignore_version => 1 });
-
-DBICDHTest::ready;
 
 use_ok 'DBICVersion_v1';
 my $s = DBICVersion::Schema->connect(@connection);
-my $dm = Translator->new({ schema => $s });
+my $dm = Translator->new({
+   schema => $s,
+   script_directory => $sql_dir,
+});
 
 my ($fname1, $fname2) = @_;
 

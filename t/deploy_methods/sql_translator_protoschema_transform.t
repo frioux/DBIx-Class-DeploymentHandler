@@ -9,15 +9,13 @@ use Test::Exception;
 use lib 't/lib';
 use DBICDHTest;
 use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
-use File::Spec::Functions;
+use File::Spec::Functions qw(catfile splitdir);
 use File::Path qw(rmtree mkpath);
-use File::Temp 'tempfile';
+use File::Temp qw(tempfile tempdir);
 
 my $dbh = DBICDHTest::dbh();
 my @connection = (sub { $dbh }, { ignore_version => 1 });
-my $sql_dir = 't/sql';
-
-DBICDHTest::ready;
+my $sql_dir = tempdir( CLEANUP => 1 );
 
 VERSION1: {
    use_ok 'DBICVersion_v1';
@@ -45,9 +43,9 @@ VERSION2: {
    });
 
    $dm->prepare_deploy;
-   mkpath(catfile(qw( t sql _preprocess_schema upgrade 1.0-2.0 )));
+   mkpath(catfile(splitdir($sql_dir), qw(_preprocess_schema upgrade 1.0-2.0 )));
    open my $prerun, '>',
-      catfile(qw( t sql _preprocess_schema upgrade 1.0-2.0 003-semiautomatic.pl ));
+      catfile(splitdir($sql_dir), qw(_preprocess_schema upgrade 1.0-2.0 003-semiautomatic.pl ));
    my (undef, $fn) = tempfile(OPEN => 0);
    print {$prerun}
       qq^sub {

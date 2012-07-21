@@ -10,14 +10,13 @@ use aliased 'DBIx::Class::DeploymentHandler', 'DH';
 
 use File::Path 'remove_tree';
 use Test::More;
+use File::Temp 'tempdir';
 use Test::Exception;
 use DBI;
 
-DBICDHTest::ready;
-
 my $dbh = DBICDHTest::dbh();
 my @connection = (sub { $dbh }, { ignore_version => 1 });
-my $sql_dir = 't/sql';
+my $sql_dir = tempdir( CLEANUP => 1 );
 
 VERSION1: {
   use_ok 'DBICVersion_v1';
@@ -160,7 +159,7 @@ DOWN2: {
     })
   } 'schema is at version 2';
 
-  is $handler->version_storage->database_version => 2, 
+  is $handler->version_storage->database_version => 2,
     'database version is down to 2';
 
 }
