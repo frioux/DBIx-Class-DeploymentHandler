@@ -5,11 +5,7 @@ use Moose;
 
 use autodie;
 use Carp qw( carp croak );
-use DBIx::Class::DeploymentHandler::Logger;
-use Log::Contextual qw(:log :dlog), -package_logger =>
-  DBIx::Class::DeploymentHandler::Logger->new({
-    env_prefix => 'DBICDH'
-  });
+use DBIx::Class::DeploymentHandler::LogImporter qw(:log :dlog);
 use Context::Preserve;
 
 use Try::Tiny;

@@ -1,10 +1,6 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Deprecated;
 use Moose;
-use DBIx::Class::DeploymentHandler::Logger;
-use Log::Contextual ':log', -package_logger =>
-  DBIx::Class::DeploymentHandler::Logger->new({
-    env_prefix => 'DBICDH'
-  });
+use DBIx::Class::DeploymentHandler::LogImporter ':log';
 
 
 # ABSTRACT: (DEPRECATED) Use this if you are stuck in the past

@@ -5,12 +5,8 @@ package DBIx::Class::DeploymentHandler::Dad;
 use Moose;
 require DBIx::Class::Schema;    # loaded for type constraint
 use Carp::Clan '^DBIx::Class::DeploymentHandler';
-use DBIx::Class::DeploymentHandler::Logger;
+use DBIx::Class::DeploymentHandler::LogImporter ':log';
 use DBIx::Class::DeploymentHandler::Types;
-use Log::Contextual ':log', -package_logger =>
-  DBIx::Class::DeploymentHandler::Logger->new({
-    env_prefix => 'DBICDH'
-  });
 
 has schema => (
   is       => 'ro',
