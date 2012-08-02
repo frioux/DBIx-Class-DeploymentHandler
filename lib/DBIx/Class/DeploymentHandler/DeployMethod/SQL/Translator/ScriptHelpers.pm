@@ -3,7 +3,7 @@ package DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::ScriptHel
 use strict;
 use warnings;
 
-use Sub::Exporter -setup => {
+use Sub::Exporter::Progressive -setup => {
   exports => [qw(dbh schema_from_schema_loader)],
 };
 
