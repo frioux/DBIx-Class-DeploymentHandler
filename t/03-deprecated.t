@@ -10,7 +10,7 @@ use aliased 'DBIx::Class::DeploymentHandler::Deprecated';
 use File::Path 'remove_tree';
 use Test::More;
 use File::Temp 'tempdir';
-use Test::Exception;
+use Test::Fatal qw(lives_ok dies_ok);
 
 my $dbh = DBICDHTest::dbh();
 my @connection = (sub { $dbh }, { ignore_version => 1 });

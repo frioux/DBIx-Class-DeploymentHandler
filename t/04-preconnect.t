@@ -11,7 +11,6 @@ use aliased 'DBIx::Class::DeploymentHandler', 'DH';
 use File::Path qw(remove_tree mkpath);
 use Test::More;
 use File::Temp 'tempdir';
-use Test::Exception;
 
 my $db = 'dbi:SQLite::memory:';
 my @connection = ($db, '', '', { ignore_version => 1, on_connect_do => sub { die }});

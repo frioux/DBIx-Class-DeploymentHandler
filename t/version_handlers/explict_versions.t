@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use Test::More;
-use Test::Exception;
+use Test::Fatal qw(lives_ok dies_ok);
 
 use lib 't/lib';
 use aliased

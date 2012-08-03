@@ -5,7 +5,6 @@ use warnings;
 
 use File::Path 'remove_tree';
 use Test::More;
-use Test::Exception;
 
 sub ready {
    if (-d 't/sql') {
