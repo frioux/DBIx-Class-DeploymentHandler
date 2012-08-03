@@ -10,6 +10,7 @@ use Sub::Exporter::Progressive -setup => {
 use List::Util 'first';
 use Text::Brew 'distance';
 use Try::Tiny;
+use DBIx::Class::DeploymentHandler::LogImporter qw(:dlog);
 
 sub dbh {
    my ($code) = @_;
@@ -46,6 +47,9 @@ sub schema_from_schema_loader {
       if $opts->{naming} eq 'current' ||
         (ref $opts->{naming} eq 'HASH' && first { $_ eq 'current' } values %{$opts->{naming}});
 
+   $opts->{debug} = 1
+      if !exists $opts->{debug} && $ENV{DBICDH_TRACE};
+
    sub {
       my ($schema, $versions) = @_;
 
@@ -57,6 +61,10 @@ sub schema_from_schema_loader {
       my $new_schema = DBIx::Class::Schema::Loader::make_schema_at(
         'SHSchema::' . $count++, $opts, \@ci
       );
+
+      Dlog_debug {
+         "schema_from_schema_loader generated the following sources: $_"
+      } [ $new_schema->sources ];
       my $sl_schema = $new_schema->connect(@ci);
       try {
          $code->($sl_schema, $versions)

@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Added helpful logging for the schema_from_schema_loader ScriptHelper
        - Added much more helpful error for "Can't find source for..." error in
          migration scripts, based on code from DBIx::Class::Migration
        - Test suite now is fully parallelizable
