@@ -5,6 +5,7 @@ use warnings;
 
 use Test::More;
 use DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::ScriptHelpers ':all';;
+use Test::Fatal;
 
 use lib 't/lib';
 
@@ -83,6 +84,28 @@ subtest schema_from_schema_loader => sub {
       RaiseError => 1,
       ignore_version => 1,
    });
+
+   subtest '({ dbh_maker => ..., ... })' => $build_sl_test->({
+      dbh_maker => sub { DBICDHTest->dbh },
+      RaiseError => 1,
+      ignore_version => 1,
+   });
+
+   subtest 'error handling' => sub {
+      my $outer_schema = DBICVersion::Schema->connect(
+         'dbi:SQLite::memory:', undef, undef,
+         { RaiseError => 1 },
+         { ignore_version => 1 },
+      );
+      $outer_schema->deploy;
+      like(exception {
+         schema_from_schema_loader({ naming => 'v4' }, sub {
+            my ($schema, $versions) = @_;
+
+            $schema->resultset('foo')
+         })->($outer_schema, [2,3]);
+      }, qr/Foo <== Possible Match/, 'correct error');
+   };
 };
 
 done_testing;

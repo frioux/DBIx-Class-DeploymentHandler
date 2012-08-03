@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Added much more helpful error for "Can't find source for..." error in
+         migration scripts, based on code from DBIx::Class::Migration
        - Test suite now is fully parallelizable
        - Switch ::ScriptHelpers to Sub::Exporter::Progressive
        - Switch from Test::Exception to Test::Fatal
