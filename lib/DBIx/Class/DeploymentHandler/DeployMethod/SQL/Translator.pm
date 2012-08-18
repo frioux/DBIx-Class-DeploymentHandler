@@ -338,7 +338,7 @@ sub _run_sql_and_perl {
      my $sql = ($sql_to_run)?join ";\n", @$sql_to_run:'';
      FILENAME:
      for my $filename (map file($_), @files) {
-       if ($self->ignore_ddl && $filename->basename =~ /^[^_]*-auto.*\.sql$/) {
+       if ($self->ignore_ddl && $filename->basename =~ /^[^-]*-auto.*\.sql$/) {
          next FILENAME
        } elsif ($filename =~ /\.sql$/) {
           $sql .= $self->_run_sql($filename)
