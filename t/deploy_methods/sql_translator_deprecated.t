@@ -8,7 +8,7 @@ use DBICDHTest;
 use aliased
    'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::Deprecated';
 
-use File::Spec::Functions qw(catfile splitdir);
+use Path::Class 'file';
 use File::Temp 'tempdir';
 
 my $dbh = DBICDHTest::dbh();
@@ -32,7 +32,7 @@ VERSION1: {
    $dm->prepare_deploy;
 
    ok(
-      -f catfile(splitdir($sql_dir), qw(DBICVersion-Schema-1.0-SQLite.sql )),
+      -f file($sql_dir, qw(DBICVersion-Schema-1.0-SQLite.sql )),
       '1.0 schema gets generated properly'
    );
 

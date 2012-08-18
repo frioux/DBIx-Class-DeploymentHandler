@@ -8,7 +8,6 @@ use DBICDHTest;
 use DBIx::Class::DeploymentHandler;
 use aliased 'DBIx::Class::DeploymentHandler', 'DH';
 
-use File::Path 'remove_tree';
 use Test::More;
 use File::Temp 'tempdir';
 use Test::Fatal qw(lives_ok dies_ok);

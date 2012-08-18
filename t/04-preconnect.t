@@ -8,7 +8,7 @@ use DBICDHTest;
 use DBIx::Class::DeploymentHandler;
 use aliased 'DBIx::Class::DeploymentHandler', 'DH';
 
-use File::Path qw(remove_tree mkpath);
+use Path::Class 'dir';
 use Test::More;
 use File::Temp 'tempdir';
 
@@ -31,7 +31,7 @@ VERSION1: {
   ok !$s->storage->connected, 'creating handler did not connect';
   ok($handler, 'DBIx::Class::DeploymentHandler w/1 instantiates correctly');
 
-  mkpath("$sql_dir/SQLite/initialize/1");
+  dir($sql_dir, qw(SQLite initialize 1))->mkpath;
   $handler->initialize({ version => 1, storage_type => 'SQLite' });
   ok !$s->storage->connected, 'creating schema did not connect';
 }
