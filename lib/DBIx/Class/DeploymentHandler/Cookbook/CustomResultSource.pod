@@ -2,6 +2,13 @@ package DBIx::Class::DeploymentHandler::Cookbook::CustomResultSource;
 
 =pod
 
+=head1 NAME
+
+DBIx::Class::DeploymentHandler::Cookbook::CustomResultSource - Customize how
+your DBICDH versions are stored
+
+=head1 DESCRIPTION
+
 One of the reasons for the absurd level of flexibility that
 L<DBIx::Class::DeploymentHandler> is so that you can do things that we did not
 originally anticipate.  Surprisingly, I never added a method to change the
