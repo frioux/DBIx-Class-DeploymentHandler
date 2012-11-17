@@ -2,6 +2,9 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.002203  2012-11-17 16:38:24 CST6CDT
+       - Put MetaYAML back in dist
+
 0.002202  2012-09-02 12:23:07 America/Chicago
        - Fix RT#79301
 
