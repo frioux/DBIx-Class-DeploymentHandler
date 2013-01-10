@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+       - Add semicolon to generated SQL for "correctness"
 
 0.002203  2012-11-17 16:38:24 CST6CDT
        - Put MetaYAML back in dist

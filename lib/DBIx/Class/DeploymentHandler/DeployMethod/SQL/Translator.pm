@@ -525,7 +525,7 @@ sub _prepare_install {
       }
     }
     open my $file, q(>), $filename;
-    print {$file} join ";\n", @$sql;
+    print {$file} join ";\n", @$sql, '';
     close $file;
   }
 }
