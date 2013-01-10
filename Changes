@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002204  2013-01-09 20:34:56 CST6CDT
        - Add semicolon to generated SQL for "correctness"
 
 0.002203  2012-11-17 16:38:24 CST6CDT
