@@ -703,14 +703,13 @@ sub prepare_protoschema {
 
   # we do this because the code that uses this sets parser args,
   # so we just need to merge in the package
-  $sqltargs->{parser_args}{package} = $self->schema;
   my $sqlt = SQL::Translator->new({
     parser                  => 'SQL::Translator::Parser::DBIx::Class',
     producer                => 'SQL::Translator::Producer::YAML',
     %{ $sqltargs },
   });
 
-  my $yml = $sqlt->translate;
+  my $yml = $sqlt->translate(data => $self->schema);
 
   croak("Failed to translate to YAML: " . $sqlt->error)
     unless $yml;
