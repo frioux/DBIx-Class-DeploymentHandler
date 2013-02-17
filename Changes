@@ -3,164 +3,164 @@ Revision history for {{$dist->name}}
 {{$NEXT}}
 
 0.002204  2013-01-09 20:34:56 CST6CDT
-       - Add semicolon to generated SQL for "correctness"
+  - Add semicolon to generated SQL for "correctness"
 
 0.002203  2012-11-17 16:38:24 CST6CDT
-       - Put MetaYAML back in dist
+  - Put MetaYAML back in dist
 
 0.002202  2012-09-02 12:23:07 America/Chicago
-       - Fix RT#79301
+  - Fix RT#79301
 
 0.002201  2012-08-18 13:31:00 America/Chicago
-       - Fix RT#76323
+  - Fix RT#76323
 
 0.002200  2012-08-02 20:48:52 America/Chicago
-       - Added helpful logging for the schema_from_schema_loader ScriptHelper
-       - Added much more helpful error for "Can't find source for..." error in
-         migration scripts, based on code from DBIx::Class::Migration
-       - Test suite now is fully parallelizable
-       - Switch ::ScriptHelpers to Sub::Exporter::Progressive
-       - Switch from Test::Exception to Test::Fatal
+  - Added helpful logging for the schema_from_schema_loader ScriptHelper
+  - Added much more helpful error for "Can't find source for..." error in
+    migration scripts, based on code from DBIx::Class::Migration
+  - Test suite now is fully parallelizable
+  - Switch ::ScriptHelpers to Sub::Exporter::Progressive
+  - Switch from Test::Exception to Test::Fatal
 
 0.002115  2012-07-10 13:36:35 America/Chicago
-       - Make tests use actual temp files to make certain systems stop failing tests
-       - Remove dep on File::Touch
+  - Make tests use actual temp files to make certain systems stop failing tests
+  - Remove dep on File::Touch
 
 0.002114  2012-05-07 08:05:20 America/Chicago
-       - Correctly set the version deployed to the version requested on install
-         instead of just the current schema version
+  - Correctly set the version deployed to the version requested on install
+    instead of just the current schema version
 
 0.002113  2012-05-05 23:09:33 America/Chicago
-       - Remove isa check on schema attributes so that you may pass the schema
-         class instead of the schema object
+  - Remove isa check on schema attributes so that you may pass the schema
+    class instead of the schema object
 
 0.002112  2012-04-03 21:11:19 America/Chicago
-       - Handle errors in Perl Scripts better
-       - Stop supporting FindBin by localizing $0, just use Dir::Self if you
-         need that
+  - Handle errors in Perl Scripts better
+  - Stop supporting FindBin by localizing $0, just use Dir::Self if you
+    need that
 
 0.002111  2012-03-29 20:09:45 America/Chicago
-       - Improve docs by linking from implementations to their roles
+  - Improve docs by linking from implementations to their roles
 
 0.002110  2012-03-14 21:22:36 America/Chicago
-       - Use ->count instead of ->next to check if version storage is deployed
-         (->next caused issues on MSSQL due to length of DDL)
-       - Fix a couple stupid documentation issues (Phillip Smith)
+  - Use ->count instead of ->next to check if version storage is deployed
+    (->next caused issues on MSSQL due to length of DDL)
+  - Fix a couple stupid documentation issues (Phillip Smith)
 
 0.002100  2012-03-03 17:09:21 CST6CDT
-       - Wrap upgrades, downgrades, and installs in a transaction, as a failure
-         to add a version to the version table should cause a rollback
-       - Allow user to specify version of schema to install
-       - Added better sandboxing (stolen straight from Plack::Util) for coderefs
-         to avoid accidental leakage
-       - Sandboxing also makes $0 and thus FindBin et al work in perl scripts
+  - Wrap upgrades, downgrades, and installs in a transaction, as a failure
+    to add a version to the version table should cause a rollback
+  - Allow user to specify version of schema to install
+  - Added better sandboxing (stolen straight from Plack::Util) for coderefs
+    to avoid accidental leakage
+  - Sandboxing also makes $0 and thus FindBin et al work in perl scripts
 
 0.002000  2012-02-28 21:20:48 CST6CDT
-       - Added DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::ScriptHelpers,
-         ALL users who use perl scripts during migrations are encouraged to use
-         schema_from_schema_loader from that package.
+  - Added DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::ScriptHelpers,
+    ALL users who use perl scripts during migrations are encouraged to use
+    schema_from_schema_loader from that package.
 
 0.001008  2012-02-19 10:12:34 CST6CDT
-       - Added dep on parent, bump dep on DBD::SQLite to avoid silly failures
+  - Added dep on parent, bump dep on DBD::SQLite to avoid silly failures
 
 0.001007  2012-02-16 08:58:30 CST6CDT
-       - removed the rest of the references to Method::Signatures::Simple
+  - removed the rest of the references to Method::Signatures::Simple
 
 0.001006  2012-02-01 21:18:38 CST6CDT
-       - Fix install to allow you to deploy to a given version (jnap)
-       - Fix the backup method to use storage, not schema (jnap)
-       - Fix the reasonable defaults for downgrading (jnap)
-       - Stop warning all the time (ribasushi)
-       - croak on a couple errors that should be fatal
-       - Stop deleting the wrong version (for downgrades)
-       - Fix documentation for in the Cookbook (moltar)
-       - removed Method::Signatures::Simple stuff (dhoss)
+  - Fix install to allow you to deploy to a given version (jnap)
+  - Fix the backup method to use storage, not schema (jnap)
+  - Fix the reasonable defaults for downgrading (jnap)
+  - Stop warning all the time (ribasushi)
+  - croak on a couple errors that should be fatal
+  - Stop deleting the wrong version (for downgrades)
+  - Fix documentation for in the Cookbook (moltar)
+  - removed Method::Signatures::Simple stuff (dhoss)
 
 0.001005  2011-04-13 15:21:08 CST6CDT
-       - Add _any "version" for running code for all versions
-       - Fix more minor pod niggles
+  - Add _any "version" for running code for all versions
+  - Fix more minor pod niggles
 
 0.001004  2010-07-29 22:09:10 CST6CDT
-       - Fix incorrect POD in SYNOPSIS
-       - Add missing attribute to DBIx::Class::DeploymentHandler (force_overwrite)
+  - Fix incorrect POD in SYNOPSIS
+  - Add missing attribute to DBIx::Class::DeploymentHandler (force_overwrite)
 
 0.001003  2010-07-15 20:30:37 CST6CDT
-       - Add Catalyst-y intro (norkakn)
-       - fix bug caused by install_version_storage not passing a required param
-       - add force_overwrite attribute to SQLTDM
+  - Add Catalyst-y intro (norkakn)
+  - fix bug caused by install_version_storage not passing a required param
+  - add force_overwrite attribute to SQLTDM
 
 0.001002  2010-07-07 21:11:45 CST6CDT
-       - Add basic intro (norkakn)
-       - install should now work in all cases, previously had a really bad bug
-         where it would try to install the version storage table twice, which
-         breaks everything
-       - Fix issue where the ignore_version connect attr doesn't work in all
-         situations
+  - Add basic intro (norkakn)
+  - install should now work in all cases, previously had a really bad bug
+    where it would try to install the version storage table twice, which
+    breaks everything
+  - Fix issue where the ignore_version connect attr doesn't work in all
+    situations
 
 0.001001  2010-06-26 10:46:03 CST6CDT
-       - Fix bad parameters in version_storage install methods
-       - Fix Try::Tiny typo
+  - Fix bad parameters in version_storage install methods
+  - Fix Try::Tiny typo
 
 0.001000  2010-06-10 21:55:40 CST6CDT
-       - Use package logger instead of default logger
+  - Use package logger instead of default logger
 
 0.001000_14 2010-06-03 20:17:03 CST6CDT
-       - Rename preinstall to initialize
+  - Rename preinstall to initialize
 
 0.001000_13 2010-06-01 23:30:15 CST6CDT
-       - No more serialized SQL, we serialize the SQLT schema instead
-       - Completely reorganize the name of directories for more user friendlyness
-       - take out support for _generic since it's against my creed
+  - No more serialized SQL, we serialize the SQLT schema instead
+  - Completely reorganize the name of directories for more user friendlyness
+  - take out support for _generic since it's against my creed
 
 0.001000_12 2010-05-27 19:12:20 CST6CDT
-       - Add missing dep
-       - Better defaults and cascading for Logging
-       - Die on SQL errors
+  - Add missing dep
+  - Better defaults and cascading for Logging
+  - Die on SQL errors
 
 0.001000_11 2010-05-21 00:16:13 CST6CDT
-       - Make default (and preferred) way of using this tool serialized SQL
-         instead of just sql files
-       - Add logging with Log::Contextual
+  - Make default (and preferred) way of using this tool serialized SQL
+    instead of just sql files
+  - Add logging with Log::Contextual
 
 0.001000_10 2010-05-18 00:07:31 CST6CDT
-       - upgrade_directory is wrong and vague, instead we use script_directory
-       - stricter validation (no undef) on versions to prevent weird surprises
-       - change method args to named args
-       - document method args
-       - preconnect should not connect to the database
+  - upgrade_directory is wrong and vague, instead we use script_directory
+  - stricter validation (no undef) on versions to prevent weird surprises
+  - change method args to named args
+  - document method args
+  - preconnect should not connect to the database
 
 0.001000_09 2010-05-15 23:19:05 CST6CDT
-       - Schemata is no longer required to add version checking component
+  - Schemata is no longer required to add version checking component
 
 0.001000_08 2010-05-11 22:42:20 CST6CDT
-       - Add missing dep namespace::autoclean
+  - Add missing dep namespace::autoclean
 
 0.001000_07 2010-05-09 01:59:59 CST6CDT
-       - Downgrades swap from version and to version, so instead of up 1-2
-         being down 1-2, it's down 2-1, which clearly makes more sense
-       - perl scripts are now just anonymous subroutines, instead of files
-         with a single run subroutine
-       - Serious changes to architecture by using MXRP instead
-         of lots of repetitive roles
+  - Downgrades swap from version and to version, so instead of up 1-2
+    being down 1-2, it's down 2-1, which clearly makes more sense
+  - perl scripts are now just anonymous subroutines, instead of files
+    with a single run subroutine
+  - Serious changes to architecture by using MXRP instead
+    of lots of repetitive roles
 
 0.001000_06 2010-05-05 00:46:24 CST6CDT
-       - Add a bunch of boilerplate and not so boilerplate doc
-       - rename sqltargs attribute to sql_translator_args
+  - Add a bunch of boilerplate and not so boilerplate doc
+  - rename sqltargs attribute to sql_translator_args
 
 0.001000_05 2010-05-04 13:37:29 CST6CDT
-       - put schema_version attr in more places
+  - put schema_version attr in more places
 
 0.001000_04 2010-04-27 13:29:14 CST6CDT
-       - schema_version is now an attr so that users can more easily force the
-         version of the schema
-       - add prepare_install method which installs everything as well as the
-         version storage
+  - schema_version is now an attr so that users can more easily force the
+    version of the schema
+  - add prepare_install method which installs everything as well as the
+    version storage
 
 0.001000_03 2010-04-20 23:19:36 CST6CDT
-       - bump File::Path dep
+  - bump File::Path dep
 
 0.001000_02 2010-04-19 18:46:16 CST6CDT
-       - add autodie as dep
+  - add autodie as dep
 
 0.001000_01
-       - initial dev release
+  - initial dev release
