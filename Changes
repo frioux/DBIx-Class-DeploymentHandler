@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002205  2013-02-19 15:26:53 CST6CDT
   - Fix spurious warning caused by serializing $dbh (Peter Rabbitson)
 
 0.002204  2013-01-09 20:34:56 CST6CDT
