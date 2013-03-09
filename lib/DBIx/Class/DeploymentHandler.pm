@@ -220,6 +220,8 @@ because I love it.
 
 Instead, consider donating to someone who might actually need it.  Obviously
 you should do research when donating to a charity, so don't just take my word
-on this.  I like Children's Survival Fund:
-L<http://www.childrenssurvivalfund.org>, but there are a host of other
+on this.  I like Matthew 25: Ministries:
+L<http://www.m25m.org/>, but there are a host of other
 charities that can do much more good than I will with your money.
+(Third party charity info here:
+L<http://www.charitynavigator.org/index.cfm?bay=search.summary&orgid=6901>

@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+  - Fix embarrassing broken charity link
 
 0.002205  2013-02-19 15:26:53 CST6CDT
   - Fix spurious warning caused by serializing $dbh (Peter Rabbitson)
