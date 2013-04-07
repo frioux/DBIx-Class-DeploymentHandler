@@ -3,6 +3,8 @@ Revision history for {{$dist->name}}
 {{$NEXT}}
  - Include the filename of the script being run in case of error
  - Add some documentation for how to portably create indices
+ - Fix doc bug stating that install calls initialize
+   (Thanks Gavin Shelley! Fixes GH#13)
 
 0.002213  2014-12-03 08:44:10-06:00 America/Chicago
  - Fix some POD formatting

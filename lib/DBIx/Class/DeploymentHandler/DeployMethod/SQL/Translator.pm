@@ -917,7 +917,8 @@ directory can contain the following directories itself:
 
 =item C<initialize>
 
-Gets run before the C<deploy> is C<deploy>ed.  Has the same structure as the
+If you are using the C<initialize> functionality,
+you should call initialize() before calling C<install>. This has the same structure as the
 C<deploy> subdirectory as well; that is, it has a directory for each schema
 version.  Unlike C<deploy>, C<upgrade>, and C<downgrade> though, it can only run
 C<.pl> files, and the coderef in the perl files get no arguments passed to them.
