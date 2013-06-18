@@ -18,6 +18,10 @@ shows how one can do it in style:
 =head2 Version Storage
 
  package MyApp::Schema::DBICDHStorage;
+ 
+ # the following is necessary for some setups
+ use MyApp::Schema::DBICDHStorageResult;
+ 
  use Moose;
  extends 'DBIx::Class::DeploymentHandler::VersionStorage::Standard';
 
