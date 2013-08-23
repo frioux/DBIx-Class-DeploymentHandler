@@ -5,12 +5,11 @@ use strict;
 
 use parent 'Log::Contextual';
 
-use DBIx::Class::DeploymentHandler::Logger;
+use DBIx::Class::DeploymentHandler::LogRouter;
 
-my $logger = DBIx::Class::DeploymentHandler::Logger->new({
-   env_prefix => 'DBICDH'
-});
-
-sub arg_package_logger { $_[1] || $logger }
+{
+   my $router;
+   sub router { $router ||= DBIx::Class::DeploymentHandler::LogRouter->new }
+}
 
 1;

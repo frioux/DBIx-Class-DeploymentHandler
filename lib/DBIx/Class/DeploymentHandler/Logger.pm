@@ -37,4 +37,13 @@ sub _log {
   warn "[DBICDH] [$level] $message";
 }
 
+sub new {
+   my ($self, $options, @rest) = @_;
+
+   $options ||= {};
+   $options->{env_prefix} ||= 'DBICDH';
+
+   $self->next::method($options, @rest)
+}
+
 1;

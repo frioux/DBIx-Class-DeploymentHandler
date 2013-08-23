@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+  - Modernize usage of Log::Contextual, creating a simple example for how to
+    make static loggers for modules and applications
 
 0.002206  2013-03-09 12:50:57 CST6CDT
   - Fix embarrassing broken charity link
