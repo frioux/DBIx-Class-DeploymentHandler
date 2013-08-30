@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002207  2013-08-29 23:18:27 CST6CDT
   - Modernize usage of Log::Contextual, creating a simple example for how to
     make static loggers for modules and applications
 
