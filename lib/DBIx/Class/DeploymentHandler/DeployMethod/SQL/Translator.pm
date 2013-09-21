@@ -483,10 +483,10 @@ sub _sql_from_yaml {
   my @sql;
 
   my $actual_file = $self->$from_file($version);
-  for my $yaml_filename (@{
+  for my $yaml_filename (@{(
      DlogS_trace { "generating SQL from Serialized SQL Files: $_" }
         (ref $actual_file?$actual_file:[$actual_file])
-  }) {
+  )}) {
      my $sqlt = SQL::Translator->new({
        add_drop_table          => 0,
        parser                  => 'SQL::Translator::Parser::YAML',
