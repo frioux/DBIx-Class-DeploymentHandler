@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002208  2013-09-21 12:47:31 America/Chicago
   - Fix under perl 5.19.4 (thanks Hugmeir)
 
 0.002207  2013-08-29 23:18:27 CST6CDT
