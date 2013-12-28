@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002209  2013-12-27 18:08:31 America/Chicago
   - stop using Class::MOP::load_class (RT#91003)
 
 0.002208  2013-09-21 12:47:31 America/Chicago
