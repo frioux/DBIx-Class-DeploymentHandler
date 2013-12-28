@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+  - stop using Class::MOP::load_class (RT#91003)
 
 0.002208  2013-09-21 12:47:31 America/Chicago
   - Fix under perl 5.19.4 (thanks Hugmeir)
