@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+  - Ensure that sqltargs are passed to deploy when ignore_ddl is set
+    (fixes RT#92373)
   - Correctly strip lines that are all whitespace (fixes RT#92582)
   - Ditch RT
 

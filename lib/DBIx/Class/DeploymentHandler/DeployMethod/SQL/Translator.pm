@@ -360,8 +360,9 @@ sub deploy {
   log_info { "deploying version $version" };
   my $sqlt_type = $self->storage->sqlt_type;
   my $sql;
+  my $sqltargs = $self->sql_translator_args;
   if ($self->ignore_ddl) {
-     $sql = $self->_sql_from_yaml({},
+     $sql = $self->_sql_from_yaml($sqltargs,
        '_ddl_protoschema_deploy_consume_filenames', $sqlt_type
      );
   }
