@@ -591,7 +591,13 @@ sub prepare_deploy {
   my $self = shift;
   $self->prepare_protoschema({
       # Exclude __VERSION so that it gets installed separately
-      parser_args => { sources => [grep { $_ ne '__VERSION' } $self->schema->sources], }
+      parser_args => {
+         sources => [
+            sort { $a cmp $b }
+            grep { $_ ne '__VERSION' }
+            $self->schema->sources
+         ],
+      }
   }, '_ddl_protoschema_produce_filename');
   $self->_prepare_install({}, '_ddl_protoschema_produce_filename', '_ddl_schema_produce_filename');
 }

@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+  - Make source order stable to avoid non-changes in git (fixes RT#92580)
   - Ensure that sqltargs are passed to deploy when ignore_ddl is set
     (fixes RT#92373)
   - Correctly strip lines that are all whitespace (fixes RT#92582)
