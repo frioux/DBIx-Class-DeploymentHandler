@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002210  2014-01-31 09:35:27 America/Chicago
   - Make source order stable to avoid non-changes in git (fixes RT#92580)
   - Ensure that sqltargs are passed to deploy when ignore_ddl is set
     (fixes RT#92373)
