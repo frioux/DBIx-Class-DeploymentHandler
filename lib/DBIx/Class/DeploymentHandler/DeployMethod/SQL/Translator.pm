@@ -288,6 +288,7 @@ sub _run_sql {
 
 sub _load_sandbox {
   my $_file = shift;
+  $_file = "$_file";
 
   my $_package = $_file;
   $_package =~ s/([^A-Za-z0-9_])/sprintf("_%2x", ord($1))/eg;
