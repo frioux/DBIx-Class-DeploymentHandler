@@ -8,7 +8,7 @@ use Test::More;
 use lib 't/lib';
 use DBICDHTest;
 use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
-use Path::Class qw(dir file);
+use IO::All;
 use File::Temp qw(tempfile tempdir);
 
 my $dbh = DBICDHTest::dbh();
@@ -41,9 +41,9 @@ VERSION2: {
    });
 
    $dm->prepare_deploy;
-   dir($sql_dir, qw(_preprocess_schema upgrade 1.0-2.0 ))->mkpath;
+   io->dir($sql_dir, qw(_preprocess_schema upgrade 1.0-2.0 ))->mkpath;
    open my $prerun, '>',
-      file($sql_dir, qw(_preprocess_schema upgrade 1.0-2.0 003-semiautomatic.pl ));
+      io->file($sql_dir, qw(_preprocess_schema upgrade 1.0-2.0 003-semiautomatic.pl )) . "";
    my (undef, $fn) = tempfile(OPEN => 0);
    print {$prerun}
       qq^sub {

@@ -9,7 +9,7 @@ use Test::Fatal qw(lives_ok dies_ok);
 use lib 't/lib';
 use DBICDHTest;
 use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
-use Path::Class qw(dir file);
+use IO::All;
 use File::Temp qw(tempfile tempdir);
 
 my $dbh = DBICDHTest::dbh();
@@ -18,17 +18,17 @@ my $sql_dir = tempdir( CLEANUP => 1 );
 my (undef, $stuffthatran_fn) = tempfile(OPEN => 0);
 
 for (qw(initialize upgrade downgrade deploy)) {
-   dir($sql_dir, '_common',  $_, '_any')->mkpath;
+   io->dir($sql_dir, '_common',  $_, '_any')->mkpath;
    open my $fh, '>',
-      file($sql_dir, '_common', $_, qw(_any 000-win.pl ));
+      io->file($sql_dir, '_common', $_, qw(_any 000-win.pl )) . "";
    print {$fh} qq^sub {open my \$fh, ">>", '$stuffthatran_fn'; use Data::Dumper::Concise; print {\$fh} join(",", \@{\$_[1]||[]}) . "\\n";  }^;
    close $fh;
 }
 
 for (qw(initialize upgrade downgrade deploy)) {
-   dir($sql_dir, 'SQLite',  $_, '_any')->mkpath;
+   io->dir($sql_dir, 'SQLite',  $_, '_any')->mkpath;
    open my $fh, '>',
-      file($sql_dir, 'SQLite', $_, qw(_any 000-win2.pl ));
+      io->file($sql_dir, 'SQLite', $_, qw(_any 000-win2.pl )) . "";
    print {$fh} qq^sub {open my \$fh, ">>", '$stuffthatran_fn'; use Data::Dumper::Concise; print {\$fh} join(",", \@{\$_[1]||[]}) . "\\n";  }^;
    close $fh;
 }
@@ -47,9 +47,9 @@ VERSION1: {
 
    $dm->prepare_deploy;
 
-   dir($sql_dir, qw(SQLite initialize 1.0 ))->mkpath;
+   io->dir($sql_dir, qw(SQLite initialize 1.0 ))->mkpath;
    open my $prerun, '>',
-      file($sql_dir, qw(SQLite initialize 1.0 003-semiautomatic.pl ));
+      io->file($sql_dir, qw(SQLite initialize 1.0 003-semiautomatic.pl )) . "";
    my (undef, $fn) = tempfile(OPEN => 0);
    print {$prerun} "sub { open my \$fh, '>', '$fn'}";
    close $prerun;
@@ -60,7 +60,7 @@ VERSION1: {
    dies_ok {$dm->prepare_deploy} 'prepare_deploy dies if you run it twice' ;
 
    ok(
-      -f file($sql_dir, qw(SQLite deploy 1.0 001-auto.sql )),
+      -f io->file($sql_dir, qw(SQLite deploy 1.0 001-auto.sql ))->name,
       '1.0 schema gets generated properly'
    );
 
@@ -95,10 +95,10 @@ VERSION2: {
    my $version = $s->schema_version();
    $dm->prepare_deploy;
    ok(
-      -f file($sql_dir, qw(SQLite deploy 2.0 001-auto.sql )),
+      -f io->file($sql_dir, qw(SQLite deploy 2.0 001-auto.sql )) . "",
       '2.0 schema gets generated properly'
    );
-   dir($sql_dir, qw(SQLite upgrade 1.0-2.0 ))->mkpath;
+   io->dir($sql_dir, qw(SQLite upgrade 1.0-2.0 ))->mkpath;
    $dm->prepare_upgrade({
      from_version => '1.0',
      to_version => '2.0',
@@ -116,17 +116,17 @@ VERSION2: {
       ok( $warned, 'prepare_upgrade with a bogus preversion warns' );
    }
    ok(
-      -f file($sql_dir, qw(SQLite upgrade 1.0-2.0 001-auto.sql )),
+      -f io->file($sql_dir, qw(SQLite upgrade 1.0-2.0 001-auto.sql )) . "",
       '1.0-2.0 diff gets generated properly and default start and end versions get set'
    );
-   dir($sql_dir, qw(SQLite downgrade 2.0-1.0 ))->mkpath;
+   io->dir($sql_dir, qw(SQLite downgrade 2.0-1.0 ))->mkpath;
    $dm->prepare_downgrade({
      from_version => $version,
      to_version => '1.0',
      version_set => [$version, '1.0']
    });
    ok(
-      -f file($sql_dir, qw(SQLite downgrade 2.0-1.0 001-auto.sql )),
+      -f io->file($sql_dir, qw(SQLite downgrade 2.0-1.0 001-auto.sql )) . "",
       '2.0-1.0 diff gets generated properly'
    );
    dies_ok {
@@ -142,14 +142,14 @@ VERSION2: {
       })
    } 'schema not uppgrayyed';
 
-   dir($sql_dir, qw(_common upgrade 1.0-2.0 ))->mkpath;
+   io->dir($sql_dir, qw(_common upgrade 1.0-2.0 ))->mkpath;
    open my $common, '>',
-      file($sql_dir, qw(_common upgrade 1.0-2.0 002-semiautomatic.sql ));
+      io->file($sql_dir, qw(_common upgrade 1.0-2.0 002-semiautomatic.sql )) . "";
    print {$common} qq<INSERT INTO Foo (bar, baz) VALUES ("hello", "world");\n\n>;
    close $common;
 
    open my $common_pl, '>',
-      file($sql_dir, qw(_common upgrade 1.0-2.0 003-semiautomatic.pl ));
+      io->file($sql_dir, qw(_common upgrade 1.0-2.0 003-semiautomatic.pl )) . "";
    print {$common_pl} q|
       sub {
          my $schema = shift;
@@ -202,7 +202,7 @@ VERSION3: {
    my $version = $s->schema_version();
    $dm->prepare_deploy;
    ok(
-      -f file($sql_dir, qw(SQLite deploy 3.0 001-auto.sql )),
+      -f io->file($sql_dir, qw(SQLite deploy 3.0 001-auto.sql )) . "",
       '2.0 schema gets generated properly'
    );
    $dm->prepare_downgrade({
@@ -211,7 +211,7 @@ VERSION3: {
      version_set => [$version, '1.0']
    });
    ok(
-      -f file($sql_dir, qw(SQLite downgrade 3.0-1.0 001-auto.sql )),
+      -f io->file($sql_dir, qw(SQLite downgrade 3.0-1.0 001-auto.sql )) . "",
       '3.0-1.0 diff gets generated properly'
    );
    $dm->prepare_upgrade({
@@ -220,7 +220,7 @@ VERSION3: {
      version_set => ['1.0', $version]
    });
    ok(
-      -f file($sql_dir, qw(SQLite upgrade 1.0-3.0 001-auto.sql )),
+      -f io->file($sql_dir, qw(SQLite upgrade 1.0-3.0 001-auto.sql )) . "",
       '1.0-3.0 diff gets generated properly'
    );
    $dm->prepare_upgrade({
@@ -237,7 +237,7 @@ VERSION3: {
       }
    'prepare_upgrade dies if you clobber an existing upgrade file' ;
    ok(
-      -f file($sql_dir, qw(SQLite upgrade 1.0-2.0 001-auto.sql )),
+      -f io->file($sql_dir, qw(SQLite upgrade 1.0-2.0 001-auto.sql )) . "",
       '2.0-3.0 diff gets generated properly'
    );
    dies_ok {
