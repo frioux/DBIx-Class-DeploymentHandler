@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+  - Correctly strip lines that are all whitespace (fixes RT#92582)
   - Ditch RT
 
 0.002209  2013-12-27 18:08:31 America/Chicago

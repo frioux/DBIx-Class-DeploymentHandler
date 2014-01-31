@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 1;
+use Test::More;
 
 use DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator;
 
@@ -15,3 +15,6 @@ BEGIN
 END;
 END
 
+is_deeply [ split_sql_chunk( 'foo', ' ', 'bar' ) ], [qw( foo bar)];
+
+done_testing;

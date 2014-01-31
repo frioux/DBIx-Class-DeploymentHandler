@@ -264,19 +264,20 @@ sub _split_sql_chunk {
         s/^(?:BEGIN|BEGIN TRANSACTION|COMMIT).*//mgi;
 
         # trim whitespaces
-        s/^\s+|\s+$//mg;
+        s/^\s+//gm;
+        s/\s+$//gm;
 
         # remove comments
         s/^--.*//gm;
 
         # remove blank lines
-        s/^\n//mg;
+        s/^\n//gm;
 
         # put on single line
         s/\n/ /g;
     }
 
-    return @sql;
+    return grep $_, @sql;
 }
 
 sub _run_sql {
