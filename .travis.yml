@@ -8,5 +8,9 @@ perl:
   - 5.8
 install:
   - cpanm -nq --installdeps .
+  - cpanm -nq Devel::Cover::Report::Coveralls
 script:
-   - prove -lrsv t
+   - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine prove -lrsv t
+   - cover
+after_success:
+  - cover -report coveralls
