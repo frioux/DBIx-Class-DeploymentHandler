@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+  - Ditch RT
 
 0.002209  2013-12-27 18:08:31 America/Chicago
   - stop using Class::MOP::load_class (RT#91003)
