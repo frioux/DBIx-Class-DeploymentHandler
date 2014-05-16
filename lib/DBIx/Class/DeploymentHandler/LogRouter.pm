@@ -1,4 +1,5 @@
 package DBIx::Class::DeploymentHandler::LogRouter;
+
 use Moo;
 use DBIx::Class::DeploymentHandler::Logger;
 

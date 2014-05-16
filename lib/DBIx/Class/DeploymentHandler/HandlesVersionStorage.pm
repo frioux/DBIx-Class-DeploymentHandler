@@ -1,4 +1,5 @@
 package DBIx::Class::DeploymentHandler::HandlesVersionStorage;
+
 use Moose::Role;
 
 # ABSTRACT: Interface for version storage methods

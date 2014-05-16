@@ -1,4 +1,5 @@
 package DBIx::Class::DeploymentHandler::WithApplicatorDumple;
+
 use MooseX::Role::Parameterized;
 use Module::Runtime 'use_module';
 use namespace::autoclean;

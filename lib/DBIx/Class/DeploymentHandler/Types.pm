@@ -1,4 +1,5 @@
 package DBIx::Class::DeploymentHandler::Types;
+
 use strict;
 use warnings;
 

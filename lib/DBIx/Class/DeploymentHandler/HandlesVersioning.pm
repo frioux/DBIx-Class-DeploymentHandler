@@ -1,4 +1,5 @@
 package DBIx::Class::DeploymentHandler::HandlesVersioning;
+
 use Moose::Role;
 
 # ABSTRACT: Interface for version methods

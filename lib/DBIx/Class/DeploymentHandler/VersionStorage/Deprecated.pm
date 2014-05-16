@@ -1,4 +1,5 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Deprecated;
+
 use Moose;
 use DBIx::Class::DeploymentHandler::LogImporter ':log';
 

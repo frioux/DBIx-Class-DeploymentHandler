@@ -1,4 +1,5 @@
 package DBIx::Class::DeploymentHandler::VersionHandler::Monotonic;
+
 use Moose;
 
 # ABSTRACT: Obvious version progressions

@@ -1,4 +1,5 @@
 package DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator;
+
 use Moose;
 
 # ABSTRACT: Manage your SQL and Perl migrations in nicely laid out directories

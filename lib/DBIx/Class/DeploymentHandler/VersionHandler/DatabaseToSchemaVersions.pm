@@ -1,4 +1,5 @@
 package DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions;
+
 use Moose;
 
 # ABSTRACT: Go straight from Database to Schema version

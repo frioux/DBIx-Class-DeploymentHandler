@@ -1,4 +1,5 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Standard;
+
 use Moose;
 use DBIx::Class::DeploymentHandler::LogImporter ':log';
 
