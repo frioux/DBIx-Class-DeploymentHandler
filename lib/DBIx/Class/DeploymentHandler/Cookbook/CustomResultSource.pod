@@ -1,11 +1,8 @@
 package DBIx::Class::DeploymentHandler::Cookbook::CustomResultSource;
 
+# ABSTRACT: Customize how your DBICDH versions are stored
+
 =pod
-
-=head1 NAME
-
-DBIx::Class::DeploymentHandler::Cookbook::CustomResultSource - Customize how
-your DBICDH versions are stored
 
 =head1 DESCRIPTION
 

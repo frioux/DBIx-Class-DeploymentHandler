@@ -1,5 +1,7 @@
 package DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::ScriptHelpers;
 
+# ABSTRACT: CodeRef Transforms for common use-cases in DBICDH Migrations
+
 use strict;
 use warnings;
 
