@@ -174,6 +174,48 @@ storage
 
 Install the version storage and not the rest of the tables
 
+=head1 WHY IS THIS SO WEIRD
+
+C<DBIx::Class::DeploymentHandler> has a strange structure.  The gist is that it
+delegates to three small objects that are proxied to via interface roles that
+then create the illusion of one large, monolithic object.  Here is a diagram
+that might help:
+
+                    +------------+
+                    |            |
+       +------------+ Deployment +-----------+
+       |            |  Handler   |           |
+       |            |            |           |
+       |            +-----+------+           |
+       |                  |                  |
+       |                  |                  |
+       :                  :                  :
+       v                  v                  v
+  /-=-------\        /-=-------\       /-=----------\
+  |         |        |         |       |            |  (interface roles)
+  | Handles |        | Handles |       |  Handles   |
+  | Version |        | Deploy  |       | Versioning |
+  | Storage |        |         |       |            |
+  |         |        \-+--+--+-/       \-+---+---+--/
+  \-+--+--+-/          |  |  |           |   |   |
+    |  |  |            |  |  |           |   |   |
+    |  |  |            |  |  |           |   |   |
+    v  v  v            v  v  v           v   v   v
+ +----------+        +--------+        +-----------+
+ |          |        |        |        |           |  (implementations)
+ | Version  |        | Deploy |        |  Version  |
+ | Storage  |        | Method |        |  Handler  |
+ | Standard |        | SQLT   |        | Monotonic |
+ |          |        |        |        |           |
+ +----------+        +--------+        +-----------+
+
+The nice thing about this is that we have well defined interfaces for the
+objects that comprise the C<DeploymentHandler>, the smaller objects can be
+tested in isolation, and the smaller objects can even be swapped in easily.  But
+the real win is that you can subclass the C<DeploymentHandler> without knowing
+about the underlying delegation; you just treat it like normal Perl and write
+methods that do what you want.
+
 =head1 THIS SUCKS
 
 You started your project and weren't using C<DBIx::Class::DeploymentHandler>?
