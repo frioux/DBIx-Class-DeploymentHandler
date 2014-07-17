@@ -49,7 +49,7 @@ Deletes given database version from the version storage
  warn q(I can't version this database!)
    unless $dh->version_storage_is_installed
 
-return true iff the version storage is installed.
+return true if the version storage is installed.
 
 =head1 KNOWN IMPLEMENTATIONS
 
