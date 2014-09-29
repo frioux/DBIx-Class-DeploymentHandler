@@ -91,6 +91,7 @@ or for upgrades:
    sql_translator_args => { add_drop_table => 0 },
  });
 
+ $dh->prepare_deploy;
  $dh->prepare_upgrade({
    from_version => 1,
    to_version   => 2,
