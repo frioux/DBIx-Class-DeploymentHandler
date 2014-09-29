@@ -5,7 +5,7 @@ Revision history for {{$dist->name}}
  - Add some documentation for how to portably create indices
  - Fix doc bug stating that install calls initialize
    (Thanks Gavin Shelley! Fixes GH#13)
- - Minor Pod Fixes (Thanks Renee B!)
+ - Minor Pod Fixes (Thanks Renee B and Pär Karlsson!)
 
 0.002213  2014-12-03 08:44:10-06:00 America/Chicago
  - Fix some POD formatting
