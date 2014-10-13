@@ -2,6 +2,9 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.002212  2014-10-11 15:04:22-05:00 America/Chicago
+ - Add some nice documentation on overall structure
+
 0.002211  2014-05-15 20:06:48-05:00 America/Chicago
   - Fix some missing ABSTRACTs (Fixes GH#22, thanks Gregor Herrmann!)
 
