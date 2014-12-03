@@ -841,65 +841,80 @@ The following subdirectories are recognized by this DeployMethod:
 
 =over 2
 
-=item C<_source> This directory can contain the following directories:
+=item C<_source>
+
+This directory can contain the following directories:
 
 =over 2
 
-=item C<deploy> This directory merely contains directories named after schema
+=item C<deploy>
+
+This directory merely contains directories named after schema
 versions, which in turn contain C<yaml> files that are serialized versions
 of the schema at that version.  These files are not for editing by hand.
 
 =back
 
-=item C<_preprocess_schema> This directory can contain the following
-directories:
+=item C<_preprocess_schema>
+
+This directory can contain the following directories:
 
 =over 2
 
-=item C<downgrade> This directory merely contains directories named after
-migrations, which are of the form C<$from_version-$to_version>.  Inside of
-these directories you may put Perl scripts which are to return a subref
-that takes the arguments C<< $from_schema, $to_schema >>, which are
-L<SQL::Translator::Schema> objects.
+=item C<downgrade>
 
-=item C<upgrade> This directory merely contains directories named after
-migrations, which are of the form C<$from_version-$to_version>.  Inside of
-these directories you may put Perl scripts which are to return a subref
-that takes the arguments C<< $from_schema, $to_schema >>, which are
-L<SQL::Translator::Schema> objects.
+This directory merely contains directories named after migrations, which are of
+the form C<$from_version-$to_version>.  Inside of these directories you may put
+Perl scripts which are to return a subref that takes the arguments C<<
+$from_schema, $to_schema >>, which are L<SQL::Translator::Schema> objects.
+
+=item C<upgrade>
+
+This directory merely contains directories named after migrations, which are of
+the form C<$from_version-$to_version>.  Inside of these directories you may put
+Perl scripts which are to return a subref that takes the arguments C<<
+$from_schema, $to_schema >>, which are L<SQL::Translator::Schema> objects.
 
 =back
 
-=item C<$storage_type> This is a set of scripts that gets run depending on what
-your storage type is.  If you are not sure what your storage type is, take a
-look at the producers listed for L<SQL::Translator>.  Also note, C<_common>
-is a special case.  C<_common> will get merged into whatever other files you
-already have.  This directory can contain the following directories itself:
+=item C<$storage_type>
+
+This is a set of scripts that gets run depending on what your storage type is.
+If you are not sure what your storage type is, take a look at the producers
+listed for L<SQL::Translator>.  Also note, C<_common> is a special case.
+C<_common> will get merged into whatever other files you already have.  This
+directory can contain the following directories itself:
 
 =over 2
 
-=item C<initialize> Gets run before the C<deploy> is C<deploy>ed.  Has the
-same structure as the C<deploy> subdirectory as well; that is, it has a
-directory for each schema version.  Unlike C<deploy>, C<upgrade>, and C<downgrade>
-though, it can only run C<.pl> files, and the coderef in the perl files get
-no arguments passed to them.
+=item C<initialize>
 
-=item C<deploy> Gets run when the schema is C<deploy>ed.  Structure is a
-directory per schema version, and then files are merged with C<_common> and run
-in filename order.  C<.sql> files are merely run, as expected.  C<.pl> files are
-run according to L</PERL SCRIPTS>.
+Gets run before the C<deploy> is C<deploy>ed.  Has the same structure as the
+C<deploy> subdirectory as well; that is, it has a directory for each schema
+version.  Unlike C<deploy>, C<upgrade>, and C<downgrade> though, it can only run
+C<.pl> files, and the coderef in the perl files get no arguments passed to them.
 
-=item C<upgrade> Gets run when the schema is C<upgrade>d.  Structure is a directory
-per upgrade step, (for example, C<1-2> for upgrading from version 1 to version
-2,) and then files are merged with C<_common> and run in filename order.
-C<.sql> files are merely run, as expected.  C<.pl> files are run according
-to L</PERL SCRIPTS>.
+=item C<deploy>
 
-=item C<downgrade> Gets run when the schema is C<downgrade>d.  Structure is a directory
-per downgrade step, (for example, C<2-1> for downgrading from version 2 to version
+Gets run when the schema is C<deploy>ed.  Structure is a directory per schema
+version, and then files are merged with C<_common> and run in filename order.
+C<.sql> files are merely run, as expected.  C<.pl> files are run according to
+L</PERL SCRIPTS>.
+
+=item C<upgrade>
+
+Gets run when the schema is C<upgrade>d.  Structure is a directory per upgrade
+step, (for example, C<1-2> for upgrading from version 1 to version 2,) and then
+files are merged with C<_common> and run in filename order.  C<.sql> files are
+merely run, as expected.  C<.pl> files are run according to L</PERL SCRIPTS>.
+
+=item C<downgrade>
+
+Gets run when the schema is C<downgrade>d.  Structure is a directory per
+downgrade step, (for example, C<2-1> for downgrading from version 2 to version
 1,) and then files are merged with C<_common> and run in filename order.
-C<.sql> files are merely run, as expected.  C<.pl> files are run according
-to L</PERL SCRIPTS>.
+C<.sql> files are merely run, as expected.  C<.pl> files are run according to
+L</PERL SCRIPTS>.
 
 
 =back
