@@ -955,7 +955,7 @@ A very basic perl script might look like:
  })
 
 Note that the above uses
-L<DBIx::Class::DeploymentHanlder::DeployMethod::SQL::Translator::ScriptHelpers/schema_from_schema_loader>.
+L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::ScriptHelpers/schema_from_schema_loader>.
 Using a raw coderef is strongly discouraged as it is likely to break as you
 modify your schema.
 
