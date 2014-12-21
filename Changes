@@ -1,6 +1,11 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - Fix inconsistency of what files get run when `ignore_ddl` is set.
+   To be clear, if in the past you generated DDL and *also* hand wrote DDL,
+   `ignore_ddl` would ignore both, though the intention was only to ignore
+   generated DDL.
+   (Thanks Lianna Eeftinck for very detailed bug report at GH#20!)
  - Include the filename of the script being run in case of error
  - Add some documentation for how to portably create indices
  - Fix doc bug stating that install calls initialize

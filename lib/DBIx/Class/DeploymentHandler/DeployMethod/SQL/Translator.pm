@@ -101,20 +101,11 @@ sub __ddl_consume_with_prefix {
   my $common_any  =
     dir( $base_dir, '_common', $prefix, '_any' );
 
-  my $dir;
-  if (-d $main) {
-    $dir = dir($main, $prefix, join q(-), @{$versions})
-  } else {
-    if ($self->ignore_ddl) {
-      return []
-    } else {
-      croak "$main does not exist; please write/generate some SQL"
-    }
-  }
   my $dir_any = dir($main, $prefix, '_any');
 
   my %files;
   try {
+     my $dir = dir( $main, $prefix, join q(-), @{$versions} );
      opendir my($dh), $dir;
      %files =
        map { $_ => "$dir/$_" }
