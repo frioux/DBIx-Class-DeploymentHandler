@@ -877,6 +877,26 @@ $from_schema, $to_schema >>, which are L<SQL::Translator::Schema> objects.
 
 =back
 
+A typical usage of C<_preprocess_schema> is to define indices or other non-DBIC
+type metadata.  Here is an example of how one might do that:
+
+The following coderef could be placed in a file called
+F<_preprocess_schema/1-2/001-add-user-index.pl>
+
+ sub {
+    my ($from, $to) = @_;
+
+    $to->get_table('Users')->add_index(
+       name => 'idx_Users_name',
+       fields => ['name'],
+    )
+ }
+
+This would ensure that in version 2 of the schema the generated migrations
+include an index on C<< Users.name >>.  Frustratingly, due to the nature of
+L<SQL::Translator>, you'll need to add this to each migration or it will detect
+that it was left out and kindly remove the index for you.
+
 =item C<$storage_type>
 
 This is a set of scripts that gets run depending on what your storage type is.
