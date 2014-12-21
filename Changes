@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002214  2014-12-21 11:53:20-06:00 America/Chicago
  - Fix inconsistency of what files get run when `ignore_ddl` is set.
    To be clear, if in the past you generated DDL and *also* hand wrote DDL,
    `ignore_ddl` would ignore both, though the intention was only to ignore
