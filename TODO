@@ -1,0 +1,4 @@
+ * Serialize generated DDL (https://github.com/frioux/DBIx-Class-DeploymentHandler/issues/11)
+ * Refactor code to only optionally require DBIC (https://github.com/frioux/DBIx-Class-DeploymentHandler/issues/10)
+ * Factor out MigrationStorage (https://github.com/frioux/DBIx-Class-DeploymentHandler/issues/9)
+ * Remove the Deprecated options and add Migrations (https://github.com/frioux/DBIx-Class-DeploymentHandler/issues/31)
