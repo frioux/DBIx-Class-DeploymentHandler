@@ -284,7 +284,11 @@ sub _split_sql_chunk {
 sub _run_sql {
   my ($self, $filename) = @_;
   log_debug { "Running SQL from $filename" };
-  return $self->_run_sql_array($self->_read_sql_file($filename));
+  try {
+     $self->_run_sql_array($self->_read_sql_file($filename));
+  } catch {
+     die "failed to run SQL in $filename: $_"
+  };
 }
 
 sub _load_sandbox {
@@ -320,7 +324,11 @@ sub _run_perl {
 
   Dlog_trace { "Running Perl $_" } $fn;
 
-  $fn->($self->schema, $versions)
+  try {
+     $fn->($self->schema, $versions)
+  } catch {
+     die "failed to run Perl in $filename: $_"
+  };
 }
 
 sub txn_do {
