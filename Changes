@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - Improve documentation for how to portably create indices
+   (Thanks Meredith Howard for the ideas!)
 
 0.002214  2014-12-21 11:53:20-06:00 America/Chicago
  - Fix inconsistency of what files get run when `ignore_ddl` is set.
