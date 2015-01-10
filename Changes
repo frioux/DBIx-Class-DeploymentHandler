@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002215  2015-01-10 13:58:10-06:00 America/Chicago
  - Improve documentation for how to portably create indices
    (Thanks Meredith Howard for the ideas!)
 
