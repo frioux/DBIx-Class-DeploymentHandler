@@ -182,6 +182,8 @@ delegates to three small objects that are proxied to via interface roles that
 then create the illusion of one large, monolithic object.  Here is a diagram
 that might help:
 
+=begin ditaa
+
                     +------------+
                     |            |
        +------------+ Deployment +-----------+
@@ -209,6 +211,8 @@ that might help:
  | Standard |        | SQLT   |        | Monotonic |
  |          |        |        |        |           |
  +----------+        +--------+        +-----------+
+
+=end ditaa
 
 The nice thing about this is that we have well defined interfaces for the
 objects that comprise the C<DeploymentHandler>, the smaller objects can be
