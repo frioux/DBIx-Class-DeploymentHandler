@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002216  2015-06-14 09:34:57-07:00 America/Los_Angeles
  - Use Pod::Weaver::Plugin::Ditaa to render diagram
 
 0.002215  2015-01-10 13:58:10-06:00 America/Chicago
