@@ -1,6 +1,6 @@
 package DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator;
 
-use Moose;
+use Moose::Role;
 
 # ABSTRACT: Manage your SQL and Perl migrations in nicely laid out directories
 
@@ -21,22 +21,6 @@ use Path::Class qw(file dir);
 
 with 'DBIx::Class::DeploymentHandler::HandlesDeploy';
 
-has ignore_ddl => (
-  isa      => 'Bool',
-  is       => 'ro',
-  default  => undef,
-);
-
-has force_overwrite => (
-  isa      => 'Bool',
-  is       => 'ro',
-  default  => undef,
-);
-
-has schema => (
-  is       => 'ro',
-  required => 1,
-);
 
 has storage => (
   isa        => 'DBIx::Class::Storage',
@@ -56,39 +40,13 @@ has sql_translator_args => (
   is  => 'ro',
   default => sub { {} },
 );
-has script_directory => (
-  isa      => 'Str',
-  is       => 'ro',
-  required => 1,
-  default  => 'sql',
-);
 
-has databases => (
-  coerce  => 1,
-  isa     => 'DBIx::Class::DeploymentHandler::Databases',
-  is      => 'ro',
-  default => sub { [qw( MySQL SQLite PostgreSQL )] },
-);
 
 has txn_wrap => (
   is => 'ro',
   isa => 'Bool',
   default => 1,
 );
-
-has schema_version => (
-  is => 'ro',
-  isa => 'Str',
-  lazy_build => 1,
-);
-
-# this will probably never get called as the DBICDH
-# will be passing down a schema_version normally, which
-# is built the same way, but we leave this in place
-sub _build_schema_version {
-  my $self = shift;
-  $self->schema->schema_version
-}
 
 sub __ddl_consume_with_prefix {
   my ($self, $type, $versions, $prefix) = @_;
@@ -736,8 +694,6 @@ sub prepare_protoschema {
   print {$file} $yml;
   close $file;
 }
-
-__PACKAGE__->meta->make_immutable;
 
 1;
 

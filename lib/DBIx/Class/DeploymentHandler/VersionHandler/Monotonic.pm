@@ -1,24 +1,12 @@
 package DBIx::Class::DeploymentHandler::VersionHandler::Monotonic;
 
-use Moose;
+use Moose::Role;
 
 # ABSTRACT: Obvious version progressions
 
 use Carp 'croak';
 
 with 'DBIx::Class::DeploymentHandler::HandlesVersioning';
-
-has schema_version => (
-  isa      => 'Int',
-  is       => 'ro',
-  required => 1,
-);
-
-has database_version => (
-  isa      => 'Int',
-  is       => 'ro',
-  required => 1,
-);
 
 has to_version => (
   isa        => 'Int',
@@ -33,6 +21,7 @@ has _version => (
   isa        => 'Int',
   lazy_build => 1,
 );
+
 
 sub _inc_version { $_[0]->_version($_[0]->_version + 1 ) }
 sub _dec_version { $_[0]->_version($_[0]->_version - 1 ) }
@@ -66,8 +55,6 @@ sub next_version_set {
     return [$self->_version - 1, $self->_version];
   }
 }
-
-__PACKAGE__->meta->make_immutable;
 
 1;
 

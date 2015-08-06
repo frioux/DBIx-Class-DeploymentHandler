@@ -1,23 +1,23 @@
 package DBIx::Class::DeploymentHandler::VersionStorage::Standard;
 
-use Moose;
+use Moose::Role;
 use DBIx::Class::DeploymentHandler::LogImporter ':log';
 
 # ABSTRACT: Version storage that does the normal stuff
 
 use DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResult;
 
-has schema => (
-  is       => 'ro',
-  required => 1,
-);
-
 has version_rs => (
   isa        => 'DBIx::Class::ResultSet',
   is         => 'ro',
+  lazy       => 1,
   builder    => '_build_version_rs',
   handles    => [qw( database_version version_storage_is_installed )],
 );
+
+# handles methods don't make it in time?
+sub database_version { $_[0]->version_rs->database_version }
+sub version_storage_is_installed { $_[0]->version_rs->version_storage_is_installed }
 
 with 'DBIx::Class::DeploymentHandler::HandlesVersionStorage';
 
@@ -41,7 +41,6 @@ sub delete_database_version {
   $_[0]->version_rs->search({ version => $version})->delete
 }
 
-__PACKAGE__->meta->make_immutable;
 
 1;
 
