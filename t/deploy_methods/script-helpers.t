@@ -9,6 +9,7 @@ use Test::Fatal;
 
 use lib 't/lib';
 
+use SH dbh => { -as => 'alternate_dbh'};
 use DBICVersion_v1;
 use DBICDHTest;
 
@@ -16,6 +17,27 @@ my $dbh = DBICDHTest->dbh;
 my @connection = (sub { $dbh }, { ignore_version => 1 });
 my $schema = DBICVersion::Schema->connect(@connection);
 $schema->deploy;
+
+subtest 'custom script helpers' => sub {
+   my $ran;
+
+   ok !$SH::DBH_RAN_OUTTER, 'alternate_dbh has ...';
+   ok !$SH::DBH_RAN_INNER,  '... not run yet';
+
+   alternate_dbh(sub {
+      my ($dbh, $versions) = @_;
+
+      $ran = 1;
+
+      is($dbh, $schema->storage->dbh, 'dbh is correctly reused');
+      is_deeply $versions, [1,2], 'version correctly passed';
+      isa_ok($dbh, 'DBI::db');
+   })->($schema, [1,2]);
+
+   ok $ran, 'coderef ran';
+   ok $SH::DBH_RAN_OUTTER, 'alternate_dbh has ...';
+   ok $SH::DBH_RAN_INNER,  '... run correctly';
+};
 
 subtest dbh => sub {
    my $ran;

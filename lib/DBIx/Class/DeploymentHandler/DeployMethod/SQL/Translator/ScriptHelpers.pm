@@ -144,3 +144,57 @@ script.
 
 Note that C<$sl_opts> requires that you specify something for the C<naming>
 option.
+
+=head1 CUSTOM SCRIPT HELPERS
+
+If you find that in your scripts you need to always pass the same arguments to
+your script helpers, you may want to define a custom set of script helpers.  I
+am not sure that there is a better way than just using Perl and other modules
+that are already installed when you install L<DBIx::Class::DeploymentHandler>.
+
+The following is a pattern that will get you started; if anyone has ideas on
+how to make this even easier let me know.
+
+ package MyApp::DBICDH::ScriptHelpers;
+
+ use strict;
+ use warnings;
+
+ use DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::ScriptHelpers
+    dbh => { -as => '_old_dbh' },
+    schema_from_schema_loader => { -as => '_old_sfsl' };
+
+ use Sub::Exporter::Progressive -setup => {
+    exports => [qw(dbh schema_from_schema_loader)],
+ };
+
+ sub dbh {
+    my $coderef = shift;
+
+    _old_dbh(sub {
+       my ($dbh) = @_;
+       $dbh->do(q(SET search_path TO 'myapp_db'));
+
+       $coderef->(@_);
+    });
+ }
+
+ sub schema_from_schema_loader {
+    my ($config, $coderef) = @_;
+
+    $config->{naming} ||= 'v7';
+
+    _old_sfsl(sub {
+       my ($schema) = @_;
+       $schema->storage->dbh->do(q(SET search_path TO 'myapp_db'));
+
+       $coderef->(@_);
+    });
+
+ }
+
+The above will default the naming to C<v7> when using
+C<schema_from_schema_loader>.  And in both cases it will set the schema for
+PostgreSQL. Of course if you do that you will not be able to switch to MySQL or
+something else, so I recommended looking into my L<DBIx::Introspector> to only
+do that for the database in question.
