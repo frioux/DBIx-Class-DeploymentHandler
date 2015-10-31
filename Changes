@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - Fix spelling mistake in POD (Thanks Gregor Herrmann!)
 
 0.002217  2015-10-04 15:05:01-07:00 America/Los_Angeles
  - Document Custom Script Helper pattern
