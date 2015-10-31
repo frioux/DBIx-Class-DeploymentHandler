@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002218  2015-10-31 16:35:26-07:00 America/Los_Angeles
  - Fix spelling mistake in POD (Thanks Gregor Herrmann!)
 
 0.002217  2015-10-04 15:05:01-07:00 America/Los_Angeles
