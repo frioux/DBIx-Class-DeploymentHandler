@@ -144,9 +144,14 @@ all the details.
 
 =head1 WHERE IS ALL THE DOC?!
 
-C<DBIx::Class::DeploymentHandler> extends
-L<DBIx::Class::DeploymentHandler::Dad>, so that's probably the first place to
-look when you are trying to figure out how everything works.
+To get up and running fast, your best place to start is
+L<DBIx::Class::DeploymentHandler::Manual::Intro> and then
+L<DBIx::Class::DeploymentHandler::Manual::CatalystIntro> if your intending on
+using this with Catalyst.
+
+For the full story you should realise that C<DBIx::Class::DeploymentHandler>
+extends L<DBIx::Class::DeploymentHandler::Dad>, so that's probably the first
+place to look when you are trying to figure out how everything works.
 
 Next would be to look at all the pieces that fill in the blanks that
 L<DBIx::Class::DeploymentHandler::Dad> expects to be filled.  They would be

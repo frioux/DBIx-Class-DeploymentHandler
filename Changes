@@ -2,6 +2,7 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
  - Fix spelling mistake in POD (Thanks Stefan Hornburg!)
+ - Add links to ::Intro from the docs (Thanks Martin Renvoize!)
 
 0.002218  2015-10-31 16:35:26-07:00 America/Los_Angeles
  - Fix spelling mistake in POD (Thanks Gregor Herrmann!)
