@@ -15,7 +15,7 @@ __END__
 
 =head1 DESCRIPTION
 
-Typically a VersionHandler will take a C<to_version> and yeild an iterator of
+Typically a VersionHandler will take a C<to_version> and yield an iterator of
 L<version sets|/VERSION SET>.
 
 Typically a call to a VersionHandler's L</next_version_set> with a C<db_version>
@@ -64,7 +64,7 @@ there is no inherent order for this type of database upgraded.
 
 For the typical case downgrades should be easy for users to perform and
 understand.  That means that with the first two examples given above we can use
-the L</previous_version_set> iterator to yeild the following:
+the L</previous_version_set> iterator to yield the following:
 
 
  db_version = 5, to_version=1
