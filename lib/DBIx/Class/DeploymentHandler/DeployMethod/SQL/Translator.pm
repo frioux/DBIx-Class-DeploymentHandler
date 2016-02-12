@@ -240,7 +240,14 @@ sub _run_sql_array {
       $storage->dbh_do (sub { $_[1]->do($line) });
     }
     catch {
-      die "$_ (running line '$line')"
+      # FIXME: this might be the wrong setting to do this.
+      # it might be worth adding another one that implies both
+      # no transaction and ignore errors.
+      if($self->txn_wrap) {
+        die "$_ (running line '$line')"
+      } else {
+        warn "$_ (running line '$line')"
+      }
     };
     $storage->_query_end($line);
   }
