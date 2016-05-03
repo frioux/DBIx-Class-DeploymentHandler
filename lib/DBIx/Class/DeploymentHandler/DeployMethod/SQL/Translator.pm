@@ -528,6 +528,7 @@ sub _prepare_install {
       }
     }
     open my $file, q(>), $filename;
+    binmode $file;
     print {$file} join ";\n", @$sql, '';
     close $file;
   }
@@ -649,6 +650,7 @@ sub _prepare_changegrade {
     }
 
     open my $file, q(>), $diff_file;
+    binmode $file;
     print {$file} join ";\n", @{$self->_sqldiff_from_yaml($from_version, $to_version, $db, $direction)};
     close $file;
   }
@@ -733,6 +735,7 @@ sub prepare_protoschema {
   }
 
   open my $file, q(>), $filename;
+  binmode $file;
   print {$file} $yml;
   close $file;
 }
