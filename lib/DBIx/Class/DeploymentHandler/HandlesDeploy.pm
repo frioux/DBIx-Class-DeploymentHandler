@@ -81,8 +81,8 @@ The version set uniquely identifies the migration.
 =method prepare_downgrade
 
  $dh->prepare_downgrade({
-   from_version => 1,
-   to_version   => 2,
+   from_version => 2,
+   to_version   => 1,
    version_set  => [1, 2]
  });
 

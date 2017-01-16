@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - Fix typo in docs (Thanks Aaron Crane) (Fixes GH#49)
  - Fix spelling mistake in POD (Thanks Stefan Hornburg!)
  - Add links to ::Intro from the docs (Thanks Martin Renvoize!)
 
