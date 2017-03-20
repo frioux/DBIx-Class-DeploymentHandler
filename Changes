@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002219  2017-03-19 21:15:19-07:00 America/Los_Angeles
  - Fix typo in docs (Thanks Aaron Crane) (Fixes GH#49)
  - Fix spelling mistake in POD (Thanks Stefan Hornburg!)
  - Add links to ::Intro from the docs (Thanks Martin Renvoize!)
