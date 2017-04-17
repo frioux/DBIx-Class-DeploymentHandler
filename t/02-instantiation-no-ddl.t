@@ -158,7 +158,7 @@ DOWN2: {
     })
   } 'schema is at version 2';
 
-  is $handler->version_storage->database_version => 2,
+  is $handler->database_version => 2,
     'database version is down to 2';
 
 }

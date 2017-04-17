@@ -4,37 +4,190 @@ package DBIx::Class::DeploymentHandler;
 
 use Moose;
 
-extends 'DBIx::Class::DeploymentHandler::Dad';
-# a single with would be better, but we can't do that
-# see: http://rt.cpan.org/Public/Bug/Display.html?id=46347
-with 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
-    interface_role       => 'DBIx::Class::DeploymentHandler::HandlesDeploy',
-    class_name           => 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator',
-    delegate_name        => 'deploy_method',
-    attributes_to_assume => [qw(schema schema_version)],
-    attributes_to_copy   => [qw(
-      ignore_ddl databases script_directory sql_translator_args force_overwrite
-    )],
-  },
-  'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
-    interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
-    class_name           => 'DBIx::Class::DeploymentHandler::VersionHandler::Monotonic',
-    delegate_name        => 'version_handler',
-    attributes_to_assume => [qw( database_version schema_version to_version )],
-  },
-  'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
-    interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersionStorage',
-    class_name           => 'DBIx::Class::DeploymentHandler::VersionStorage::Standard',
-    delegate_name        => 'version_storage',
-    attributes_to_assume => ['schema'],
-  };
-with 'DBIx::Class::DeploymentHandler::WithReasonableDefaults';
+use Moose::Util qw/ with_traits /;
+
+use DBIx::Class::DeploymentHandler::Types;
+require DBIx::Class::Schema;    # loaded for type constraint
+
+use Carp::Clan '^DBIx::Class::DeploymentHandler';
+use DBIx::Class::DeploymentHandler::LogImporter ':log';
+use DBIx::Class::DeploymentHandler::Types;
+
+has script_directory => (
+  isa      => 'Str',
+  is       => 'ro',
+  default  => 'sql',
+);
+
+has ignore_ddl => (
+  isa      => 'Bool',
+  is       => 'ro',
+  default  => undef,
+);
+
+has databases => (
+  coerce  => 1,
+  isa     => 'DBIx::Class::DeploymentHandler::Databases',
+  is      => 'ro',
+  default => sub { [qw( MySQL SQLite PostgreSQL )] },
+);
+
+has deploy_handler_class => (
+    is => 'ro',
+    isa => 'Str',
+    default => 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator'
+);
+
+has version_handler_class => (
+    is => 'ro',
+    isa => 'Str',
+    required => 1,
+);
+
+has storage_handler_class => (
+    is => 'ro',
+    isa => 'Str',
+    required => 1,
+);
+
+has additional_roles => (
+    is => 'ro',
+    isa => 'ArrayRef[Str]',
+    required => 1,
+);
+
+
+has schema => (
+  is       => 'ro',
+  required => 1,
+);
+
+has schema_version => (
+    is => 'ro',
+    lazy => 1,
+    default => sub { $_[0]->schema->schema_version },
+);
+
+
+has backup_directory => (
+  isa => 'Str',
+  is  => 'ro',
+  predicate  => 'has_backup_directory',
+);
+
+has to_version => (
+  is         => 'ro',
+  isa        => 'Str',
+  lazy_build => 1,
+);
+
+sub _build_to_version { $_[0]->schema_version }
+
+has schema_version => (
+  is         => 'ro',
+  isa        => 'StrSchemaVersion',
+  lazy_build => 1,
+);
+
+sub _build_schema_version { $_[0]->schema->schema_version }
+
+sub new {
+    my( $class, @args ) = @_;
+
+    my %args = @args == 1 ? %{$args[0]} : @args;
+
+    my $new_class = $class;
+
+    my @handlers = (
+      # [ role,             arg,        default ]
+        [ 'Deploy',         'deploy',  'DeployMethod::SQL::Translator' ],
+        [ 'Versioning',     'version', 'VersionHandler::Monotonic' ],
+        [ 'VersionStorage', 'storage', 'VersionStorage::Standard' ],
+    );
+
+    for my $handler ( @handlers ) {
+        my( $role, $arg, $default ) = @$handler;
+
+        next if $new_class->does('DBIx::Class::DeploymentHandler::Handles'.$role);
+
+        my $handler = $args{$arg."_handler_class"} ||= 'DBIx::Class::DeploymentHandler::'.$default;
+        $new_class = $new_class->with_traits( $handler );
+    }
+
+    my $additional = $args{additional_roles} ||= [ 'DBIx::Class::DeploymentHandler::WithReasonableDefaults' ];
+    $new_class = $new_class->with_traits( @$additional ) if @$additional;
+
+    $new_class->SUPER::new(%args);
+}
+
+sub install {
+  my $self = shift;
+
+  my $version = (shift @_ || {})->{version} || $self->to_version;
+  log_info { "installing version $version" };
+  croak 'Install not possible as versions table already exists in database'
+    if $self->version_storage_is_installed;
+
+  $self->txn_do(sub {
+     my $ddl = $self->deploy({ version=> $version });
+
+     $self->add_database_version({
+       version     => $version,
+       ddl         => $ddl,
+     });
+  });
+}
+
+sub upgrade {
+  log_info { 'upgrading' };
+  my $self = shift;
+  my $ran_once = 0;
+  $self->txn_do(sub {
+     while ( my $version_list = $self->next_version_set ) {
+       $ran_once = 1;
+       my ($ddl, $upgrade_sql) = @{
+         $self->upgrade_single_step({ version_set => $version_list })
+       ||[]};
+
+       $self->add_database_version({
+         version     => $version_list->[-1],
+         ddl         => $ddl,
+         upgrade_sql => $upgrade_sql,
+       });
+     }
+  });
+
+  log_warn { 'no need to run upgrade' } unless $ran_once;
+}
+
+sub downgrade {
+  log_info { 'downgrading' };
+  my $self = shift;
+  my $ran_once = 0;
+  $self->txn_do(sub {
+     while ( my $version_list = $self->previous_version_set ) {
+       $ran_once = 1;
+       $self->downgrade_single_step({ version_set => $version_list });
+
+       # do we just delete a row here?  I think so but not sure
+       $self->delete_database_version({ version => $version_list->[0] });
+     }
+  });
+  log_warn { 'no version to run downgrade' } unless $ran_once;
+}
+
+sub backup {
+  my $self = shift;
+  log_info { 'backing up' };
+  $self->schema->storage->backup($self->backup_directory)
+}
+
 
 sub prepare_version_storage_install {
   my $self = shift;
 
   $self->prepare_resultsource_install({
-    result_source => $self->version_storage->version_rs->result_source
+    result_source => $self->version_rs->result_source
   });
 }
 
@@ -54,10 +207,7 @@ sub prepare_install {
   $_[0]->prepare_version_storage_install;
 }
 
-# the following is just a hack so that ->version_storage
-# won't be lazy
-sub BUILD { $_[0]->version_storage }
-__PACKAGE__->meta->make_immutable;
+__PACKAGE__->meta->make_immutable( inline_constructor => 0 );
 
 1;
 
