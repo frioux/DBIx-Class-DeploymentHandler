@@ -14,6 +14,7 @@ with 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     attributes_to_assume => [qw(schema schema_version)],
     attributes_to_copy   => [qw(
       ignore_ddl databases script_directory sql_translator_args force_overwrite
+      txn_wrap
     )],
   },
   'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
