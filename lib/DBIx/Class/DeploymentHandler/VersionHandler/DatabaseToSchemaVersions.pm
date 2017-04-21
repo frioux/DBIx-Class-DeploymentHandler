@@ -1,14 +1,16 @@
 package DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions;
 
 use Moose;
+use DBIx::Class::DeploymentHandler::Types;
 
 # ABSTRACT: Go straight from Database to Schema version
 
 with 'DBIx::Class::DeploymentHandler::HandlesVersioning';
 
 has schema_version => (
-  isa      => 'Str',
+  isa      => 'StrSchemaVersion',
   is       => 'ro',
+  coerce   => 1,
   required => 1,
 );
 

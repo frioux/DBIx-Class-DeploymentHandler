@@ -21,6 +21,12 @@ subtype 'StrSchemaVersion'
     : 'Schema version must be defined'
  };
 
+coerce 'StrSchemaVersion'
+=> from 'Str'
+=> via { $_ }
+=> from 'Object'
+=> via { $_->isa('version') && $_->stringify };
+
 no Moose::Util::TypeConstraints;
 1;
 

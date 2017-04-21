@@ -30,6 +30,7 @@ sub _build_to_version { $_[0]->schema_version }
 has schema_version => (
   is         => 'ro',
   isa        => 'StrSchemaVersion',
+  coerce     => 1,
   lazy_build => 1,
 );
 
