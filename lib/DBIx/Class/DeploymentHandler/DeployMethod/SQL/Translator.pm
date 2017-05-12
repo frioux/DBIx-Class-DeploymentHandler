@@ -114,6 +114,7 @@ sub __ddl_consume_with_prefix {
      opendir my($dh), $dir;
      %files =
        map { $_ => "$dir/$_" }
+       grep { ! /__VERSION/ }
        grep { /\.(?:sql|pl|sql-\w+)$/ && -f "$dir/$_" }
        readdir $dh;
      closedir $dh;
