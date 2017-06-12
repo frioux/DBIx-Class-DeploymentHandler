@@ -54,6 +54,10 @@ sub BUILD {
   $self->version_storage;
 }
 
+# This is called from the new version of Dad, but in this old version, we don't
+# need it to do anything - merely exist
+sub install_version_storage{}
+
 __PACKAGE__->meta->make_immutable;
 
 1;
