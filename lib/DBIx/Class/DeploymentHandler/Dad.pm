@@ -39,8 +39,10 @@ sub install {
 
   my $version = (shift @_ || {})->{version} || $self->to_version;
   log_info { "installing version $version" };
-  croak 'Install not possible as versions table already exists in database'
+  croak 'Install not possible as versions table already exists in database (try deploy)'
     if $self->version_storage_is_installed;
+
+  $self->install_version_storage({ version => $version });
 
   $self->txn_do(sub {
      my $ddl = $self->deploy({ version=> $version });
