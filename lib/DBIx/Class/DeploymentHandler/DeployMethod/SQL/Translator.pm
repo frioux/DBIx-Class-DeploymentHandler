@@ -571,7 +571,7 @@ sub install_resultsource {
       $version,
     )
   ];
-  $self->_run_sql_and_perl($files, '', [$version]);
+  $self->_run_sql_and_perl($files, [], [$version]);
 }
 
 sub prepare_resultsource_install {
