@@ -1,6 +1,10 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - Deployment method is now consistent with prepare method:
+   * "deploy" deploys your schema
+   * "install_version_storage" installs the version storage, but not your schema
+   * "install" runs install_version_storage, then deploy
 
 0.002222  2018-01-06 10:25:42-08:00 America/Los_Angeles
  - Stop defaulting to include DROP TABLE, introduced by fix in prior release
