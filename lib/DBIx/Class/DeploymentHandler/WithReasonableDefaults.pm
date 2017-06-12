@@ -41,6 +41,24 @@ around install_resultsource => sub {
   $self->$orig($source, $version);
 };
 
+around deploy => sub {
+  my $orig = shift;
+  my $self = shift;
+
+  my $sql = $self->$orig(@_);
+
+  my $args = $_[0] || {};
+  my $version = $args->{version} || $self->deploy_method->schema_version;
+
+  $self->add_database_version({
+    version     => $version,
+    ddl         => $sql,
+  });
+
+  return $sql;
+};
+
+
 1;
 
 __END__

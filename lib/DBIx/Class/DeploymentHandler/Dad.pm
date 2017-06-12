@@ -45,12 +45,7 @@ sub install {
   $self->install_version_storage({ version => $version });
 
   $self->txn_do(sub {
-     my $ddl = $self->deploy({ version=> $version });
-
-     $self->add_database_version({
-       version     => $version,
-       ddl         => $ddl,
-     });
+     $self->deploy({ version=> $version });
   });
 }
 
