@@ -9,7 +9,6 @@ use Carp 'croak';
 with 'DBIx::Class::DeploymentHandler::HandlesVersioning';
 
 has schema_version => (
-  isa      => 'Str',
   is       => 'ro',
   required => 1,
 );

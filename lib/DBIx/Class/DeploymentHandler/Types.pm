@@ -13,14 +13,6 @@ coerce 'DBIx::Class::DeploymentHandler::Databases'
  => from 'Str'
  => via { [$_] };
 
-subtype 'StrSchemaVersion'
- => as 'Str'
- => message {
-  defined $_
-    ? "Schema version (currently '$_') must be a string"
-    : 'Schema version must be defined'
- };
-
 no Moose::Util::TypeConstraints;
 1;
 
