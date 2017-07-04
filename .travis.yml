@@ -11,10 +11,6 @@ perl:
   - "5.22"
   - "5.26"
   - "blead"
-addons:
-  apt:
-    packages:
-      - ditaa
 matrix:
   include:
     - perl: 5.18
@@ -22,4 +18,6 @@ matrix:
   allow_failures:
     - perl: blead
 before_install:
+  - sudo apt-get update
+  - sudo apt-get install ditaa
   - eval $(curl https://travis-perl.github.io/init) --auto
