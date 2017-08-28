@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - generate short package names for scripts (Fixes GH#55)
+   (Thanks Andrew Gregory!)
  - Fix args to internal method (Fixes GH#53)
    (Thanks Alastair McGowan-Douglas!)
  - Allow schema versions to be version objects (Fixes GH#51)
