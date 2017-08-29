@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002220  2017-08-29 16:59:10-07:00 America/Los_Angeles
  - generate short package names for scripts (Fixes GH#55)
    (Thanks Andrew Gregory!)
  - Fix args to internal method (Fixes GH#53)
