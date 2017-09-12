@@ -27,6 +27,7 @@ with 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     class_name           => 'DBIx::Class::DeploymentHandler::VersionStorage::Standard',
     delegate_name        => 'version_storage',
     attributes_to_assume => ['schema'],
+    attributes_to_copy   => ['version_class'],
   };
 with 'DBIx::Class::DeploymentHandler::WithReasonableDefaults';
 
