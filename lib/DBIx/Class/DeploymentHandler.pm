@@ -11,7 +11,7 @@ with 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     interface_role       => 'DBIx::Class::DeploymentHandler::HandlesDeploy',
     class_name           => 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator',
     delegate_name        => 'deploy_method',
-    attributes_to_assume => [qw(schema schema_version)],
+    attributes_to_assume => [qw(schema schema_version version_source)],
     attributes_to_copy   => [qw(
       ignore_ddl databases script_directory sql_translator_args force_overwrite
     )],
@@ -27,7 +27,7 @@ with 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     class_name           => 'DBIx::Class::DeploymentHandler::VersionStorage::Standard',
     delegate_name        => 'version_storage',
     attributes_to_assume => ['schema'],
-    attributes_to_copy   => ['version_class'],
+    attributes_to_copy   => [qw(version_source version_class)],
   };
 with 'DBIx::Class::DeploymentHandler::WithReasonableDefaults';
 
