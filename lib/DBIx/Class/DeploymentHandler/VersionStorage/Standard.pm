@@ -12,6 +12,11 @@ has schema => (
   required => 1,
 );
 
+has version_source => (
+  is      => 'ro',
+  default => '__VERSION',
+);
+
 has version_class => (
   is      => 'ro',
   default =>
@@ -30,7 +35,7 @@ with 'DBIx::Class::DeploymentHandler::HandlesVersionStorage';
 
 sub _build_version_rs {
   $_[0]->schema->register_class(
-    '__VERSION' => $_[0]->version_class )->resultset;
+    $_[0]->version_source => $_[0]->version_class )->resultset;
 }
 
 sub add_database_version {

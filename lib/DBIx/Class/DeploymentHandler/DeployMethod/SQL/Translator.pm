@@ -45,6 +45,11 @@ has storage => (
   lazy_build => 1,
 );
 
+has version_source => (
+    is      => 'ro',
+    default => '__VERSION',
+);
+
 sub _build_storage {
   my $self = shift;
   my $s = $self->schema->storage;
@@ -611,11 +616,11 @@ sub prepare_deploy {
   log_info { 'preparing deploy' };
   my $self = shift;
   $self->prepare_protoschema({
-      # Exclude __VERSION so that it gets installed separately
+      # Exclude version table so that it gets installed separately
       parser_args => {
          sources => [
             sort { $a cmp $b }
-            grep { $_ ne '__VERSION' }
+            grep { $_ ne $self->version_source }
             $self->schema->sources
          ],
       }
