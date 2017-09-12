@@ -12,9 +12,16 @@ has schema => (
   required => 1,
 );
 
+has version_class => (
+  is      => 'ro',
+  default =>
+    'DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResult',
+);
+
 has version_rs => (
   isa        => 'DBIx::Class::ResultSet',
   is         => 'ro',
+  lazy       => 1,
   builder    => '_build_version_rs',
   handles    => [qw( database_version version_storage_is_installed )],
 );
@@ -23,10 +30,7 @@ with 'DBIx::Class::DeploymentHandler::HandlesVersionStorage';
 
 sub _build_version_rs {
   $_[0]->schema->register_class(
-    __VERSION =>
-      'DBIx::Class::DeploymentHandler::VersionStorage::Standard::VersionResult'
-  );
-  $_[0]->schema->resultset('__VERSION')
+    '__VERSION' => $_[0]->version_class )->resultset;
 }
 
 sub add_database_version {
