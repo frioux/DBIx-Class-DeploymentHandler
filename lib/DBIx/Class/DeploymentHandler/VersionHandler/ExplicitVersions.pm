@@ -13,7 +13,7 @@ has schema_version => (
   required => 1,
 );
 
-has database_version => (
+has initial_version => (
   isa      => 'Str',
   is       => 'ro',
   required => 1,
@@ -54,11 +54,21 @@ has _version_idx => (
   lazy_build => 1,
 );
 
-sub _build__version_idx { $_[0]->_index_of_versions->{$_[0]->database_version} }
+sub _build__version_idx { $_[0]->_index_of_versions->{$_[0]->initial_version} }
 
 sub _inc_version_idx { $_[0]->_version_idx($_[0]->_version_idx + 1 ) }
 sub _dec_version_idx { $_[0]->_version_idx($_[0]->_version_idx - 1 ) }
 
+# provide backwards compatibility for initial_version/database_version
+around BUILDARGS => sub {
+    my $orig  = shift;
+    my $class = shift;
+
+    my $args = $class->$orig(@_);
+    $args->{initial_version} = $args->{database_version}
+      if exists $args->{database_version} && !exists $args->{initial_version};
+    return $args;
+};
 
 sub next_version_set {
   my $self = shift;

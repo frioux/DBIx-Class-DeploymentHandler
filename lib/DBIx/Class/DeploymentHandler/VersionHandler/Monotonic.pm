@@ -14,7 +14,7 @@ has schema_version => (
   required => 1,
 );
 
-has database_version => (
+has initial_version => (
   isa      => 'Int',
   is       => 'ro',
   required => 1,
@@ -37,7 +37,18 @@ has _version => (
 sub _inc_version { $_[0]->_version($_[0]->_version + 1 ) }
 sub _dec_version { $_[0]->_version($_[0]->_version - 1 ) }
 
-sub _build__version { $_[0]->database_version }
+sub _build__version { $_[0]->initial_version }
+
+# provide backwards compatibility for initial_version/database_version
+around BUILDARGS => sub {
+    my $orig  = shift;
+    my $class = shift;
+
+    my $args = $class->$orig(@_);
+    $args->{initial_version} = $args->{database_version}
+      if exists $args->{database_version} && !exists $args->{initial_version};
+    return $args;
+};
 
 sub previous_version_set {
   my $self = shift;
@@ -55,7 +66,7 @@ sub previous_version_set {
 
 sub next_version_set {
   my $self = shift;
-  if ($self->to_version < $self->_version) {
+  if ($self->to_version < $self->initial_version) {
     croak "you are trying to upgrade and your current version is greater\n".
           "than the version you are trying to upgrade to.  Either downgrade\n".
           "or update your schema"

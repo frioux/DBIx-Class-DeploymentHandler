@@ -4,14 +4,14 @@ use Moose::Role;
 
 # ABSTRACT: Make default arguments to a few methods sensible
 
-requires qw( prepare_upgrade prepare_downgrade database_version schema_version );
+requires qw( prepare_upgrade prepare_downgrade initial_version schema_version );
 
 around prepare_upgrade => sub {
   my $orig = shift;
   my $self = shift;
   my $args = shift || {};
 
-  $args->{from_version} ||= $self->database_version;
+  $args->{from_version} ||= $self->initial_version;
   $args->{to_version}   ||= $self->schema_version;
   $args->{version_set}  ||= [$args->{from_version}, $args->{to_version}];
 
@@ -25,7 +25,7 @@ around prepare_downgrade => sub {
 
   my $args = shift || {};
 
-  $args->{to_version}   ||= $self->database_version;
+  $args->{to_version}   ||= $self->initial_version;
   $args->{from_version} ||= $self->schema_version;
   $args->{version_set}  ||= [$args->{from_version}, $args->{to_version}];
 
@@ -58,7 +58,7 @@ methods.  It's a little awesome.
 
 Defaulted args:
 
-  my $from_version = $self->database_version;
+  my $from_version = $self->initial_version;
   my $to_version   = $self->schema_version;
   my $version_set  = [$from_version, $to_version];
 
