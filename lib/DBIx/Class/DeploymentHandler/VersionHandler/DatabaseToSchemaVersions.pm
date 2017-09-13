@@ -11,7 +11,7 @@ has schema_version => (
   required => 1,
 );
 
-has database_version => (
+has initial_version => (
   isa      => 'Str',
   is       => 'ro',
   required => 1,
@@ -31,6 +31,17 @@ has once => (
   default => undef,
 );
 
+# provide backwards compatibility for initial_version/database_version
+around BUILDARGS => sub {
+    my $orig  = shift;
+    my $class = shift;
+
+    my $args = $class->$orig(@_);
+    $args->{initial_version} = $args->{database_version}
+      if exists $args->{database_version} && !exists $args->{initial_version};
+    return $args;
+};
+
 sub next_version_set {
   my $self = shift;
   return undef
@@ -38,8 +49,8 @@ sub next_version_set {
 
   $self->once(!$self->once);
   return undef
-    if $self->database_version eq $self->to_version;
-  return [$self->database_version, $self->to_version];
+    if $self->initial_version eq $self->to_version;
+  return [$self->initial_version, $self->to_version];
 }
 
 sub previous_version_set {
@@ -49,8 +60,8 @@ sub previous_version_set {
 
   $self->once(!$self->once);
   return undef
-    if $self->database_version eq $self->to_version;
-  return [$self->database_version, $self->to_version];
+    if $self->initial_version eq $self->to_version;
+  return [$self->initial_version, $self->to_version];
 }
 
 

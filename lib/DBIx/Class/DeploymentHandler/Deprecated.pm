@@ -5,6 +5,8 @@ package DBIx::Class::DeploymentHandler::Deprecated;
 use Moose;
 use Moose::Util 'apply_all_roles';
 
+sub initial_version { return $_[0]->database_version }
+
 extends 'DBIx::Class::DeploymentHandler::Dad';
 # a single with would be better, but we can't do that
 # see: http://rt.cpan.org/Public/Bug/Display.html?id=46347

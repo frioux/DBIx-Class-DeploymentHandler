@@ -4,6 +4,9 @@ package DBIx::Class::DeploymentHandler;
 
 use Moose;
 
+has initial_version => (is => 'ro', lazy_build => 1);
+sub _build_initial_version { $_[0]->database_version }
+
 extends 'DBIx::Class::DeploymentHandler::Dad';
 # a single with would be better, but we can't do that
 # see: http://rt.cpan.org/Public/Bug/Display.html?id=46347
@@ -20,7 +23,7 @@ with 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
     class_name           => 'DBIx::Class::DeploymentHandler::VersionHandler::Monotonic',
     delegate_name        => 'version_handler',
-    attributes_to_assume => [qw( database_version schema_version to_version )],
+    attributes_to_assume => [qw( initial_version schema_version to_version )],
   },
   'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersionStorage',
