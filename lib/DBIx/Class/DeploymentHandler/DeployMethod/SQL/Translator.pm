@@ -494,7 +494,7 @@ sub _sqldiff_from_yaml {
   return [SQL::Translator::Diff::schema_diff(
      $source_schema, $db,
      $dest_schema,   $db,
-     $sqltargs
+     { producer_args => $sqltargs }
   )];
 }
 
