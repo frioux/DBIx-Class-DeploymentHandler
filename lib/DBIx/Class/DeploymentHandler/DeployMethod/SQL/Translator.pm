@@ -1063,6 +1063,11 @@ transaction.
 The version the schema on your harddrive is at.  Defaults to
 C<< $self->schema->schema_version >>.
 
+=attr version_source
+
+The source name used to register the version storage with C<schema>.  Defaults
+to C<__VERSION>.
+
 =head1 SEE ALSO
 
 This class is an implementation of

@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - Allow easy changing the version storage table name, which makes subclassing
+   much less painful (Thanks Andrew Gregory!)
  - Fix args passed to SQL::Translator::Diff
  - Add Michael McClimon as comaint
 
