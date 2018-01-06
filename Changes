@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - Stop defaulting to include DROP TABLE, introduced by fix in prior release
+   (Fixes GH#59, thanks for the report Eugen Konkov!)
 
 0.002221  2017-09-27 21:19:42-04:00 America/New_York
  - Allow easy changing the version storage table name, which makes subclassing

@@ -436,7 +436,7 @@ sub _sqldiff_from_yaml {
   my ($self, $from_version, $to_version, $db, $direction) = @_;
   my $dir       = $self->script_directory;
   my $sqltargs = {
-    add_drop_table => 1,
+    add_drop_table => 0,
     ignore_constraint_names => 1,
     ignore_index_names => 1,
     %{$self->sql_translator_args}
