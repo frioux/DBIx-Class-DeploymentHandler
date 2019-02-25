@@ -1,6 +1,7 @@
 package DBIx::Class::DeploymentHandler::VersionHandler::Monotonic;
 
 use Moose;
+use DBIx::Class::DeploymentHandler::Types;
 
 # ABSTRACT: Obvious version progressions
 
@@ -9,7 +10,8 @@ use Carp 'croak';
 with 'DBIx::Class::DeploymentHandler::HandlesVersioning';
 
 has schema_version => (
-  isa      => 'Int',
+  isa      => 'DBIx::Class::DeploymentHandler::VersionNonObj',
+  coerce   => 1,
   is       => 'ro',
   required => 1,
 );
@@ -21,12 +23,16 @@ has initial_version => (
 );
 
 has to_version => (
-  isa        => 'Int',
+  isa        => 'DBIx::Class::DeploymentHandler::VersionNonObj',
+  coerce     => 1,
   is         => 'ro',
   lazy_build => 1,
 );
 
-sub _build_to_version { $_[0]->schema_version }
+sub _build_to_version {
+  my $version = $_[0]->schema_version;
+  ref($version) ? $version->numify : $version;
+}
 
 has _version => (
   is         => 'rw',
