@@ -1,6 +1,9 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - handle "package NAME VERSION" in a DBIx::Class::Schema - $VERSION
+   will be object
+ - add needed dep - thanks @wheinze
 
 0.002222  2018-01-06 10:25:42-08:00 America/Los_Angeles
  - Stop defaulting to include DROP TABLE, introduced by fix in prior release
