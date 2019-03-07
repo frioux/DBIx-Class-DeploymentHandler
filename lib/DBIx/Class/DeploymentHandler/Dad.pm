@@ -25,7 +25,10 @@ has to_version => (
   lazy_build => 1,
 );
 
-sub _build_to_version { $_[0]->schema_version }
+sub _build_to_version {
+  my $version = $_[0]->schema_version;
+  ref($version) ? $version->numify : $version;
+}
 
 has schema_version => (
   is         => 'ro',

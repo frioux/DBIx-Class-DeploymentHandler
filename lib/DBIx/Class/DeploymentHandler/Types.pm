@@ -13,6 +13,13 @@ coerce 'DBIx::Class::DeploymentHandler::Databases'
  => from 'Str'
  => via { [$_] };
 
+subtype 'DBIx::Class::DeploymentHandler::VersionNonObj'
+ => as 'Str';
+
+coerce 'DBIx::Class::DeploymentHandler::VersionNonObj'
+ => from 'Object'
+ => via { $_->numify };
+
 no Moose::Util::TypeConstraints;
 1;
 

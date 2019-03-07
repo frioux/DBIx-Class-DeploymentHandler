@@ -10,6 +10,14 @@ use lib 't/lib';
 use aliased
   'DBIx::Class::DeploymentHandler::VersionHandler::Monotonic';
 
+SKIP: {
+  skip 'no "version" installed', 1 if !eval { require version; 1 };
+  lives_ok { Monotonic->new({
+    schema_version   => version->declare("2.0"),
+    database_version => 1,
+  }) } 'version-obj Ok';
+}
+
 {
   my $vh = Monotonic->new({
     schema_version   => 2,
