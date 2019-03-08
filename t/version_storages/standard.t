@@ -10,6 +10,7 @@ use DBICDHTest;
 use aliased 'DBIx::Class::DeploymentHandler::VersionStorage::Standard';
 use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
 use File::Temp 'tempdir';
+use File::Find;
 
 use DBICVersion_v1;
 use DBIx::Class::DeploymentHandler;
@@ -88,4 +89,17 @@ my $u;
 $vs->version_rs->delete;
 
 ok( $vs->version_storage_is_installed, 'VersionStorage is still installed even if all versions are deleted' );
+
+my @resulting_files;
+find(sub { -f and push @resulting_files, $File::Find::name }, $sql_dir);
+for (@resulting_files) {
+  my $contents = do {
+    local $/;
+    open my $fh, $_ or die;
+    binmode $fh, ':raw';
+    <$fh>
+  };
+  is index($contents, "\015\012"), -1, "$_ no CRLF";
+}
+
 done_testing;
