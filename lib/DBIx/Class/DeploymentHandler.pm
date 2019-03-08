@@ -146,6 +146,29 @@ And much, much more!
 That's really just a taste of some of the differences.  Check out each role for
 all the details.
 
+=head1 METHODS
+
+This is just a "stub" section to make clear
+that the bulk of implementation is documented in
+L<DBIx::Class::DeploymentHandler::Dad>. Since that is implemented using
+L<Moose> class, see L<DBIx::Class::DeploymentHandler::Dad/ATTRIBUTES>
+and L<DBIx::Class::DeploymentHandler::Dad/"ORTHODOX METHODS"> for
+available attributes to pass to C<new>, and methods callable on the
+resulting object.
+
+=head2 new
+
+  my $s = My::Schema->connect(...);
+  my $dh = DBIx::Class::DeploymentHandler->new({
+    schema              => $s,
+    databases           => 'SQLite',
+    sql_translator_args => { add_drop_table => 0 },
+  });
+
+See L<DBIx::Class::DeploymentHandler::Dad/ATTRIBUTES> and
+L<DBIx::Class::DeploymentHandler::Dad/"ORTHODOX METHODS"> for available
+attributes to pass to C<new>.
+
 =head1 WHERE IS ALL THE DOC?!
 
 To get up and running fast, your best place to start is
