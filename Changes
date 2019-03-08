@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - binmode on all filehandles so lines always end LF - thanks @wchristian
 
 0.002223  2019-03-07 01:36:36+00:00 Europe/London
  - handle "package NAME VERSION" in a DBIx::Class::Schema - $VERSION
