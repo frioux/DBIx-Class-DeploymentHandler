@@ -23,4 +23,5 @@ on test => sub {
    requires 'aliased' => 0;
    requires 'Test::Requires' => 0.06;
    requires 'File::Temp' => 0;
+   recommends 'DBIx::Class::Schema::Loader' => 0;
 };
