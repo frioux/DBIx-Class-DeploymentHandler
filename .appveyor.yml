@@ -4,8 +4,9 @@ environment:
   matrix:
   - CHOCO_PERL_PACKAGE: StrawberryPerl
     CHOCO_PERL_PATH: C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
-  - CHOCO_PERL_PACKAGE: activeperl
-    CHOCO_PERL_PATH: C:\Perl64\bin;C:\Perl64\site\bin;%PATH%
+# commented as insanely slower than SP
+#  - CHOCO_PERL_PACKAGE: activeperl
+#    CHOCO_PERL_PATH: C:\Perl64\bin;C:\Perl64\site\bin;%PATH%
 
 install:
   # running under CI
