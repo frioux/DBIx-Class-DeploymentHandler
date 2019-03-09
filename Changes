@@ -1,7 +1,11 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002224  2019-03-09 05:16:47+00:00 Europe/London
  - binmode on all filehandles so lines always end LF - thanks @wchristian
+ - more sophisticated SQL parsing handles Pg $$ stuff - thanks @mrenvoize
+   for report
 
 0.002223  2019-03-07 01:36:36+00:00 Europe/London
  - handle "package NAME VERSION" in a DBIx::Class::Schema - $VERSION
