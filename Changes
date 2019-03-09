@@ -15,6 +15,7 @@ Revision history for {{$dist->name}}
 0.002221  2017-09-27 21:19:42-04:00 America/New_York
  - Allow easy changing the version storage table name, which makes subclassing
    much less painful (Thanks Andrew Gregory!)
+ - Above change renamed database_version => initial_version
  - Fix args passed to SQL::Translator::Diff
  - Add Michael McClimon as comaint
 
