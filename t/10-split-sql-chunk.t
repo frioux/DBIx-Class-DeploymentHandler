@@ -5,16 +5,21 @@ use Test::More;
 
 use DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator;
 
-*split_sql_chunk =
-*DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::_split_sql_chunk;
+sub make_dm {
+  my ($storage_class) = @_;
+  bless {
+  }, 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
+}
 
-is_deeply [ split_sql_chunk( <<'END' ) ], [ 'SELECT * FROM YADAH END' ];
+my $dm = make_dm();
+
+is_deeply [ $dm->_split_sql_chunk( <<'END' ) ], [ 'SELECT * FROM YADAH END' ];
 BEGIN
     -- stuff
     SELECT * FROM YADAH
 END;
 END
 
-is_deeply [ split_sql_chunk( 'foo', ' ', 'bar' ) ], [qw( foo bar)];
+is_deeply [ $dm->_split_sql_chunk( 'foo', ' ', 'bar' ) ], [qw(foo bar)];
 
 done_testing;

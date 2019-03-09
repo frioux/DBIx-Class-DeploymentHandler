@@ -235,7 +235,7 @@ sub _run_sql_array {
   my ($self, $sql) = @_;
   my $storage = $self->storage;
 
-  $sql = [ _split_sql_chunk( @$sql ) ];
+  $sql = [ $self->_split_sql_chunk( @$sql ) ];
 
   Dlog_trace { "Running SQL $_" } $sql;
   foreach my $line (@{$sql}) {
@@ -254,6 +254,7 @@ sub _run_sql_array {
 
 # split a chunk o' SQL into statements
 sub _split_sql_chunk {
+    my $self = shift;
     my @sql = map { split /;\n/, $_ } @_;
 
     for ( @sql ) {
@@ -688,7 +689,7 @@ sub _read_sql_file {
    local $/ = undef;  #sluuuuuurp
 
   open my $fh, '<', $file;
-  return [ _split_sql_chunk( <$fh> ) ];
+  return [ $self->_split_sql_chunk( <$fh> ) ];
 }
 
 sub downgrade_single_step {
