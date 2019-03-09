@@ -1,6 +1,7 @@
 package DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions;
 
 use Moose;
+use DBIx::Class::DeploymentHandler::Types -all;
 
 # ABSTRACT: Define your own list of versions to use for migrations
 
@@ -14,14 +15,15 @@ has schema_version => (
 );
 
 has initial_version => (
-  isa      => 'Str',
+  isa      => Str,
   is       => 'ro',
   required => 1,
 );
 
 has to_version => (
   is         => 'ro',
-  isa        => 'Str',
+  isa        => VersionNonObj,
+  coerce     => 1,
   lazy_build => 1,
 );
 
@@ -29,13 +31,13 @@ sub _build_to_version { $_[0]->schema_version }
 
 has ordered_versions => (
   is       => 'ro',
-  isa      => 'ArrayRef',
+  isa      => ArrayRef,
   required => 1,
 );
 
 has _index_of_versions => (
   is         => 'ro',
-  isa        => 'HashRef',
+  isa        => HashRef,
   lazy_build => 1,
 );
 
@@ -50,7 +52,7 @@ sub _build__index_of_versions {
 
 has _version_idx => (
   is         => 'rw',
-  isa        => 'Int',
+  isa        => Int,
   lazy_build => 1,
 );
 

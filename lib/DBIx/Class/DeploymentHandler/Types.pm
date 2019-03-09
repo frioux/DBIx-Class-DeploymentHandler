@@ -5,22 +5,22 @@ use warnings;
 
 # ABSTRACT: Types internal to DBIx::Class::DeploymentHandler
 
-use Moose::Util::TypeConstraints;
-subtype 'DBIx::Class::DeploymentHandler::Databases'
- => as 'ArrayRef[Str]';
+use Type::Library
+  -base,
+  -declare => qw( Databases VersionNonObj );
+use Type::Utils -all;
+BEGIN { extends "Types::Standard" };
 
-coerce 'DBIx::Class::DeploymentHandler::Databases'
- => from 'Str'
- => via { [$_] };
+declare Databases, as ArrayRef[Str];
 
-subtype 'DBIx::Class::DeploymentHandler::VersionNonObj'
- => as 'Str';
+coerce Databases,
+  from Str, via { [ $_ ] };
 
-coerce 'DBIx::Class::DeploymentHandler::VersionNonObj'
- => from 'Object'
- => via { $_->numify };
+declare VersionNonObj, as Str;
 
-no Moose::Util::TypeConstraints;
+coerce VersionNonObj,
+  from InstanceOf['version'], via { $_->numify };
+
 1;
 
 # vim: ts=2 sw=2 expandtab

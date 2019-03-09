@@ -1,6 +1,7 @@
 package DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions;
 
 use Moose;
+use DBIx::Class::DeploymentHandler::Types -all;
 
 # ABSTRACT: Go straight from Database to Schema version
 
@@ -12,14 +13,15 @@ has schema_version => (
 );
 
 has initial_version => (
-  isa      => 'Str',
+  isa      => Str,
   is       => 'ro',
   required => 1,
 );
 
 has to_version => ( # configuration
   is         => 'ro',
-  isa        => 'Str',
+  isa        => VersionNonObj,
+  coerce     => 1,
   lazy_build => 1,
 );
 
@@ -27,7 +29,7 @@ sub _build_to_version { $_[0]->schema_version }
 
 has once => (
   is      => 'rw',
-  isa     => 'Bool',
+  isa     => Maybe[Bool],
   default => undef,
 );
 

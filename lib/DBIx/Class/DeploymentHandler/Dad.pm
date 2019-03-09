@@ -6,7 +6,7 @@ use Moose;
 require DBIx::Class::Schema;    # loaded for type constraint
 use Carp::Clan '^DBIx::Class::DeploymentHandler';
 use DBIx::Class::DeploymentHandler::LogImporter ':log';
-use DBIx::Class::DeploymentHandler::Types;
+use DBIx::Class::DeploymentHandler::Types -all;
 
 has schema => (
   is       => 'ro',
@@ -14,24 +14,24 @@ has schema => (
 );
 
 has backup_directory => (
-  isa => 'Str',
+  isa => Str,
   is  => 'ro',
   predicate  => 'has_backup_directory',
 );
 
 has to_version => (
   is         => 'ro',
-  isa        => 'Str',
+  isa        => VersionNonObj,
+  coerce     => 1,
   lazy_build => 1,
 );
 
-sub _build_to_version {
-  my $version = $_[0]->schema_version;
-  ref($version) ? $version->numify : $version;
-}
+sub _build_to_version { $_[0]->schema_version }
 
 has schema_version => (
   is         => 'ro',
+  isa        => VersionNonObj,
+  coerce     => 1,
   lazy_build => 1,
 );
 

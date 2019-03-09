@@ -3,6 +3,7 @@ package DBIx::Class::DeploymentHandler::WithApplicatorDumple;
 use MooseX::Role::Parameterized;
 use Module::Runtime 'use_module';
 use namespace::autoclean;
+use DBIx::Class::DeploymentHandler::Types -all;
 
 # this is at least a little ghetto and not super well
 # thought out.  Take a look at the following at some
@@ -12,27 +13,27 @@ use namespace::autoclean;
 # http://github.com/rjbs/role-subsystem/blob/master/lib/Role/Subsystem.pm
 
 parameter interface_role => (
-  isa      => 'Str',
+  isa      => Str,
   required => 1,
 );
 
 parameter class_name => (
-  isa      => 'Str',
+  isa      => Str,
   required => 1,
 );
 
 parameter delegate_name => (
-  isa      => 'Str',
+  isa      => Str,
   required => 1,
 );
 
 parameter attributes_to_copy => (
-  isa => 'ArrayRef[Str]',
+  isa => ArrayRef[Str],
   default => sub {[]},
 );
 
 parameter attributes_to_assume => (
-  isa => 'ArrayRef[Str]',
+  isa => ArrayRef[Str],
   default => sub {[]},
 );
 

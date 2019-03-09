@@ -16,20 +16,20 @@ use SQL::Translator;
 require SQL::Translator::Diff;
 
 require DBIx::Class::Storage;   # loaded for type constraint
-use DBIx::Class::DeploymentHandler::Types;
+use DBIx::Class::DeploymentHandler::Types -all;
 
 use Path::Class qw(file dir);
 
 with 'DBIx::Class::DeploymentHandler::HandlesDeploy';
 
 has ignore_ddl => (
-  isa      => 'Bool',
+  isa      => Bool,
   is       => 'ro',
   default  => undef,
 );
 
 has force_overwrite => (
-  isa      => 'Bool',
+  isa      => Bool,
   is       => 'ro',
   default  => undef,
 );
@@ -40,7 +40,7 @@ has schema => (
 );
 
 has storage => (
-  isa        => 'DBIx::Class::Storage',
+  isa        => InstanceOf['DBIx::Class::Storage'],
   is         => 'ro',
   lazy_build => 1,
 );
@@ -58,12 +58,12 @@ sub _build_storage {
 }
 
 has sql_translator_args => (
-  isa => 'HashRef',
+  isa => HashRef,
   is  => 'ro',
   default => sub { {} },
 );
 has script_directory => (
-  isa      => 'Str',
+  isa      => Str,
   is       => 'ro',
   required => 1,
   default  => 'sql',
@@ -71,18 +71,20 @@ has script_directory => (
 
 has databases => (
   coerce  => 1,
-  isa     => 'DBIx::Class::DeploymentHandler::Databases',
+  isa     => Databases,
   is      => 'ro',
   default => sub { [qw( MySQL SQLite PostgreSQL )] },
 );
 
 has txn_wrap => (
   is => 'ro',
-  isa => 'Bool',
+  isa => Bool,
   default => 1,
 );
 
 has schema_version => (
+  coerce  => 1,
+  isa     => VersionNonObj,
   is => 'ro',
   lazy_build => 1,
 );
@@ -90,10 +92,7 @@ has schema_version => (
 # this will probably never get called as the DBICDH
 # will be passing down a schema_version normally, which
 # is built the same way, but we leave this in place
-sub _build_schema_version {
-  my $self = shift;
-  $self->schema->schema_version
-}
+sub _build_schema_version { $_[0]->schema->schema_version }
 
 sub __ddl_consume_with_prefix {
   my ($self, $type, $versions, $prefix) = @_;

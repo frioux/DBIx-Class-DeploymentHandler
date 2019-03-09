@@ -8,6 +8,7 @@ requires 'Module::Runtime' => 0.001;
 requires 'Moose' => 1.0;
 requires 'Moo' => 1.003000;
 requires 'MooseX::Role::Parameterized' => 0.18;
+requires 'Type::Tiny' => '1.004004';
 requires 'Try::Tiny' => 0;
 requires 'SQL::Translator' => 0.11005;
 requires 'Carp' => 0;
