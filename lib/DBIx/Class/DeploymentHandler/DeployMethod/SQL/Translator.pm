@@ -91,12 +91,10 @@ sub _build_schema_version { $_[0]->schema->schema_version }
 sub __ddl_consume_with_prefix {
   my ($self, $type, $versions, $prefix) = @_;
   my $base_dir = io->dir($self->script_directory);
-
   my $main = $base_dir->catdir( $type );
   my $common = $base_dir->catdir( '_common', $prefix, join q(-), @{$versions} );
   my $common_any = $base_dir->catdir( '_common', $prefix, '_any' );
   my $dir_any = $main->catdir( $prefix, '_any');
-
   my %files;
   try {
      my $dir = $main->catdir( $prefix, join q(-), @{$versions} );
@@ -110,7 +108,6 @@ sub __ddl_consume_with_prefix {
   for my $dir (grep $_->exists, $common, $common_any, $dir_any) {
     $files{$_->filename} ||= $_ for grep /\.(?:sql|pl)$/, $dir->all_files;
   }
-
   return [@files{sort keys %files}]
 }
 
@@ -162,9 +159,7 @@ sub _ddl_schema_changegrade_produce_filename {
 sub _run_sql_array {
   my ($self, $sql) = @_;
   my $storage = $self->storage;
-
   $sql = [ $self->_split_sql_chunk( @$sql ) ];
-
   Dlog_trace { "Running SQL $_" } $sql;
   foreach my $line (@{$sql}) {
     $storage->_query_start($line);
@@ -309,30 +304,22 @@ sub _run_sql {
 my ( %f2p, %p2f );
 sub _generate_script_package_name {
     my $file = shift;
-
     my $pkgbase = 'DBICDH::Sandbox::';
     my $maxlen = 200;    # actual limit is "about 250" according to perldiag
-
     return $pkgbase . $f2p{"$file"} if $f2p{"$file"};
-
     my $package = Digest::MD5::md5_hex("$file");
     $package++ while exists $p2f{$package};    # increment until unique
-
     die "unable to generate a unique short name for '$file'"
       if length($pkgbase) + length($package) > $maxlen;
-
     $f2p{"$file"} = $package;
     $p2f{$package} = "$file";
-
     return $pkgbase . $package;
 }
 
 sub _load_sandbox {
   my $_file = shift;
   $_file = "$_file";
-
   my $_package = _generate_script_package_name($_file);
-
   my $fn = eval sprintf <<'END_EVAL', $_package;
 package %s;
 {
@@ -342,23 +329,17 @@ package %s;
   $app;
 }
 END_EVAL
-
   croak $@ if $@;
-
   croak "$_file should define an anonymous sub that takes a schema but it didn't!"
      unless ref $fn && ref $fn eq 'CODE';
-
   return $fn;
 }
 
 sub _run_perl {
   my ($self, $filename, $versions) = @_;
   log_debug { "Running Perl from $filename" };
-
   my $fn = _load_sandbox($filename);
-
   Dlog_trace { "Running Perl $_" } $fn;
-
   try {
      $fn->($self->schema, $versions)
   } catch {
@@ -369,9 +350,7 @@ sub _run_perl {
 sub txn_do {
    my ( $self, $code ) = @_;
    return $code->() unless $self->txn_wrap;
-
    my $guard = $self->schema->txn_scope_guard;
-
    return preserve_context { $code->() } after => sub { $guard->commit };
 }
 
@@ -380,7 +359,6 @@ sub _run_sql_and_perl {
   my @files   = @{$filenames};
   $self->txn_do(sub {
      $self->_run_sql_array($sql_to_run) if $self->ignore_ddl;
-
      my $sql = ($sql_to_run)?join ";\n", @$sql_to_run:'';
      FILENAME:
      for my $filename (@files) {
@@ -394,7 +372,6 @@ sub _run_sql_and_perl {
          croak "A file ($filename) got to deploy that wasn't sql or perl!";
        }
      }
-
      return $sql;
   });
 }
@@ -423,21 +400,17 @@ sub initialize {
   my $version      = $args->{version}      || $self->schema_version;
   log_info { "initializing version $version" };
   my $storage_type = $args->{storage_type} || $self->storage->sqlt_type;
-
   my @files = @{$self->_ddl_initialize_consume_filenames(
     $storage_type,
     $version,
   )};
-
   for my $filename (@files) {
     # We ignore sql for now (till I figure out what to do with it)
     if ( $filename =~ /^(.+)\.pl$/ ) {
       my $filedata = do { local( @ARGV, $/ ) = $filename; <> };
-
       no warnings 'redefine';
       my $fn = eval "$filedata";
       use warnings;
-
       if ($@) {
         croak "$filename failed to compile: $@";
       } elsif (ref $fn eq 'CODE') {
@@ -460,7 +433,6 @@ sub _sqldiff_from_yaml {
     ignore_index_names => 1,
     %{$self->sql_translator_args}
   };
-
   my @schemas; # source, dest
   for ([ $from_version, 'previous' ], [ $to_version, 'next' ]) {
     my ($version, $label) = @$_;
@@ -479,12 +451,10 @@ sub _sqldiff_from_yaml {
     $schema->name( $file ) unless $schema->name;
     push @schemas, $schema;
   }
-
   my $transforms = $self->_coderefs_per_files(
     $self->_ddl_protoschema_changegrade_consume_filenames([$from_version, $to_version], $direction)
   );
   $_->(@schemas) for @$transforms;
-
   return [SQL::Translator::Diff::schema_diff(
      $schemas[0], $db,
      $schemas[1], $db,
@@ -496,9 +466,7 @@ sub _sql_from_yaml {
   my ($self, $sqltargs, $from_file, $db) = @_;
   my $schema    = $self->schema;
   my $version   = $self->schema_version;
-
   my @sql;
-
   my $actual_file = $self->$from_file($version);
   for my $yaml_filename (@{(
      DlogS_trace { "generating SQL from Serialized SQL Files: $_" }
@@ -510,7 +478,6 @@ sub _sql_from_yaml {
        %{$sqltargs},
        producer => $db,
      });
-
      push @sql, $sqlt->translate($yaml_filename.'');
      if(!@sql) {
        carp("Failed to translate to $db, skipping. (" . $sqlt->error . ")");
@@ -527,10 +494,8 @@ sub _prepare_install {
   my $to_file   = shift;
   my $databases = $self->databases;
   my $version   = $self->schema_version;
-
   foreach my $db (@$databases) {
     my $sql = $self->_sql_from_yaml($sqltargs, $from_file, $db ) or next;
-
     my $file = $self->$to_file($db, $version);
     $self->_maybe_overwrite('DDL', $file, join ";\n", @$sql, '');
   }
@@ -542,7 +507,6 @@ sub _resultsource_install_filename {
     my ($self, $type, $version) = @_;
     my $dir = io->dir( $self->script_directory, $type, 'deploy', $version );
     $dir->mkpath unless $dir->exists;
-
     return $dir->catfile( "001-auto-$source_name.sql" );
   }
 }
@@ -553,7 +517,6 @@ sub _resultsource_protoschema_filename {
     my ($self, $version) = @_;
     my $dir = io->dir( $self->script_directory, '_source', 'deploy', $version );
     $dir->mkpath unless $dir->exists;
-
     return $dir->catfile( "001-auto-$source_name.yml" );
   }
 }
@@ -567,7 +530,6 @@ sub install_resultsource {
   log_info { 'installing_resultsource ' . $source->source_name . ", version $version" };
   my $rs_install_file =
     $self->_resultsource_install_filename($source->source_name);
-
   my $files = [
      $self->$rs_install_file(
       $self->storage->sqlt_type,
@@ -581,7 +543,6 @@ sub prepare_resultsource_install {
   my $self = shift;
   my $source = (shift @_)->{result_source};
   log_info { 'preparing install for resultsource ' . $source->source_name };
-
   my $install_filename = $self->_resultsource_install_filename($source->source_name);
   my $proto_filename = $self->_resultsource_protoschema_filename($source->source_name);
   $self->prepare_protoschema({
@@ -635,7 +596,6 @@ sub _prepare_changegrade {
   }
 }
 
-
 sub downgrade_single_step {
   push @_, 'downgrade';
   goto &_changegrade_single_step;
@@ -651,7 +611,6 @@ sub _changegrade_single_step {
   my $version_set = (shift @_)->{version_set};
   my $direction = shift;
   Dlog_info { "${direction}_single_step'ing $_" } $version_set;
-
   my $sqlt_type = $self->storage->sqlt_type;
   my $sql_to_run;
   if ($self->ignore_ddl) {
