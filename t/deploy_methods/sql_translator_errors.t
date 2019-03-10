@@ -9,7 +9,7 @@ use Test::Fatal qw(dies_ok exception);
 use lib 't/lib';
 use DBICDHTest;
 use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
-use Path::Class qw(dir file);
+use IO::All;
 use File::Temp qw(tempdir);
 
 my $dbh = DBICDHTest::dbh();
@@ -28,24 +28,18 @@ VERSION1: {
 
    ok( $dm, 'DBIC::DH::DM::SQL::Translator gets instantiated correctly' );
 
-   my $lethal_perl = file($sql_dir, 'SQLite', 'deploy', qw(1.0 000-foo.pl ));
-   dir($sql_dir, 'SQLite',  'deploy', '1.0')->mkpath;
-   {
-      open my $fh, '>', $lethal_perl;
-      print {$fh} 'sub {die "test"}';
-      close $fh;
-   }
+   my $dir = io->dir($sql_dir, qw(SQLite deploy 1.0));
+   $dir->mkpath;
 
+   my $lethal_perl = $dir->catfile('000-foo.pl');
+   $lethal_perl->print('sub {die "test"}');
+   $lethal_perl->close;
    like exception {
       $dm->deploy;
    }, qr(Perl in .*SQLite[/\\]deploy[/\\]1\.0[/\\]000-foo\.pl), 'file prepended to Perl script error';
-
    unlink "$lethal_perl";
 
-   open my $fh, '>',
-      file($sql_dir, 'SQLite', 'deploy', qw(1.0 000-bar.sql ));
-   print {$fh} 'INVALID SQL;';
-   close $fh;
+   $dir->catfile('000-bar.sql')->print('INVALID SQL;');
 
    like exception {
       $dm->deploy;

@@ -32,7 +32,7 @@ VERSION1: {
    $dm->prepare_deploy;
 
    ok(
-      -f io->file($sql_dir, qw(DBICVersion-Schema-1.0-SQLite.sql )) . "",
+      io->file($sql_dir, qw(DBICVersion-Schema-1.0-SQLite.sql ))->exists,
       '1.0 schema gets generated properly'
    );
 

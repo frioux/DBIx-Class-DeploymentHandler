@@ -90,37 +90,25 @@ sub _build_schema_version { $_[0]->schema->schema_version }
 
 sub __ddl_consume_with_prefix {
   my ($self, $type, $versions, $prefix) = @_;
-  my $base_dir = $self->script_directory;
+  my $base_dir = io->dir($self->script_directory);
 
-  my $main    = io->dir( $base_dir, $type );
-  my $common  =
-    io->dir( $base_dir, '_common', $prefix, join q(-), @{$versions} );
-
-  my $common_any  =
-    io->dir( $base_dir, '_common', $prefix, '_any' );
-
-  my $dir_any = io->dir($main, $prefix, '_any');
+  my $main = $base_dir->catdir( $type );
+  my $common = $base_dir->catdir( '_common', $prefix, join q(-), @{$versions} );
+  my $common_any = $base_dir->catdir( '_common', $prefix, '_any' );
+  my $dir_any = $main->catdir( $prefix, '_any');
 
   my %files;
   try {
-     my $dir = io->dir( $main, $prefix, join q(-), @{$versions} );
-     opendir my($dh), $dir;
+     my $dir = $main->catdir( $prefix, join q(-), @{$versions} );
      %files =
-       map { $_ => "$dir/$_" }
-       grep { /\.(?:sql|pl|sql-\w+)$/ && -f "$dir/$_" }
-       readdir $dh;
-     closedir $dh;
+       map { $_->filename => $_ }
+       grep /\.(?:sql|pl|sql-\w+)$/,
+       $dir->all_files;
   } catch {
     die $_ unless $self->ignore_ddl;
   };
-  for my $dirname (grep { -d $_ } map "$_", $common, $common_any, $dir_any) {
-    opendir my($dh), $dirname;
-    for my $filename (grep { /\.(?:sql|pl)$/ && -f io->file($dirname,$_)->name } readdir $dh) {
-      unless ($files{$filename}) {
-        $files{$filename} = io->file($dirname,$filename)->name;
-      }
-    }
-    closedir $dh;
+  for my $dir (grep $_->exists, $common, $common_any, $dir_any) {
+    $files{$_->filename} ||= $_ for grep /\.(?:sql|pl)$/, $dir->all_files;
   }
 
   return [@files{sort keys %files}]
@@ -138,62 +126,37 @@ sub _ddl_schema_consume_filenames {
 
 sub _ddl_protoschema_deploy_consume_filenames {
   my ($self, $version) = @_;
-  my $base_dir = $self->script_directory;
-
-  my $dir = io->dir( $base_dir, '_source', 'deploy', $version) . '';
-  return [] unless -d $dir;
-
-  opendir my($dh), $dir;
-  my %files = map { $_ => "$dir/$_" } grep { /\.yml$/ && -f "$dir/$_" } readdir $dh;
-  closedir $dh;
-
-  return [@files{sort keys %files}]
+  my $dir = io->dir($self->script_directory, '_source', 'deploy', $version);
+  return [] unless $dir->exists;
+  return [grep /\.yml$/, $dir->all_files];
 }
 
 sub _ddl_protoschema_upgrade_consume_filenames {
   my ($self, $versions) = @_;
-  my $base_dir = $self->script_directory;
-
-  my $dir = io->dir( $base_dir, '_preprocess_schema', 'upgrade', join q(-), @{$versions}) . '';
-
-  return [] unless -d $dir;
-
-  opendir my($dh), $dir;
-  my %files = map { $_ => "$dir/$_" } grep { /\.pl$/ && -f "$dir/$_" } readdir $dh;
-  closedir $dh;
-
-  return [@files{sort keys %files}]
+  my $dir = io->dir($self->script_directory, '_preprocess_schema', 'upgrade', join q(-), @{$versions});
+  return [] unless $dir->exists;
+  return [grep /\.pl$/, $dir->all_files];
 }
 
 sub _ddl_protoschema_downgrade_consume_filenames {
   my ($self, $versions) = @_;
-  my $base_dir = $self->script_directory;
-
-  my $dir = io->dir( $base_dir, '_preprocess_schema', 'downgrade', join q(-), @{$versions}) . '';
-
-  return [] unless -d $dir;
-
-  opendir my($dh), $dir;
-  my %files = map { $_ => "$dir/$_" } grep { /\.pl$/ && -f "$dir/$_" } readdir $dh;
-  closedir $dh;
-
-  return [@files{sort keys %files}]
+  my $dir = io->dir($self->script_directory, '_preprocess_schema', 'downgrade', join q(-), @{$versions});
+  return [] unless $dir->exists;
+  return [grep /\.pl$/, $dir->all_files];
 }
 
 sub _ddl_protoschema_produce_filename {
   my ($self, $version) = @_;
-  my $dirname = io->dir( $self->script_directory, '_source', 'deploy',  $version );
-  $dirname->mkpath unless -d "$dirname";
-
-  return "" . io->file( "$dirname", '001-auto.yml' );
+  my $dir = io->dir( $self->script_directory, '_source', 'deploy',  $version );
+  $dir->mkpath unless $dir->exists;
+  return $dir->catfile( '001-auto.yml' );
 }
 
 sub _ddl_schema_produce_filename {
   my ($self, $type, $version) = @_;
-  my $dirname = io->dir( $self->script_directory, $type, 'deploy', $version );
-  $dirname->mkpath unless -d "$dirname";
-
-  return "" . io->file( "$dirname", '001-auto.sql' );
+  my $dir = io->dir( $self->script_directory, $type, 'deploy', $version );
+  $dir->mkpath unless $dir->exists;
+  return $dir->catfile( '001-auto.sql' );
 }
 
 sub _ddl_schema_upgrade_consume_filenames {
@@ -208,20 +171,16 @@ sub _ddl_schema_downgrade_consume_filenames {
 
 sub _ddl_schema_upgrade_produce_filename {
   my ($self, $type, $versions) = @_;
-  my $dir = $self->script_directory;
-
-  my $dirname = io->dir( "$dir", $type, 'upgrade', join q(-), @{$versions});
-  $dirname->mkpath unless -d "$dirname";
-
-  return "" . io->file( "$dirname", '001-auto.sql' );
+  my $dir = io->dir($self->script_directory, $type, 'upgrade', join q(-), @{$versions});
+  $dir->mkpath unless $dir->exists;
+  return $dir->catfile( '001-auto.sql' );
 }
 
 sub _ddl_schema_downgrade_produce_filename {
-  my ($self, $type, $versions, $dir) = @_;
-  my $dirname = io->dir( $dir, $type, 'downgrade', join q(-), @{$versions} );
-  $dirname->mkpath unless -d "$dirname";
-
-  return "" . io->file( "$dirname", '001-auto.sql');
+  my ($self, $type, $versions) = @_;
+  my $dir = io->dir($self->script_directory, $type, 'downgrade', join q(-), @{$versions});
+  $dir->mkpath unless $dir->exists;
+  return $dir->catfile( '001-auto.sql');
 }
 
 sub _run_sql_array {
@@ -365,7 +324,7 @@ sub _run_sql {
   my ($self, $filename) = @_;
   log_debug { "Running SQL from $filename" };
   try {
-     $self->_run_sql_array($self->_read_sql_file($filename));
+     $self->_run_sql_array([ $self->_split_sql_chunk( $$filename ) ]);
   } catch {
      die "failed to run SQL in $filename: $_"
   };
@@ -448,8 +407,8 @@ sub _run_sql_and_perl {
 
      my $sql = ($sql_to_run)?join ";\n", @$sql_to_run:'';
      FILENAME:
-     for my $filename (map io->file($_), @files) {
-       if ($self->ignore_ddl && $filename->filename =~ /^[^-]*-auto.*\.sql$/) {
+     for my $filename (@files) {
+       if ($self->ignore_ddl && $filename =~ /^[^-]*-auto.*\.sql$/) {
          next FILENAME
        } elsif ($filename =~ /\.sql$/) {
           $sql .= $self->_run_sql($filename)
@@ -528,11 +487,11 @@ sub _sqldiff_from_yaml {
 
   my $source_schema;
   {
-    my $prefilename = $self->_ddl_protoschema_produce_filename($from_version, $dir);
+    my $prefile = $self->_ddl_protoschema_produce_filename($from_version, $dir);
 
     # should probably be a croak
-    carp("No previous schema file found ($prefilename)")
-       unless -e $prefilename;
+    carp("No previous schema file found ($prefile)")
+       unless $prefile->exists;
 
     my $t = SQL::Translator->new({
        %{$sqltargs},
@@ -541,22 +500,22 @@ sub _sqldiff_from_yaml {
        parser => 'SQL::Translator::Parser::YAML',
     });
 
-    my $out = $t->translate( $prefilename )
+    my $out = $t->translate( $prefile . '' )
       or croak($t->error);
 
     $source_schema = $t->schema;
 
-    $source_schema->name( $prefilename )
+    $source_schema->name( $prefile )
       unless  $source_schema->name;
   }
 
   my $dest_schema;
   {
-    my $filename = $self->_ddl_protoschema_produce_filename($to_version, $dir);
+    my $file = $self->_ddl_protoschema_produce_filename($to_version, $dir);
 
     # should probably be a croak
-    carp("No next schema file found ($filename)")
-       unless -e $filename;
+    carp("No next schema file found ($file)")
+       unless $file->exists;
 
     my $t = SQL::Translator->new({
        %{$sqltargs},
@@ -565,12 +524,12 @@ sub _sqldiff_from_yaml {
        parser => 'SQL::Translator::Parser::YAML',
     });
 
-    my $out = $t->translate( $filename )
+    my $out = $t->translate( $file . '' )
       or croak($t->error);
 
     $dest_schema = $t->schema;
 
-    $dest_schema->name( $filename )
+    $dest_schema->name( $file )
       unless $dest_schema->name;
   }
 
@@ -606,7 +565,7 @@ sub _sql_from_yaml {
        producer => $db,
      });
 
-     push @sql, $sqlt->translate($yaml_filename);
+     push @sql, $sqlt->translate($yaml_filename.'');
      if(!@sql) {
        carp("Failed to translate to $db, skipping. (" . $sqlt->error . ")");
        return undef;
@@ -627,19 +586,17 @@ sub _prepare_install {
   foreach my $db (@$databases) {
     my $sql = $self->_sql_from_yaml($sqltargs, $from_file, $db ) or next;
 
-    my $filename = $self->$to_file($db, $version, $dir);
-    if (-e $filename ) {
+    my $file = $self->$to_file($db, $version, $dir);
+    if ($file->exists) {
       if ($self->force_overwrite) {
-         carp "Overwriting existing DDL file - $filename";
-         unlink $filename;
+         carp "Overwriting existing DDL file - $file";
+         unlink $file;
       } else {
-         die "Cannot overwrite '$filename', either enable force_overwrite or delete it"
+         die "Cannot overwrite '$file', either enable force_overwrite or delete it"
       }
     }
-    open my $file, q(>), $filename;
-    binmode $file;
-    print {$file} join ";\n", @$sql, '';
-    close $file;
+    $file->binmode;
+    $file->print(join ";\n", @$sql, '');
   }
 }
 
@@ -647,10 +604,10 @@ sub _resultsource_install_filename {
   my ($self, $source_name) = @_;
   return sub {
     my ($self, $type, $version) = @_;
-    my $dirname = io->dir( "" . $self->script_directory, $type, 'deploy', $version );
-    $dirname->mkpath unless -d "$dirname";
+    my $dir = io->dir( $self->script_directory, $type, 'deploy', $version );
+    $dir->mkpath unless $dir->exists;
 
-    return "" . io->file( "$dirname", "001-auto-$source_name.sql" );
+    return $dir->catfile( "001-auto-$source_name.sql" );
   }
 }
 
@@ -658,10 +615,10 @@ sub _resultsource_protoschema_filename {
   my ($self, $source_name) = @_;
   return sub {
     my ($self, $version) = @_;
-    my $dirname = io->dir( "" . $self->script_directory, '_source', 'deploy', $version );
-    $dirname->mkpath unless -d "$dirname";
+    my $dir = io->dir( $self->script_directory, '_source', 'deploy', $version );
+    $dir->mkpath unless $dir->exists;
 
-    return "" . io->file( "$dirname", "001-auto-$source_name.yml" );
+    return $dir->catfile( "001-auto-$source_name.yml" );
   }
 }
 
@@ -736,7 +693,7 @@ sub prepare_downgrade {
 sub _coderefs_per_files {
   my ($self, $files) = @_;
   no warnings 'redefine';
-  [map eval do { local( @ARGV, $/ ) = $_; <> }, @$files]
+  [map eval $$_, @$files]
 }
 
 sub _prepare_changegrade {
@@ -748,8 +705,8 @@ sub _prepare_changegrade {
   my $schema_version = $self->schema_version;
   my $diff_file_method = "_ddl_schema_${direction}_produce_filename";
   foreach my $db (@$databases) {
-    my $diff_file = $self->$diff_file_method($db, $version_set, $dir );
-    if(-e $diff_file) {
+    my $diff_file = $self->$diff_file_method($db, $version_set);
+    if($diff_file->exists) {
       if ($self->force_overwrite) {
          carp("Overwriting existing $direction-diff file - $diff_file");
          unlink $diff_file;
@@ -757,21 +714,13 @@ sub _prepare_changegrade {
          die "Cannot overwrite '$diff_file', either enable force_overwrite or delete it"
       }
     }
-
-    open my $file, q(>), $diff_file;
-    binmode $file;
-    print {$file} join ";\n", @{$self->_sqldiff_from_yaml($from_version, $to_version, $db, $direction)};
-    close $file;
+    $diff_file->binmode;
+    $diff_file->print(
+      join ";\n", @{$self->_sqldiff_from_yaml($from_version, $to_version, $db, $direction)}
+    );
   }
 }
 
-sub _read_sql_file {
-  my ($self, $file)  = @_;
-  return unless $file;
-  local $/ = undef;  #sluuuuuurp
-  open my $fh, '<', $file;
-  return [ $self->_split_sql_chunk( <$fh> ) ];
-}
 
 sub downgrade_single_step {
   my $self = shift;
@@ -816,8 +765,7 @@ sub prepare_protoschema {
   my $self      = shift;
   my $sqltargs  = { %{$self->sql_translator_args}, %{shift @_} };
   my $to_file   = shift;
-  my $filename
-    = $self->$to_file($self->schema_version);
+  my $file = $self->$to_file($self->schema_version);
 
   # we do this because the code that uses this sets parser args,
   # so we just need to merge in the package
@@ -832,19 +780,17 @@ sub prepare_protoschema {
   croak("Failed to translate to YAML: " . $sqlt->error)
     unless $yml;
 
-  if (-e $filename ) {
+  if ($file->exists) {
     if ($self->force_overwrite) {
-       carp "Overwriting existing DDL-YML file - $filename";
-       unlink $filename;
+       carp "Overwriting existing DDL-YML file - $file";
+       unlink $file;
     } else {
-       die "Cannot overwrite '$filename', either enable force_overwrite or delete it"
+       die "Cannot overwrite '$file', either enable force_overwrite or delete it"
     }
   }
 
-  open my $file, q(>), $filename;
-  binmode $file;
-  print {$file} $yml;
-  close $file;
+  $file->binmode;
+  $file->print($yml);
 }
 
 __PACKAGE__->meta->make_immutable;

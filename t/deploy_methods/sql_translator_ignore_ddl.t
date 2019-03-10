@@ -9,7 +9,7 @@ use Test::Fatal qw(dies_ok exception);
 use lib 't/lib';
 use DBICDHTest;
 use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
-use Path::Class qw(dir file);
+use IO::All;
 use File::Temp qw(tempdir);
 
 my $dbh = DBICDHTest::dbh();
@@ -29,11 +29,9 @@ VERSION1: {
 
    ok( $dm, 'DBIC::DH::DM::SQL::Translator gets instantiated correctly' );
 
-   dir($sql_dir, '_common',  'deploy', '_any')->mkpath;
-   open my $fh, '>',
-      file($sql_dir, '_common', 'deploy', qw(_any 000-bar.sql ));
-   print {$fh} 'INVALID SQL;';
-   close $fh;
+   my $dir = io->dir($sql_dir, qw(_common deploy _any));
+   $dir->mkpath;
+   $dir->catfile('000-bar.sql')->print('INVALID SQL;');
 
    like exception {
       $dm->deploy;
