@@ -41,28 +41,32 @@ role {
   my $p = shift;
 
   my $class_name = $p->class_name;
+  my $delegate_name = $p->delegate_name;
+  my $interface_role = $p->interface_role;
+  my $attributes_to_assume = $p->attributes_to_assume;
+  my $attributes_to_copy = $p->attributes_to_copy;
 
   use_module($class_name);
 
   my $meta = Class::MOP::class_of($class_name);
 
   has $_->name => %{ $_->clone }
-    for grep { $_ } map $meta->find_attribute_by_name($_), @{ $p->attributes_to_copy };
+    for grep $_, map $meta->find_attribute_by_name($_), @$attributes_to_copy;
 
-  has $p->delegate_name => (
+  has $delegate_name => (
     is         => 'ro',
     lazy_build => 1,
-    does       => $p->interface_role,
-    handles    => $p->interface_role,
+    does       => $interface_role,
+    handles    => $interface_role,
   );
 
-  method '_build_'.$p->delegate_name => sub {
+  method '_build_'.$delegate_name => sub {
     my $self = shift;
 
     $class_name->new({
       map { $_ => $self->$_ }
-        @{ $p->attributes_to_assume },
-        @{ $p->attributes_to_copy   },
+        @$attributes_to_assume,
+        @$attributes_to_copy,
     })
   };
 };
