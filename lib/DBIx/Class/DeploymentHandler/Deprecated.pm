@@ -29,27 +29,19 @@ with 'DBIx::Class::DeploymentHandler::WithReasonableDefaults';
 sub BUILD {
   my $self = shift;
 
-  if ($self->schema->can('ordered_versions') && $self->schema->ordered_versions) {
-    apply_all_roles(
-      $self,
-      WithApplicatorDumple(
-        interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
-        class_name           => 'DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions',
-        delegate_name        => 'version_handler',
-        attributes_to_assume => [qw( database_version schema_version to_version )],
-      )
-    );
-  } else {
-    apply_all_roles(
-      $self,
-      WithApplicatorDumple(
-        interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
-        class_name           => 'DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions',
-        delegate_name        => 'version_handler',
-        attributes_to_assume => [qw( database_version schema_version to_version )],
-      )
-    );
-  }
+  my $schema = $self->schema;
+  my $class_name =
+    ($schema->can('ordered_versions') && $schema->ordered_versions)
+      ? 'ExplicitVersions' : 'DatabaseToSchemaVersions';
+  apply_all_roles(
+    $self,
+    WithApplicatorDumple(
+      interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
+      class_name           => 'DBIx::Class::DeploymentHandler::VersionHandler::' . $class_name,
+      delegate_name        => 'version_handler',
+      attributes_to_assume => [qw( database_version schema_version to_version )],
+    )
+  );
   # the following is just a hack so that ->version_storage
   # won't be lazy
   $self->version_storage;
