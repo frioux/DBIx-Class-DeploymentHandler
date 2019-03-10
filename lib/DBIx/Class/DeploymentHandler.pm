@@ -2,9 +2,9 @@ package DBIx::Class::DeploymentHandler;
 
 # ABSTRACT: Extensible DBIx::Class deployment
 
-use Moose;
+use Moo;
 
-has initial_version => (is => 'ro', lazy_build => 1);
+has initial_version => (is => 'lazy');
 sub _build_initial_version { $_[0]->database_version }
 
 extends 'DBIx::Class::DeploymentHandler::Dad';

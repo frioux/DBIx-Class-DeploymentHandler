@@ -5,7 +5,6 @@ requires 'Log::Contextual' => 0.005005;
 requires 'Path::Class' => 0.26;
 requires 'DBIx::Class' => 0.08121;
 requires 'Module::Runtime' => 0.001;
-requires 'Moose' => 2.2011;
 requires 'Moo' => 2.0;
 requires 'Package::Variant' => 0;
 requires 'Type::Tiny' => '1.004004';

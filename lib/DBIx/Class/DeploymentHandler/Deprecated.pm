@@ -2,8 +2,8 @@ package DBIx::Class::DeploymentHandler::Deprecated;
 
 # ABSTRACT: (DEPRECATED) Use this if you are stuck in the past
 
-use Moose;
-use Moose::Util 'apply_all_roles';
+use Moo;
+require Moo::Role;
 
 sub initial_version { return $_[0]->database_version }
 
@@ -33,7 +33,7 @@ sub BUILD {
   my $class_name =
     ($schema->can('ordered_versions') && $schema->ordered_versions)
       ? 'ExplicitVersions' : 'DatabaseToSchemaVersions';
-  apply_all_roles(
+  Moo::Role->apply_roles_to_object(
     $self,
     WithApplicatorDumple(
       interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersioning',

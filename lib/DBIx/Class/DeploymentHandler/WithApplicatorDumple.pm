@@ -27,14 +27,14 @@ sub make_variant {
 
   use_module($class_name);
 
-  my $meta = Class::MOP::class_of($class_name);
+  my $meta = Moo->_constructor_maker_for($class_name);
+  my $class_attrs = $meta->all_attribute_specs;
 
-  has $_->name => %{ $_->clone }
-    for grep $_, map $meta->find_attribute_by_name($_), @$attributes_to_copy;
+  has $_ => %{ $class_attrs->{$_} }
+    for grep $class_attrs->{$_}, @$attributes_to_copy;
 
   has $delegate_name => (
-    is         => 'ro',
-    lazy_build => 1,
+    is         => 'lazy',
     does       => $interface_role,
     handles    => $interface_role,
   );
