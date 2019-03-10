@@ -532,16 +532,7 @@ sub _prepare_install {
     my $sql = $self->_sql_from_yaml($sqltargs, $from_file, $db ) or next;
 
     my $file = $self->$to_file($db, $version);
-    if ($file->exists) {
-      if ($self->force_overwrite) {
-         carp "Overwriting existing DDL file - $file";
-         unlink $file;
-      } else {
-         die "Cannot overwrite '$file', either enable force_overwrite or delete it"
-      }
-    }
-    $file->binmode;
-    $file->print(join ";\n", @$sql, '');
+    $self->_maybe_overwrite('DDL', $file, join ";\n", @$sql, '');
   }
 }
 
@@ -637,17 +628,8 @@ sub _prepare_changegrade {
      "preparing $direction from $args->{from_version} to $args->{to_version}"
   };
   foreach my $db (@{ $self->databases }) {
-    my $diff_file = $self->_ddl_schema_changegrade_produce_filename($db, $args->{version_set}, $direction);
-    if($diff_file->exists) {
-      if ($self->force_overwrite) {
-         carp("Overwriting existing $direction-diff file - $diff_file");
-         unlink $diff_file;
-      } else {
-         die "Cannot overwrite '$diff_file', either enable force_overwrite or delete it"
-      }
-    }
-    $diff_file->binmode;
-    $diff_file->print(
+    my $file = $self->_ddl_schema_changegrade_produce_filename($db, $args->{version_set}, $direction);
+    $self->_maybe_overwrite("$direction-diff", $file,
       join ";\n", @{$self->_sqldiff_from_yaml(@$args{qw(from_version to_version)}, $db, $direction)}
     );
   }
@@ -690,7 +672,6 @@ sub prepare_protoschema {
   my $sqltargs  = { %{$self->sql_translator_args}, %{shift @_} };
   my $to_file   = shift;
   my $file = $self->$to_file($self->schema_version);
-
   # we do this because the code that uses this sets parser args,
   # so we just need to merge in the package
   my $sqlt = SQL::Translator->new({
@@ -698,23 +679,23 @@ sub prepare_protoschema {
     producer                => 'SQL::Translator::Producer::YAML',
     %{ $sqltargs },
   });
+  my $yml = $sqlt->translate(data => $self->schema)
+    or croak "Failed to translate to YAML: " . $sqlt->error;
+  $self->_maybe_overwrite('DDL-YML', $file, $yml);
+}
 
-  my $yml = $sqlt->translate(data => $self->schema);
-
-  croak("Failed to translate to YAML: " . $sqlt->error)
-    unless $yml;
-
+sub _maybe_overwrite {
+  my ($self, $label, $file, $content) = @_;
   if ($file->exists) {
     if ($self->force_overwrite) {
-       carp "Overwriting existing DDL-YML file - $file";
+       carp "Overwriting existing $label file - $file";
        unlink $file;
     } else {
-       die "Cannot overwrite '$file', either enable force_overwrite or delete it"
+       die "Cannot overwrite '$file', either enable force_overwrite or delete it";
     }
   }
-
   $file->binmode;
-  $file->print($yml);
+  $file->print($content);
 }
 
 __PACKAGE__->meta->make_immutable;
