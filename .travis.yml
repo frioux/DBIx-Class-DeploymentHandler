@@ -1,20 +1,14 @@
 sudo: true
 language: perl
-perl:
-  - "5.8"
-  - "5.10"
-  - "5.12"
-  - "5.14"
-  - "5.16"
-  - "5.18"
-  - "5.20"
-  - "5.22"
-  - "5.26"
-  - "blead"
 matrix:
   include:
+    # slowest to fastest
+    - perl: blead
     - perl: 5.18
       env: COVERAGE=1
+    - perl: 5.8
+    - perl: 5.14
+    - perl: 5.26
   allow_failures:
     - perl: blead
 before_install:
