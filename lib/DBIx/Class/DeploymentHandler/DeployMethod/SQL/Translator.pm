@@ -131,16 +131,9 @@ sub _ddl_protoschema_deploy_consume_filenames {
   return [grep /\.yml$/, $dir->all_files];
 }
 
-sub _ddl_protoschema_upgrade_consume_filenames {
-  my ($self, $versions) = @_;
-  my $dir = io->dir($self->script_directory, '_preprocess_schema', 'upgrade', join q(-), @{$versions});
-  return [] unless $dir->exists;
-  return [grep /\.pl$/, $dir->all_files];
-}
-
-sub _ddl_protoschema_downgrade_consume_filenames {
-  my ($self, $versions) = @_;
-  my $dir = io->dir($self->script_directory, '_preprocess_schema', 'downgrade', join q(-), @{$versions});
+sub _ddl_protoschema_changegrade_consume_filenames {
+  my ($self, $versions, $direction) = @_;
+  my $dir = io->dir($self->script_directory, '_preprocess_schema', $direction, join q(-), @{$versions});
   return [] unless $dir->exists;
   return [grep /\.pl$/, $dir->all_files];
 }
@@ -159,28 +152,11 @@ sub _ddl_schema_produce_filename {
   return $dir->catfile( '001-auto.sql' );
 }
 
-sub _ddl_schema_upgrade_consume_filenames {
-  my ($self, $type, $versions) = @_;
-  $self->__ddl_consume_with_prefix($type, $versions, 'upgrade')
-}
-
-sub _ddl_schema_downgrade_consume_filenames {
-  my ($self, $type, $versions) = @_;
-  $self->__ddl_consume_with_prefix($type, $versions, 'downgrade')
-}
-
-sub _ddl_schema_upgrade_produce_filename {
-  my ($self, $type, $versions) = @_;
-  my $dir = io->dir($self->script_directory, $type, 'upgrade', join q(-), @{$versions});
+sub _ddl_schema_changegrade_produce_filename {
+  my ($self, $type, $versions, $direction) = @_;
+  my $dir = io->dir($self->script_directory, $type, $direction, join q(-), @{$versions});
   $dir->mkpath unless $dir->exists;
   return $dir->catfile( '001-auto.sql' );
-}
-
-sub _ddl_schema_downgrade_produce_filename {
-  my ($self, $type, $versions) = @_;
-  my $dir = io->dir($self->script_directory, $type, 'downgrade', join q(-), @{$versions});
-  $dir->mkpath unless $dir->exists;
-  return $dir->catfile( '001-auto.sql');
 }
 
 sub _run_sql_array {
@@ -485,63 +461,33 @@ sub _sqldiff_from_yaml {
     %{$self->sql_translator_args}
   };
 
-  my $source_schema;
-  {
-    my $prefile = $self->_ddl_protoschema_produce_filename($from_version, $dir);
-
+  my @schemas; # source, dest
+  for ([ $from_version, 'previous' ], [ $to_version, 'next' ]) {
+    my ($version, $label) = @$_;
+    my $file = $self->_ddl_protoschema_produce_filename($version, $dir);
     # should probably be a croak
-    carp("No previous schema file found ($prefile)")
-       unless $prefile->exists;
-
-    my $t = SQL::Translator->new({
-       %{$sqltargs},
-       debug => 0,
-       trace => 0,
-       parser => 'SQL::Translator::Parser::YAML',
-    });
-
-    my $out = $t->translate( $prefile . '' )
-      or croak($t->error);
-
-    $source_schema = $t->schema;
-
-    $source_schema->name( $prefile )
-      unless  $source_schema->name;
-  }
-
-  my $dest_schema;
-  {
-    my $file = $self->_ddl_protoschema_produce_filename($to_version, $dir);
-
-    # should probably be a croak
-    carp("No next schema file found ($file)")
+    carp("No $label schema file found ($file)")
        unless $file->exists;
-
     my $t = SQL::Translator->new({
-       %{$sqltargs},
+       %$sqltargs,
        debug => 0,
        trace => 0,
        parser => 'SQL::Translator::Parser::YAML',
     });
-
-    my $out = $t->translate( $file . '' )
-      or croak($t->error);
-
-    $dest_schema = $t->schema;
-
-    $dest_schema->name( $file )
-      unless $dest_schema->name;
+    my $out = $t->translate( $file . '' ) or croak($t->error);
+    my $schema = $t->schema;
+    $schema->name( $file ) unless $schema->name;
+    push @schemas, $schema;
   }
 
-  my $transform_files_method =  "_ddl_protoschema_${direction}_consume_filenames";
   my $transforms = $self->_coderefs_per_files(
-    $self->$transform_files_method([$from_version, $to_version])
+    $self->_ddl_protoschema_changegrade_consume_filenames([$from_version, $to_version], $direction)
   );
-  $_->($source_schema, $dest_schema) for @$transforms;
+  $_->(@schemas) for @$transforms;
 
   return [SQL::Translator::Diff::schema_diff(
-     $source_schema, $db,
-     $dest_schema,   $db,
+     $schemas[0], $db,
+     $schemas[1], $db,
      { producer_args => $sqltargs }
   )];
 }
@@ -670,23 +616,13 @@ sub prepare_deploy {
 }
 
 sub prepare_upgrade {
-  my ($self, $args) = @_;
-  log_info {
-     "preparing upgrade from $args->{from_version} to $args->{to_version}"
-  };
-  $self->_prepare_changegrade(
-    $args->{from_version}, $args->{to_version}, $args->{version_set}, 'upgrade'
-  );
+  push @_, 'upgrade';
+  goto &_prepare_changegrade;
 }
 
 sub prepare_downgrade {
-  my ($self, $args) = @_;
-  log_info {
-     "preparing downgrade from $args->{from_version} to $args->{to_version}"
-  };
-  $self->_prepare_changegrade(
-    $args->{from_version}, $args->{to_version}, $args->{version_set}, 'downgrade'
-  );
+  push @_, 'downgrade';
+  goto &_prepare_changegrade;
 }
 
 sub _coderefs_per_files {
@@ -696,10 +632,12 @@ sub _coderefs_per_files {
 }
 
 sub _prepare_changegrade {
-  my ($self, $from_version, $to_version, $version_set, $direction) = @_;
-  my $diff_file_method = "_ddl_schema_${direction}_produce_filename";
+  my ($self, $args, $direction) = @_;
+  log_info {
+     "preparing $direction from $args->{from_version} to $args->{to_version}"
+  };
   foreach my $db (@{ $self->databases }) {
-    my $diff_file = $self->$diff_file_method($db, $version_set);
+    my $diff_file = $self->_ddl_schema_changegrade_produce_filename($db, $args->{version_set}, $direction);
     if($diff_file->exists) {
       if ($self->force_overwrite) {
          carp("Overwriting existing $direction-diff file - $diff_file");
@@ -710,47 +648,39 @@ sub _prepare_changegrade {
     }
     $diff_file->binmode;
     $diff_file->print(
-      join ";\n", @{$self->_sqldiff_from_yaml($from_version, $to_version, $db, $direction)}
+      join ";\n", @{$self->_sqldiff_from_yaml(@$args{qw(from_version to_version)}, $db, $direction)}
     );
   }
 }
 
 
 sub downgrade_single_step {
-  my $self = shift;
-  my $version_set = (shift @_)->{version_set};
-  Dlog_info { "downgrade_single_step'ing $_" } $version_set;
-
-  my $sqlt_type = $self->storage->sqlt_type;
-  my $sql_to_run;
-  if ($self->ignore_ddl) {
-     $sql_to_run = $self->_sqldiff_from_yaml(
-       $version_set->[0], $version_set->[1], $sqlt_type, 'downgrade',
-     );
-  }
-  my $sql = $self->_run_sql_and_perl($self->_ddl_schema_downgrade_consume_filenames(
-    $sqlt_type,
-    $version_set,
-  ), $sql_to_run, $version_set);
-
-  return ['', $sql];
+  push @_, 'downgrade';
+  goto &_changegrade_single_step;
 }
 
 sub upgrade_single_step {
+  push @_, 'upgrade';
+  goto &_changegrade_single_step;
+}
+
+sub _changegrade_single_step {
   my $self = shift;
   my $version_set = (shift @_)->{version_set};
-  Dlog_info { "upgrade_single_step'ing $_" } $version_set;
+  my $direction = shift;
+  Dlog_info { "${direction}_single_step'ing $_" } $version_set;
 
   my $sqlt_type = $self->storage->sqlt_type;
   my $sql_to_run;
   if ($self->ignore_ddl) {
      $sql_to_run = $self->_sqldiff_from_yaml(
-       $version_set->[0], $version_set->[1], $sqlt_type, 'upgrade',
+       $version_set->[0], $version_set->[1], $sqlt_type, $direction,
      );
   }
-  my $sql = $self->_run_sql_and_perl($self->_ddl_schema_upgrade_consume_filenames(
+  my $sql = $self->_run_sql_and_perl($self->__ddl_consume_with_prefix(
     $sqlt_type,
     $version_set,
+    $direction,
   ), $sql_to_run, $version_set);
   return ['', $sql];
 }
