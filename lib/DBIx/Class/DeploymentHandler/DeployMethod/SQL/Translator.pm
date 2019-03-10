@@ -579,14 +579,13 @@ sub _prepare_install {
   my $sqltargs  = { %{$self->sql_translator_args}, %{shift @_} };
   my $from_file = shift;
   my $to_file   = shift;
-  my $dir       = $self->script_directory;
   my $databases = $self->databases;
   my $version   = $self->schema_version;
 
   foreach my $db (@$databases) {
     my $sql = $self->_sql_from_yaml($sqltargs, $from_file, $db ) or next;
 
-    my $file = $self->$to_file($db, $version, $dir);
+    my $file = $self->$to_file($db, $version);
     if ($file->exists) {
       if ($self->force_overwrite) {
          carp "Overwriting existing DDL file - $file";
@@ -698,13 +697,8 @@ sub _coderefs_per_files {
 
 sub _prepare_changegrade {
   my ($self, $from_version, $to_version, $version_set, $direction) = @_;
-  my $schema    = $self->schema;
-  my $databases = $self->databases;
-  my $dir       = $self->script_directory;
-
-  my $schema_version = $self->schema_version;
   my $diff_file_method = "_ddl_schema_${direction}_produce_filename";
-  foreach my $db (@$databases) {
+  foreach my $db (@{ $self->databases }) {
     my $diff_file = $self->$diff_file_method($db, $version_set);
     if($diff_file->exists) {
       if ($self->force_overwrite) {
