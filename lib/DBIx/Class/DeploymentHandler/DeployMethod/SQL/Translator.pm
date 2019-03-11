@@ -323,7 +323,9 @@ my %STORAGE2FEATURE = (
           push @ret, $accumulator;
           $accumulator = '';
         } else {
-          die "SQL splitting error: $accumulator $c (@ret)";
+          push @ret, $accumulator.$c;
+          $accumulator = '';
+          last;
         }
       }
       @ret;

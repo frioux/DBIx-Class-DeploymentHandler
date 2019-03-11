@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - relax the Pg chunk-splitting when no ";"
 
 0.002230  2019-03-14 18:31:07+00:00 Europe/London
  - MooX::Role::Parameterized forces min perl 5.010
