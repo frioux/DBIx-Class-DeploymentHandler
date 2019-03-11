@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - relax the Pg chunk-splitting when no ";"
 
 0.002225  2019-03-11 01:56:47+00:00 Europe/London
  - convert to Type::Tiny
