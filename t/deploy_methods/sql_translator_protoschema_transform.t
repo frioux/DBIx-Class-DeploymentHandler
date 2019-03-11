@@ -41,7 +41,7 @@ VERSION2: {
    });
 
    $dm->prepare_deploy;
-   my $dir = io->dir($sql_dir, qw(_preprocess_schema upgrade 1.0-2.0 ));
+   my $dir = io->dir($sql_dir, qw(_preprocess_schema upgrade 1.0-2 ));
    $dir->mkpath;
    my (undef, $fn) = tempfile(OPEN => 0);
    $dir->catfile('003-semiautomatic.pl')->print(
@@ -53,11 +53,11 @@ VERSION2: {
    );
    $dm->prepare_upgrade({
      from_version => '1.0',
-     to_version => '2.0',
-     version_set => [qw(1.0 2.0)]
+     to_version => '2',
+     version_set => [qw(1.0 2)]
    });
    ok -e $fn, 'intermediate script ran with the right args';
-   $dm->upgrade_single_step({ version_set => [qw( 1.0 2.0 )] });
+   $dm->upgrade_single_step({ version_set => [qw( 1.0 2 )] });
 }
 done_testing;
 #vim: ts=2 sw=2 expandtab
