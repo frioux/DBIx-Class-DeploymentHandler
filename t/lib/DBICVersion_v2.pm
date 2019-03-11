@@ -24,12 +24,10 @@ __PACKAGE__->add_columns(
 
 __PACKAGE__->set_primary_key('foo');
 
-package DBICVersion::Schema;
+package DBICVersion::Schema 2;
 use base 'DBIx::Class::Schema';
 use strict;
 use warnings;
-
-our $VERSION = '2.0';
 
 __PACKAGE__->register_class('Foo', 'DBICVersion::Foo');
 __PACKAGE__->load_components('DeploymentHandler::VersionStorage::Standard::Component');

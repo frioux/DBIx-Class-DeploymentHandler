@@ -100,7 +100,7 @@ VERSION3: {
 
   my $version = $s->schema_version();
   $handler->prepare_deploy;
-  $handler->prepare_upgrade({ from_version => '2.0', to_version => $version });
+  $handler->prepare_upgrade({ from_version => '2', to_version => $version });
   dies_ok {
     $s->resultset('Foo')->create({
         bar => 'frew',

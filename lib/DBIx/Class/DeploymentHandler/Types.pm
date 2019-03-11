@@ -20,7 +20,7 @@ coerce Databases,
 declare VersionNonObj, as Str;
 
 coerce VersionNonObj,
-  from InstanceOf['version'], via { $_->numify };
+  from InstanceOf['version'], via { $_->numify + 0 };
 
 declare DirObject, as InstanceOf['IO::All::Dir'];
 coerce DirObject,

@@ -88,15 +88,15 @@ VERSION2: {
    my $version = $s->schema_version();
    $dm->prepare_deploy;
    ok(
-      io->file($sql_dir, qw(SQLite deploy 2.0 001-auto.sql ))->exists,
+      io->file($sql_dir, qw(SQLite deploy 2 001-auto.sql ))->exists,
       '2.0 schema gets generated properly'
    );
-   my $upgradedir = io->dir($sql_dir, qw(SQLite upgrade 1.0-2.0 ));
+   my $upgradedir = io->dir($sql_dir, qw(SQLite upgrade 1.0-2 ));
    $upgradedir->mkpath;
    $dm->prepare_upgrade({
      from_version => '1.0',
-     to_version => '2.0',
-     version_set => [qw(1.0 2.0)]
+     to_version => '2',
+     version_set => [qw(1.0 2)]
    });
 
    {
@@ -113,7 +113,7 @@ VERSION2: {
       $upgradedir->catfile('001-auto.sql')->exists,
       '1.0-2.0 diff gets generated properly and default start and end versions get set'
    );
-   my $downgradedir = io->dir($sql_dir, qw(SQLite downgrade 2.0-1.0 ));
+   my $downgradedir = io->dir($sql_dir, qw(SQLite downgrade 2-1.0 ));
    $downgradedir->mkpath;
    $dm->prepare_downgrade({
      from_version => $version,
@@ -137,7 +137,7 @@ VERSION2: {
       })
    } 'schema not uppgrayyed';
 
-   my $upgrade12 = io->dir($sql_dir, qw(_common upgrade 1.0-2.0 ));
+   my $upgrade12 = io->dir($sql_dir, qw(_common upgrade 1.0-2 ));
    $upgrade12->mkpath;
    $upgrade12->catfile('002-semiautomatic.sql')->print(qq<INSERT INTO Foo (bar, baz) VALUES ("hello", "world");\n\n>);
    $upgrade12->catfile('003-semiautomatic.pl')->print(<<'EOF');
@@ -150,7 +150,7 @@ VERSION2: {
       }
 EOF
 
-   $dm->upgrade_single_step({ version_set => [qw( 1.0 2.0 )] });
+   $dm->upgrade_single_step({ version_set => [qw( 1.0 2 )] });
    is( $s->resultset('Foo')->search({
          bar => 'hello',
          baz => 'world',
@@ -165,14 +165,14 @@ EOF
          baz => 'frew',
       })
    } 'schema is deployed';
-   $dm->downgrade_single_step({ version_set => [qw( 2.0 1.0 )] });
+   $dm->downgrade_single_step({ version_set => [qw( 2 1.0 )] });
    dies_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',
          baz => 'frew',
       })
    } 'schema is downgrayyed';
-   $dm->upgrade_single_step({ version_set => [qw( 1.0 2.0 )] });
+   $dm->upgrade_single_step({ version_set => [qw( 1.0 2 )] });
 }
 
 VERSION3: {
@@ -213,20 +213,20 @@ VERSION3: {
       '1.0-3.0 diff gets generated properly'
    );
    $dm->prepare_upgrade({
-     from_version => '2.0',
+     from_version => '2',
      to_version => $version,
-     version_set => ['2.0', $version]
+     version_set => ['2', $version]
    });
    dies_ok {
       $dm->prepare_upgrade({
-        from_version => '2.0',
+        from_version => '2',
         to_version => $version,
-        version_set => ['2.0', $version]
+        version_set => ['2', $version]
       });
       }
    'prepare_upgrade dies if you clobber an existing upgrade file' ;
    ok(
-      io->file($sql_dir, qw(SQLite upgrade 1.0-2.0 001-auto.sql ))->exists,
+      io->file($sql_dir, qw(SQLite upgrade 1.0-2 001-auto.sql ))->exists,
       '2.0-3.0 diff gets generated properly'
    );
    dies_ok {
@@ -236,7 +236,7 @@ VERSION3: {
             biff => 'frew',
          })
    } 'schema not deployed';
-   $dm->upgrade_single_step({ version_set => [qw( 2.0 3.0 )] });
+   $dm->upgrade_single_step({ version_set => [qw( 2 3.0 )] });
    lives_ok {
       $s->resultset('Foo')->create({
          bar => 'frew',
@@ -245,7 +245,7 @@ VERSION3: {
       })
    } 'schema is deployed';
    dies_ok {
-      $dm->upgrade_single_step({ version_set => [qw( 2.0 3.0 )] });
+      $dm->upgrade_single_step({ version_set => [qw( 2 3.0 )] });
    } 'dies when sql dir does not exist';
 }
 
@@ -255,16 +255,16 @@ is $stuff_that_ran,
 
 1.0
 1.0
-1.0,2.0
-1.0,2.0
-2.0,1.0
-2.0,1.0
-1.0,2.0
-1.0,2.0
-2.0,3.0
-2.0,3.0
-2.0,3.0
-2.0,3.0
+1.0,2
+1.0,2
+2,1.0
+2,1.0
+1.0,2
+1.0,2
+2,3.0
+2,3.0
+2,3.0
+2,3.0
 ', '_any got ran the right amount of times with the right args';
 
 done_testing;
