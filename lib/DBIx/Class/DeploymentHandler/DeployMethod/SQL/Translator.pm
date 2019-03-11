@@ -58,7 +58,8 @@ has sql_translator_args => (
 );
 
 has script_directory => (
-  isa      => Str,
+  isa      => DirObject,
+  coerce   => 1,
   is       => 'ro',
   required => 1,
   default  => 'sql',
@@ -90,7 +91,7 @@ sub _build_schema_version { $_[0]->schema->schema_version }
 
 sub __ddl_consume_with_prefix {
   my ($self, $type, $versions, $prefix) = @_;
-  my $base_dir = io->dir($self->script_directory);
+  my $base_dir = $self->script_directory;
   my $main = $base_dir->catdir( $type );
   my $common = $base_dir->catdir( '_common', $prefix, join q(-), @{$versions} );
   my $common_any = $base_dir->catdir( '_common', $prefix, '_any' );
@@ -123,35 +124,35 @@ sub _ddl_schema_consume_filenames {
 
 sub _ddl_protoschema_deploy_consume_filenames {
   my ($self, $version) = @_;
-  my $dir = io->dir($self->script_directory, '_source', 'deploy', $version);
+  my $dir = $self->script_directory->catdir('_source', 'deploy', $version);
   return [] unless $dir->exists;
   return [grep /\.yml$/, $dir->all_files];
 }
 
 sub _ddl_protoschema_changegrade_consume_filenames {
   my ($self, $versions, $direction) = @_;
-  my $dir = io->dir($self->script_directory, '_preprocess_schema', $direction, join q(-), @{$versions});
+  my $dir = $self->script_directory->catdir('_preprocess_schema', $direction, join q(-), @{$versions});
   return [] unless $dir->exists;
   return [grep /\.pl$/, $dir->all_files];
 }
 
 sub _ddl_protoschema_produce_filename {
   my ($self, $version) = @_;
-  my $dir = io->dir( $self->script_directory, '_source', 'deploy',  $version );
+  my $dir = $self->script_directory->catdir('_source', 'deploy',  $version);
   $dir->mkpath unless $dir->exists;
   return $dir->catfile( '001-auto.yml' );
 }
 
 sub _ddl_schema_produce_filename {
   my ($self, $type, $version) = @_;
-  my $dir = io->dir( $self->script_directory, $type, 'deploy', $version );
+  my $dir = $self->script_directory->catdir($type, 'deploy', $version);
   $dir->mkpath unless $dir->exists;
   return $dir->catfile( '001-auto.sql' );
 }
 
 sub _ddl_schema_changegrade_produce_filename {
   my ($self, $type, $versions, $direction) = @_;
-  my $dir = io->dir($self->script_directory, $type, $direction, join q(-), @{$versions});
+  my $dir = $self->script_directory->catdir($type, $direction, join q(-), @{$versions});
   $dir->mkpath unless $dir->exists;
   return $dir->catfile( '001-auto.sql' );
 }
@@ -428,7 +429,6 @@ sub initialize {
 
 sub _sqldiff_from_yaml {
   my ($self, $from_version, $to_version, $db, $direction) = @_;
-  my $dir       = $self->script_directory;
   my $sqltargs = {
     add_drop_table => 0,
     ignore_constraint_names => 1,
@@ -438,7 +438,7 @@ sub _sqldiff_from_yaml {
   my @schemas; # source, dest
   for ([ $from_version, 'previous' ], [ $to_version, 'next' ]) {
     my ($version, $label) = @$_;
-    my $file = $self->_ddl_protoschema_produce_filename($version, $dir);
+    my $file = $self->_ddl_protoschema_produce_filename($version);
     # should probably be a croak
     carp("No $label schema file found ($file)")
        unless $file->exists;
@@ -509,7 +509,7 @@ sub _resultsource_install_filename {
   my ($self, $source_name) = @_;
   return sub {
     my ($self, $type, $version) = @_;
-    my $dir = io->dir( $self->script_directory, $type, 'deploy', $version );
+    my $dir = $self->script_directory->catdir($type, 'deploy', $version);
     $dir->mkpath unless $dir->exists;
     return $dir->catfile( "001-auto-$source_name.sql" );
   }
@@ -519,7 +519,7 @@ sub _resultsource_protoschema_filename {
   my ($self, $source_name) = @_;
   return sub {
     my ($self, $version) = @_;
-    my $dir = io->dir( $self->script_directory, '_source', 'deploy', $version );
+    my $dir = $self->script_directory->catdir('_source', 'deploy', $version);
     $dir->mkpath unless $dir->exists;
     return $dir->catfile( "001-auto-$source_name.yml" );
   }
