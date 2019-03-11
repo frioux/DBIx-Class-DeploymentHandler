@@ -57,6 +57,7 @@ VERSION2: {
      version_set => [qw(1.0 2)]
    });
    ok -e $fn, 'intermediate script ran with the right args';
+   unlink $fn;
    $dm->upgrade_single_step({ version_set => [qw( 1.0 2 )] });
 }
 done_testing;

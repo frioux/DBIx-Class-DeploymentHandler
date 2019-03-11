@@ -49,6 +49,7 @@ VERSION1: {
    $dm->initialize({ version => '1.0' });
 
    ok -e $fn, 'code got run in preinit';
+   unlink $fn;
 
    dies_ok {$dm->prepare_deploy} 'prepare_deploy dies if you run it twice' ;
 
@@ -249,7 +250,7 @@ VERSION3: {
    } 'dies when sql dir does not exist';
 }
 
-my $stuff_that_ran = do { local( @ARGV, $/ ) = $stuffthatran_fn; <> };
+my $stuff_that_ran = io->file($stuffthatran_fn)->slurp;
 is $stuff_that_ran,
 '
 
@@ -266,6 +267,7 @@ is $stuff_that_ran,
 2,3.0
 2,3.0
 ', '_any got ran the right amount of times with the right args';
+unlink $stuffthatran_fn;
 
 done_testing;
 #vim: ts=2 sw=2 expandtab
