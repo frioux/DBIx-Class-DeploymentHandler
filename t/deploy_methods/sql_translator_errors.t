@@ -28,22 +28,51 @@ VERSION1: {
 
    ok( $dm, 'DBIC::DH::DM::SQL::Translator gets instantiated correctly' );
 
+   my $initdir = io->dir($sql_dir, qw(SQLite initialize 1.0));
+   $initdir->mkpath;
+   run_file($dm, 'initialize', $initdir, '000-bad.pl',
+     'INVALID PERL";',
+     qr(failed to compile),
+     'initialize parse error',
+   );
+
    my $dir = io->dir($sql_dir, qw(SQLite deploy 1.0));
    $dir->mkpath;
 
-   my $lethal_perl = $dir->catfile('000-foo.pl');
-   $lethal_perl->print('sub {die "test"}');
-   $lethal_perl->close;
-   like exception {
-      $dm->deploy;
-   }, qr(Perl in .*SQLite[/\\]deploy[/\\]1\.0[/\\]000-foo\.pl), 'file prepended to Perl script error';
-   unlink "$lethal_perl";
+   run_file($dm, 'deploy', $dir, '000-foo.pl',
+     'sub {die "test"}',
+     qr(Perl in .*SQLite.*deploy.*1\.0.*000-foo\.pl),
+     'file prepended to Perl script error',
+   );
 
-   $dir->catfile('000-bar.sql')->print('INVALID SQL;');
+   run_file($dm, 'deploy', $dir, '000-bar.sql',
+     'INVALID SQL;',
+     qr(SQL in .*SQLite.*deploy.*1\.0.*000-bar\.sql),
+     'file prepended to SQL script error',
+   );
 
-   like exception {
-      $dm->deploy;
-   }, qr(SQL in .*SQLite[/\\]deploy[/\\]1\.0[/\\]000-bar\.sql), 'file prepended to SQL script error';
+   run_file($dm, 'deploy', $dir, '000-baz.pl',
+     'INVALID PERL";',
+     qr(find string terminator),
+     'non-perl or SQL file',
+   );
+
+   run_file($dm, 'deploy', $dir, '000-bae.pl',
+     '"just a string"',
+     qr(should define an anonymous sub),
+     'non-function',
+   );
+}
+
+sub run_file {
+  my ($dm, $method, $dir, $name, $content, $re, $label) = @_;
+  my $file = $dir->catfile($name);
+  $file->print($content);
+  $file->close;
+  like exception {
+    $dm->$method;
+  }, $re, $label;
+  unlink "$file";
 }
 
 done_testing;

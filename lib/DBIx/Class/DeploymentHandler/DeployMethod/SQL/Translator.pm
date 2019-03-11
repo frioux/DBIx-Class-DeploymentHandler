@@ -369,6 +369,7 @@ sub _run_sql_and_perl {
        } elsif ( $filename =~ /\.pl$/ ) {
           $self->_run_perl($filename, $versions)
        } else {
+         # uncoverable statement
          croak "A file ($filename) got to deploy that wasn't sql or perl!";
        }
      }
@@ -407,9 +408,9 @@ sub initialize {
   for my $filename (@files) {
     # We ignore sql for now (till I figure out what to do with it)
     if ( $filename =~ /^(.+)\.pl$/ ) {
-      my $filedata = do { local( @ARGV, $/ ) = $filename; <> };
+      my $filedata = $$filename;
       no warnings 'redefine';
-      my $fn = eval "$filedata";
+      my $fn = eval $filedata;
       use warnings;
       if ($@) {
         croak "$filename failed to compile: $@";
@@ -419,6 +420,7 @@ sub initialize {
         croak "$filename should define an anonymous sub but it didn't!";
       }
     } else {
+      # uncoverable statement
       croak "A file ($filename) got to initialize_scripts that wasn't sql or perl!";
     }
   }
@@ -469,6 +471,7 @@ sub _sql_from_yaml {
   my @sql;
   my $actual_file = $self->$from_file($version);
   for my $yaml_filename (@{(
+     # uncoverable statement
      DlogS_trace { "generating SQL from Serialized SQL Files: $_" }
         (ref $actual_file eq 'ARRAY'?$actual_file:[$actual_file])
   )}) {
@@ -480,6 +483,7 @@ sub _sql_from_yaml {
      });
      push @sql, $sqlt->translate($yaml_filename.'');
      if(!@sql) {
+       # uncoverable statement count:2
        carp("Failed to translate to $db, skipping. (" . $sqlt->error . ")");
        return undef;
      }
@@ -647,6 +651,7 @@ sub _maybe_overwrite {
   my ($self, $label, $file, $content) = @_;
   if ($file->exists) {
     if ($self->force_overwrite) {
+       # uncoverable statement count:2
        carp "Overwriting existing $label file - $file";
        unlink $file;
     } else {
