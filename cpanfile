@@ -14,6 +14,7 @@ requires 'Carp' => 0;
 requires 'Carp::Clan' => 0;
 requires 'Context::Preserve' => 0.01;
 requires 'Sub::Exporter::Progressive' => 0;
+requires 'Sub::Exporter' => 0;
 requires 'Text::Brew' => 0.02;
 
 on test => sub {
