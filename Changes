@@ -4,6 +4,7 @@ Revision history for {{$dist->name}}
  - convert to Type::Tiny
  - Port to Moo
  - convert parameterised role to Package::Variant
+ - convert file-handling to IO::All
 
 0.002224  2019-03-09 05:16:47+00:00 Europe/London
  - binmode on all filehandles so lines always end LF - thanks @wchristian
