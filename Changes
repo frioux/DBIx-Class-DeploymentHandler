@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002226  2019-03-11 03:14:04+00:00 Europe/London
  - relax the Pg chunk-splitting when no ";"
  - better test of version-object on schema
 
