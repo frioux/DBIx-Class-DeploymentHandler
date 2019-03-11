@@ -16,6 +16,7 @@ requires 'Context::Preserve' => 0.01;
 requires 'Sub::Exporter::Progressive' => 0;
 requires 'Sub::Exporter' => 0;
 requires 'Text::Brew' => 0.02;
+requires 'version' => 0.9924;
 
 on test => sub {
    requires 'Test::More' => 0.88;

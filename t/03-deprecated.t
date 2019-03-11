@@ -61,7 +61,7 @@ VERSION2: {
 
   ok($handler, 'DBIx::Class::DeploymentHandler w/2.0 instantiates correctly');
 
-  my $version = $s->schema_version();
+  my $version = $s->schema_version()->numify + 0;
   $handler->prepare_deploy();
   $handler->prepare_upgrade({ from_version => '1.0', to_version => $version });
   dies_ok {

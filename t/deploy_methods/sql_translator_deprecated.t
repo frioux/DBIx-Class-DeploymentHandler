@@ -63,7 +63,7 @@ VERSION2: {
       'DBIC::DH::DM::SQLT::Deprecated gets instantiated correctly w/ version 2.0'
    );
 
-   $version = $s->schema_version;
+   $version = $s->schema_version->numify + 0;
    $dm->prepare_deploy;
    $dm->prepare_upgrade({
      from_version => '1.0',

@@ -86,7 +86,7 @@ VERSION2: {
 
    ok( $dm, 'DBIC::DH::SQL::Translator w/2.0 instantiates correctly');
 
-   my $version = $s->schema_version();
+   my $version = $s->schema_version()->numify + 0;
    $dm->prepare_deploy;
    ok(
       io->file($sql_dir, qw(SQLite deploy 2 001-auto.sql ))->exists,
