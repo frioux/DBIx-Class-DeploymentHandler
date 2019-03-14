@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002229  2019-03-14 18:13:25+00:00 Europe/London
  - convert from Package::Variant to MooX::Role::Parameterized - fix #67
 
 0.002228  2019-03-14 07:13:33+00:00 Europe/London
