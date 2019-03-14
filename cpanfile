@@ -1,3 +1,4 @@
+requires 'perl' => '5.010';
 requires 'parent' => 0.225;
 requires 'autodie' => 0;
 requires 'Log::Contextual' => 0.005005;
