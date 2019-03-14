@@ -10,8 +10,7 @@ sub _build_initial_version { $_[0]->database_version }
 extends 'DBIx::Class::DeploymentHandler::Dad';
 # a single with would be better, but we can't do that
 # see: http://rt.cpan.org/Public/Bug/Display.html?id=46347
-use DBIx::Class::DeploymentHandler::WithApplicatorDumple;
-with WithApplicatorDumple(
+use MooX::Role::Parameterized::With 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     interface_role       => 'DBIx::Class::DeploymentHandler::HandlesDeploy',
     class_name           => 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator',
     delegate_name        => 'deploy_method',
@@ -19,20 +18,20 @@ with WithApplicatorDumple(
     attributes_to_copy   => [qw(
       ignore_ddl databases script_directory sql_translator_args force_overwrite
     )],
-  ),
-  WithApplicatorDumple(
+  },
+  'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
     class_name           => 'DBIx::Class::DeploymentHandler::VersionHandler::Monotonic',
     delegate_name        => 'version_handler',
     attributes_to_assume => [qw( initial_version schema_version to_version )],
-  ),
-  WithApplicatorDumple(
+  },
+  'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersionStorage',
     class_name           => 'DBIx::Class::DeploymentHandler::VersionStorage::Standard',
     delegate_name        => 'version_storage',
     attributes_to_assume => ['schema'],
     attributes_to_copy   => [qw(version_source version_class)],
-  );
+  };
 with 'DBIx::Class::DeploymentHandler::WithReasonableDefaults';
 
 sub prepare_version_storage_install {

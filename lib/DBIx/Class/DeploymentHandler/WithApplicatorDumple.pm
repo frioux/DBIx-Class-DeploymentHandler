@@ -1,45 +1,42 @@
 package DBIx::Class::DeploymentHandler::WithApplicatorDumple;
 
-use strict;
-use warnings;
+use Moo::Role;
+use MooX::Role::Parameterized;
+use Module::Runtime 'use_module';
+use DBIx::Class::DeploymentHandler::Types -all;
 
-use Package::Variant
-  importing => {
-     'Module::Runtime' => ['use_module'],
-     'Moo::Role' => ['has'],
-  },
-  subs => [qw(has use_module)];
+# this is at least a little ghetto and not super well
+# thought out.  Take a look at the following at some
+# point to clean it all up:
+#
+# http://search.cpan.org/~jjnapiork/MooseX-Role-BuildInstanceOf-0.06/lib/MooseX/Role/BuildInstanceOf.pm
+# http://github.com/rjbs/role-subsystem/blob/master/lib/Role/Subsystem.pm
 
-sub make_variant {
-  my ($class, $target, %args) = @_;
+role {
+  my $p = shift;
+  my $mop = shift;
 
-  my $interface_role = $args{interface_role}
-    or die 'interface_role is required!';
-
-  my $class_name = $args{class_name}
-    or die 'class_name is required!';
-
-  my $delegate_name = $args{delegate_name}
-    or die 'delegate_name is required!';
-
-  my $attributes_to_copy = $args{attributes_to_copy} || [];
-  my $attributes_to_assume = $args{attributes_to_assume} || [];
+  my $class_name = Str->($p->{class_name}) or die;
+  my $delegate_name = Str->($p->{delegate_name}) or die;
+  my $interface_role = Str->($p->{interface_role}) or die;
+  my $attributes_to_assume = (Maybe[ArrayRef[Str]])->($p->{attributes_to_assume}) || [];
+  my $attributes_to_copy = (Maybe[ArrayRef[Str]])->($p->{attributes_to_copy}) || [];
 
   use_module($class_name);
 
   my $meta = Moo->_constructor_maker_for($class_name);
   my $class_attrs = $meta->all_attribute_specs;
 
-  has $_ => %{ $class_attrs->{$_} }
+  $mop->has($_ => %{ $class_attrs->{$_} })
     for grep $class_attrs->{$_}, @$attributes_to_copy;
 
-  has $delegate_name => (
+  $mop->has($delegate_name => (
     is         => 'lazy',
     does       => $interface_role,
     handles    => $interface_role,
-  );
+  ));
 
-  install '_build_'.$delegate_name => sub {
+  $mop->method('_build_'.$delegate_name => sub {
     my $self = shift;
 
     $class_name->new({
@@ -47,7 +44,7 @@ sub make_variant {
         @$attributes_to_assume,
         @$attributes_to_copy,
     })
-  };
+  });
 };
 
 1;
