@@ -6,7 +6,7 @@ matrix:
     - perl: blead
     - perl: 5.18
       env: COVERAGE=1
-    - perl: 5.8
+    - perl: 5.10
     - perl: 5.14
     - perl: 5.26
   allow_failures:
