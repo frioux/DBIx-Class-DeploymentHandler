@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002228  2019-03-14 07:13:33+00:00 Europe/London
  - IO::All dep to 0.87 in case causing Win32 problem
 
 0.002227  2019-03-11 05:58:07+00:00 Europe/London
