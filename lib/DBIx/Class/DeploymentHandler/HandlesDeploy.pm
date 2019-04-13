@@ -1,6 +1,6 @@
 package DBIx::Class::DeploymentHandler::HandlesDeploy;
 
-use Moo::Role;
+use Moose::Role;
 
 # ABSTRACT: Interface for deploy methods
 

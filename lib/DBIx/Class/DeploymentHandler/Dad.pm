@@ -2,10 +2,11 @@ package DBIx::Class::DeploymentHandler::Dad;
 
 # ABSTRACT: Parent class for DeploymentHandlers
 
-use Moo;
+use Moose;
+require DBIx::Class::Schema;    # loaded for type constraint
 use Carp::Clan '^DBIx::Class::DeploymentHandler';
 use DBIx::Class::DeploymentHandler::LogImporter ':log';
-use DBIx::Class::DeploymentHandler::Types -all;
+use DBIx::Class::DeploymentHandler::Types;
 
 has schema => (
   is       => 'ro',
@@ -13,23 +14,25 @@ has schema => (
 );
 
 has backup_directory => (
-  isa => Str,
+  isa => 'Str',
   is  => 'ro',
   predicate  => 'has_backup_directory',
 );
 
 has to_version => (
-  is         => 'lazy',
-  isa        => VersionNonObj,
-  coerce     => 1,
+  is         => 'ro',
+  isa        => 'Str',
+  lazy_build => 1,
 );
 
-sub _build_to_version { $_[0]->schema_version }
+sub _build_to_version {
+  my $version = $_[0]->schema_version;
+  ref($version) ? $version->numify : $version;
+}
 
 has schema_version => (
-  is         => 'lazy',
-  isa        => VersionNonObj,
-  coerce     => 1,
+  is         => 'ro',
+  lazy_build => 1,
 );
 
 sub _build_schema_version { $_[0]->schema->schema_version }

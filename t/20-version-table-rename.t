@@ -11,7 +11,6 @@ use aliased 'DBIx::Class::DeploymentHandler', 'DH';
 use Test::More;
 use File::Temp 'tempdir';
 use Test::Fatal qw(lives_ok dies_ok);
-use IO::All;
 
 my $dbh = DBICDHTest::dbh();
 my @connection = (sub { $dbh }, { ignore_version => 1 });
@@ -69,9 +68,12 @@ VERSION2: {
   $handler->prepare_upgrade({ from_version => 1, to_version => $version} );
 
   # manually add SQL to rename the version table
-  io->file($sql_dir, qw(SQLite upgrade 1-2 002-version-table-rename.sql))->print(<<SQL);
+  open(my $fh, '>', "$sql_dir/SQLite/upgrade/1-2/002-version-table-rename.sql")
+    or die "unable to open '$sql_dir/SQLite/upgrade/1-2/002-version-table-rename.sql' ($!)";
+  print {$fh} <<SQL;
     ALTER TABLE dbix_class_deploymenthandler_versions RENAME TO dbic_version;
 SQL
+  close $fh;
 
   dies_ok {
     $s->resultset('Foo')->create({

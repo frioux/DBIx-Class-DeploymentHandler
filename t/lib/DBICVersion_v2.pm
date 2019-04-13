@@ -29,8 +29,7 @@ use base 'DBIx::Class::Schema';
 use strict;
 use warnings;
 
-require version;
-our $VERSION = version->declare(2);
+our $VERSION = '2.0';
 
 __PACKAGE__->register_class('Foo', 'DBICVersion::Foo');
 __PACKAGE__->load_components('DeploymentHandler::VersionStorage::Standard::Component');
