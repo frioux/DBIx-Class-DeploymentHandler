@@ -1,7 +1,6 @@
 package DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions;
 
-use Moo;
-use DBIx::Class::DeploymentHandler::Types -all;
+use Moose;
 
 # ABSTRACT: Go straight from Database to Schema version
 
@@ -13,22 +12,22 @@ has schema_version => (
 );
 
 has initial_version => (
-  isa      => Str,
+  isa      => 'Str',
   is       => 'ro',
   required => 1,
 );
 
 has to_version => ( # configuration
-  is         => 'lazy',
-  isa        => VersionNonObj,
-  coerce     => 1,
+  is         => 'ro',
+  isa        => 'Str',
+  lazy_build => 1,
 );
 
 sub _build_to_version { $_[0]->schema_version }
 
 has once => (
   is      => 'rw',
-  isa     => Maybe[Bool],
+  isa     => 'Bool',
   default => undef,
 );
 
@@ -64,6 +63,7 @@ sub previous_version_set {
     if $self->initial_version eq $self->to_version;
   return [$self->initial_version, $self->to_version];
 }
+
 
 __PACKAGE__->meta->make_immutable;
 

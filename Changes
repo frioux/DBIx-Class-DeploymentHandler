@@ -1,6 +1,9 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - Revert conversion to Moo; this code is now identical to v0.002224, with one
+   small fix from 0.002225, having to do with Pg chunk-splitting when there
+   is no semicolon
 
 0.002230  2019-03-14 18:31:07+00:00 Europe/London
  - MooX::Role::Parameterized forces min perl 5.010

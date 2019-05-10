@@ -9,7 +9,7 @@ use Test::Fatal qw(dies_ok exception);
 use lib 't/lib';
 use DBICDHTest;
 use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
-use IO::All;
+use Path::Class qw(dir file);
 use File::Temp qw(tempdir);
 
 my $dbh = DBICDHTest::dbh();
@@ -28,51 +28,28 @@ VERSION1: {
 
    ok( $dm, 'DBIC::DH::DM::SQL::Translator gets instantiated correctly' );
 
-   my $initdir = io->dir($sql_dir, qw(SQLite initialize 1.0));
-   $initdir->mkpath;
-   run_file($dm, 'initialize', $initdir, '000-bad.pl',
-     'INVALID PERL";',
-     qr(failed to compile),
-     'initialize parse error',
-   );
+   my $lethal_perl = file($sql_dir, 'SQLite', 'deploy', qw(1.0 000-foo.pl ));
+   dir($sql_dir, 'SQLite',  'deploy', '1.0')->mkpath;
+   {
+      open my $fh, '>', $lethal_perl;
+      print {$fh} 'sub {die "test"}';
+      close $fh;
+   }
 
-   my $dir = io->dir($sql_dir, qw(SQLite deploy 1.0));
-   $dir->mkpath;
+   like exception {
+      $dm->deploy;
+   }, qr(Perl in .*SQLite[/\\]deploy[/\\]1\.0[/\\]000-foo\.pl), 'file prepended to Perl script error';
 
-   run_file($dm, 'deploy', $dir, '000-foo.pl',
-     'sub {die "test"}',
-     qr(Perl in .*SQLite.*deploy.*1\.0.*000-foo\.pl),
-     'file prepended to Perl script error',
-   );
+   unlink "$lethal_perl";
 
-   run_file($dm, 'deploy', $dir, '000-bar.sql',
-     'INVALID SQL;',
-     qr(SQL in .*SQLite.*deploy.*1\.0.*000-bar\.sql),
-     'file prepended to SQL script error',
-   );
+   open my $fh, '>',
+      file($sql_dir, 'SQLite', 'deploy', qw(1.0 000-bar.sql ));
+   print {$fh} 'INVALID SQL;';
+   close $fh;
 
-   run_file($dm, 'deploy', $dir, '000-baz.pl',
-     'INVALID PERL";',
-     qr(find string terminator),
-     'non-perl or SQL file',
-   );
-
-   run_file($dm, 'deploy', $dir, '000-bae.pl',
-     '"just a string"',
-     qr(should define an anonymous sub),
-     'non-function',
-   );
-}
-
-sub run_file {
-  my ($dm, $method, $dir, $name, $content, $re, $label) = @_;
-  my $file = $dir->catfile($name);
-  $file->print($content);
-  $file->close;
-  like exception {
-    $dm->$method;
-  }, $re, $label;
-  unlink "$file";
+   like exception {
+      $dm->deploy;
+   }, qr(SQL in .*SQLite[/\\]deploy[/\\]1\.0[/\\]000-bar\.sql), 'file prepended to SQL script error';
 }
 
 done_testing;

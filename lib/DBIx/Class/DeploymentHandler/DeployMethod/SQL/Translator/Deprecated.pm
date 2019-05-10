@@ -1,10 +1,10 @@
 package DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::Deprecated;
 
-use Moo;
+use Moose;
 
 # ABSTRACT: (DEPRECATED) Use this if you are stuck in the past
 
-use IO::All;
+use File::Spec::Functions;
 
 extends 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
 
@@ -18,7 +18,7 @@ sub _ddl_schema_produce_filename {
   my $filename = ref $self->schema;
   $filename =~ s/::/-/g;
 
-  $filename = io->file(
+  $filename = catfile(
     $self->script_directory, "$filename-$version-$type.sql"
   );
 
@@ -30,7 +30,7 @@ sub _ddl_schema_up_produce_filename {
   my $filename = ref $self->schema;
   $filename =~ s/::/-/g;
 
-  $filename = io->file(
+  $filename = catfile(
     $self->script_directory, "$filename-" . join( q(-), @{$versions} ) . "-$type.sql"
   );
 

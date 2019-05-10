@@ -2,14 +2,15 @@ package DBIx::Class::DeploymentHandler::Deprecated;
 
 # ABSTRACT: (DEPRECATED) Use this if you are stuck in the past
 
-use Moo;
+use Moose;
+use Moose::Util 'apply_all_roles';
 
 sub initial_version { return $_[0]->database_version }
 
 extends 'DBIx::Class::DeploymentHandler::Dad';
 # a single with would be better, but we can't do that
 # see: http://rt.cpan.org/Public/Bug/Display.html?id=46347
-use MooX::Role::Parameterized::With 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
+with 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     interface_role       => 'DBIx::Class::DeploymentHandler::HandlesDeploy',
     class_name           => 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator::Deprecated',
     delegate_name        => 'deploy_method',
@@ -27,11 +28,27 @@ with 'DBIx::Class::DeploymentHandler::WithReasonableDefaults';
 sub BUILD {
   my $self = shift;
 
-  my $schema = $self->schema;
-  my $realclass = __PACKAGE__ . '::' .
-    ($schema->can('ordered_versions') && $schema->ordered_versions
-      ? '_explicit' : '_database');
-  bless $self, $realclass;
+  if ($self->schema->can('ordered_versions') && $self->schema->ordered_versions) {
+    apply_all_roles(
+      $self,
+      'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
+        interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
+        class_name           => 'DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions',
+        delegate_name        => 'version_handler',
+        attributes_to_assume => [qw( database_version schema_version to_version )],
+      }
+    );
+  } else {
+    apply_all_roles(
+      $self,
+      'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
+        interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
+        class_name           => 'DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions',
+        delegate_name        => 'version_handler',
+        attributes_to_assume => [qw( database_version schema_version to_version )],
+      }
+    );
+  }
   # the following is just a hack so that ->version_storage
   # won't be lazy
   $self->version_storage;
@@ -39,30 +56,6 @@ sub BUILD {
 
 __PACKAGE__->meta->make_immutable;
 
-1;
-
-package # hide from PAUSE
-  DBIx::Class::DeploymentHandler::Deprecated::_database;
-use Moo;
-extends 'DBIx::Class::DeploymentHandler::Deprecated';
-use MooX::Role::Parameterized::With 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
-    interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
-    class_name           => 'DBIx::Class::DeploymentHandler::VersionHandler::DatabaseToSchemaVersions',
-    delegate_name        => 'version_handler',
-    attributes_to_assume => [qw( database_version schema_version to_version )],
-  };
-1;
-
-package # hide from PAUSE
-  DBIx::Class::DeploymentHandler::Deprecated::_explicit;
-use Moo;
-extends 'DBIx::Class::DeploymentHandler::Deprecated';
-use MooX::Role::Parameterized::With 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
-    interface_role       => 'DBIx::Class::DeploymentHandler::HandlesVersioning',
-    class_name           => 'DBIx::Class::DeploymentHandler::VersionHandler::ExplicitVersions',
-    delegate_name        => 'version_handler',
-    attributes_to_assume => [qw( database_version schema_version to_version )],
-  };
 1;
 
 # vim: ts=2 sw=2 expandtab

@@ -8,7 +8,7 @@ use Test::More;
 use lib 't/lib';
 use DBICDHTest;
 use aliased 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
-use IO::All;
+use Path::Class qw(dir file);
 use File::Temp qw(tempfile tempdir);
 
 my $dbh = DBICDHTest::dbh();
@@ -41,24 +41,24 @@ VERSION2: {
    });
 
    $dm->prepare_deploy;
-   my $dir = io->dir($sql_dir, qw(_preprocess_schema upgrade 1.0-2 ));
-   $dir->mkpath;
+   dir($sql_dir, qw(_preprocess_schema upgrade 1.0-2.0 ))->mkpath;
+   open my $prerun, '>',
+      file($sql_dir, qw(_preprocess_schema upgrade 1.0-2.0 003-semiautomatic.pl ));
    my (undef, $fn) = tempfile(OPEN => 0);
-   $dir->catfile('003-semiautomatic.pl')->print(
+   print {$prerun}
       qq^sub {
          open my \$fh, ">", '$fn'
             if \$_[0]->isa("SQL::Translator::Schema")
             && \$_[1]->isa("SQL::Translator::Schema");
-      }^
-   );
+      }^;
+   close $prerun;
    $dm->prepare_upgrade({
      from_version => '1.0',
-     to_version => '2',
-     version_set => [qw(1.0 2)]
+     to_version => '2.0',
+     version_set => [qw(1.0 2.0)]
    });
    ok -e $fn, 'intermediate script ran with the right args';
-   unlink $fn;
-   $dm->upgrade_single_step({ version_set => [qw( 1.0 2 )] });
+   $dm->upgrade_single_step({ version_set => [qw( 1.0 2.0 )] });
 }
 done_testing;
 #vim: ts=2 sw=2 expandtab

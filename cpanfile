@@ -1,22 +1,20 @@
-requires 'perl' => '5.010';
 requires 'parent' => 0.225;
 requires 'autodie' => 0;
+requires 'namespace::autoclean' => 0;
 requires 'Log::Contextual' => 0.005005;
-requires 'IO::All' => 0.87;
+requires 'Path::Class' => 0.26;
 requires 'DBIx::Class' => 0.08121;
 requires 'Module::Runtime' => 0.001;
-requires 'Moo' => 2.0;
-requires 'MooX::Role::Parameterized' => 0.082;
-requires 'Type::Tiny' => '1.004004';
+requires 'Moose' => 1.0;
+requires 'Moo' => 1.003000;
+requires 'MooseX::Role::Parameterized' => 0.18;
 requires 'Try::Tiny' => 0;
 requires 'SQL::Translator' => 0.11005;
 requires 'Carp' => 0;
 requires 'Carp::Clan' => 0;
 requires 'Context::Preserve' => 0.01;
 requires 'Sub::Exporter::Progressive' => 0;
-requires 'Sub::Exporter' => 0;
 requires 'Text::Brew' => 0.02;
-requires 'version' => 0.9924;
 
 on test => sub {
    requires 'Test::More' => 0.88;
