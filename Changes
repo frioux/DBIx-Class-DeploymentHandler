@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002232  2019-06-06 21:49:17-04:00 America/New_York
  - Add missing dependency on YAML.pm
 
 0.002231  2019-05-10 09:28:36-04:00 America/New_York
