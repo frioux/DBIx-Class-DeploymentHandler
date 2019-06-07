@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - Add missing dependency on YAML.pm
 
 0.002231  2019-05-10 09:28:36-04:00 America/New_York
  - Revert conversion to Moo; this code is now identical to v0.002224, with one
