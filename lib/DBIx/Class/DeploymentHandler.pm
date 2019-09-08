@@ -16,7 +16,7 @@ with 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     delegate_name        => 'deploy_method',
     attributes_to_assume => [qw(schema schema_version version_source)],
     attributes_to_copy   => [qw(
-      ignore_ddl databases script_directory sql_translator_args force_overwrite
+      ignore_ddl databases script_directory sql_translator_args force_overwrite txn_wrap
     )],
   },
   'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
@@ -146,15 +146,87 @@ And much, much more!
 That's really just a taste of some of the differences.  Check out each role for
 all the details.
 
+=head1 ATTRIBUTES
+
+This is just a "stub" section to make clear
+that the bulk of implementation is documented somewhere else.
+
+=head2 Attributes passed to L<DBIx::Class::DeploymentHandler::HandlesDeploy>
+
+=over
+
+=item *
+
+L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator/ignore_ddl>
+
+=item *
+
+L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator/databases>
+
+=item *
+
+L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator/script_directory>
+
+=item *
+
+L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator/sql_translator_args>
+
+=item *
+
+L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator/force_overwrite>
+
+=item *
+
+L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator/txn_wrap>
+
+=back
+
+=head2 Attributes passed to L<DBIx::Class::DeploymentHandler::HandlesVersioning>
+
+=over
+
+=item *
+
+initial_version
+
+=item *
+
+L<DBIx::Class::DeploymentHandler::Dad/schema_version>
+
+=item *
+
+L<DBIx::Class::DeploymentHandler::Dad/to_version>
+
+=back
+
+=head2 Attributes passed to L<DBIx::Class::DeploymentHandler::HandlesVersionStorage>
+
+=over
+
+=item *
+
+version_source
+
+=item *
+
+version_class
+
+=back
+
+=head2 Attributes Inherited from Parent Class
+
+See L<DBIx::Class::DeploymentHandler::Dad/ATTRIBUTES> and
+L<DBIx::Class::DeploymentHandler::Dad/"ORTHODOX METHODS"> for the remaining
+available attributes to pass to C<new>.
+
 =head1 METHODS
 
 This is just a "stub" section to make clear
 that the bulk of implementation is documented in
 L<DBIx::Class::DeploymentHandler::Dad>. Since that is implemented using
 L<Moose> class, see L<DBIx::Class::DeploymentHandler::Dad/ATTRIBUTES>
-and L<DBIx::Class::DeploymentHandler::Dad/"ORTHODOX METHODS"> for
-available attributes to pass to C<new>, and methods callable on the
-resulting object.
+and L<DBIx::Class::DeploymentHandler::Dad/"ORTHODOX METHODS"> for methods
+callable on the resulting object.
 
 =head2 new
 
@@ -164,10 +236,6 @@ resulting object.
     databases           => 'SQLite',
     sql_translator_args => { add_drop_table => 0 },
   });
-
-See L<DBIx::Class::DeploymentHandler::Dad/ATTRIBUTES> and
-L<DBIx::Class::DeploymentHandler::Dad/"ORTHODOX METHODS"> for available
-attributes to pass to C<new>.
 
 =head1 WHERE IS ALL THE DOC?!
 

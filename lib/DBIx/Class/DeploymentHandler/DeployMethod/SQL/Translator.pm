@@ -344,9 +344,9 @@ sub _split_sql_chunk {
   my $storage_class = ref $self->storage;
   $storage_class =~ s/.*://;
   my $feature = $STORAGE2FEATURE{$storage_class} || $STORAGE2FEATURE{MySQL};
+  my $txn; $txn = $feature->{txn} if $self->txn_wrap;
   for ( @sql ) {
     # strip transactions
-    my $txn = $feature->{txn};
     s/^\s*($txn|COMMIT\b).*//mgi if $txn;
     # remove comments
     my $comment = $feature->{comment};

@@ -1,6 +1,7 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - Add txn_wrap attribute to DBIC::DeploymentHandler
 
 0.002232  2019-06-06 21:49:17-04:00 America/New_York
  - Add missing dependency on YAML.pm
