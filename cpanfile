@@ -15,6 +15,7 @@ requires 'Context::Preserve' => 0.01;
 requires 'Sub::Exporter::Progressive' => 0;
 requires 'Text::Brew' => 0.02;
 requires 'YAML' => 0.66;
+requires 'SQL::SplitStatement' => '1.00020';
 
 on test => sub {
    requires 'Test::More' => 0.88;

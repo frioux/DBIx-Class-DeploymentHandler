@@ -12,6 +12,7 @@ use Digest::MD5;
 
 use Try::Tiny;
 
+use SQL::SplitStatement '1.00020';
 use SQL::Translator;
 require SQL::Translator::Diff;
 
@@ -94,6 +95,14 @@ sub _build_schema_version {
   my $self = shift;
   $self->schema->schema_version
 }
+
+has sql_splitter => (
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_sql_splitter',
+);
+
+sub _build_sql_splitter { SQL::SplitStatement->new }
 
 sub __ddl_consume_with_prefix {
   my ($self, $type, $versions, $prefix) = @_;
@@ -252,119 +261,20 @@ sub _run_sql_array {
   return join "\n", @$sql
 }
 
-my %STORAGE2FEATURE = (
-  SQLServer => {
-    txn => qr/begin\s+transaction\b/i,
-    comment => {
-      DD => 1, # --
-      HASH => 1,
-      SSTAR => 1, # /* */
-      DS => 1, # //
-      PERCENT => 1,
-    },
-  },
-  Sybase => {
-    txn => qr/begin\s+transaction\b/i,
-    comment => {
-      DD => 1,
-      SSTAR => 1,
-      DS => 1,
-      PERCENT => 1,
-    },
-  },
-  SQLite => {
-    txn => qr/begin\b/i,
-    comment => {
-      DD => 1,
-      HASH => 1,
-    },
-  },
-  MySQL => {
-    txn => qr/(begin\b|start\s+transaction\b)/i,
-    comment => {
-      DD => 1,
-      HASH => 1,
-      SS => 1,
-    },
-  },
-  Oracle => {
-    comment => {
-      DD => 1,
-      HASH => 1,
-      SS => 1,
-    },
-  },
-  Pg => {
-    txn => qr/begin\b/i,
-    chunk => sub {
-      my ($c) = @_;
-      my @ret;
-      my $accumulator = '';
-      while (length $c) {
-        if ($c =~ s/\A([^\$]*?);//s) {
-          $accumulator .= $1;
-          push @ret, $accumulator;
-          $accumulator = '';
-        } elsif (
-          $c =~ s/\A(
-            .*?
-            ( \$ [^\$]* \$ )
-          )//xs
-        ) {
-          # got a $...$ .. $...$ chunk
-          $accumulator .= $1;
-          my $anchor = $2;
-          $c =~ s/\A(
-            .*?
-            \Q$anchor\E
-          )//xs;
-          $accumulator .= $1;
-        } elsif ($c =~ s/\A\s*\z//s) {
-          push @ret, $accumulator;
-          $accumulator = '';
-        } else {
-          push @ret, $accumulator.$c;
-          $accumulator = '';
-          last;
-        }
-      }
-      @ret;
-    },
-    comment => {
-      DD => 1,
-      HASH => 1,
-    },
-  },
-);
-
-# split a chunk o' SQL into statements
 sub _split_sql_chunk {
   my $self = shift;
-  my @sql = map { $_.'' } @_; # copy
-  my $storage_class = ref $self->storage;
-  $storage_class =~ s/.*://;
-  my $feature = $STORAGE2FEATURE{$storage_class} || $STORAGE2FEATURE{MySQL};
+
+  # MySQL's DELIMITER is not understood by the server but handled on the client.
+  # SQL::SplitStatement treats the statements between the DELIMITERs correctly
+  # as ONE statement - but it does not remove the DELIMITER lines.
+  # https://rt.cpan.org/Public/Bug/Display.html?id=130473
+  my @sql = grep { /^(?!DELIMITER\s+)/i } map { $self->sql_splitter->split($_) } @_;
+
   for ( @sql ) {
-    # remove comments
-    my $comment = $feature->{comment};
-    s{--.*}{}gm if $comment->{DD};
-    s{/\* .*? \*/}{}xs if $comment->{SS};
-    s{//.*}{}gm if $comment->{DS};
-    s{#.*}{}gm if $comment->{HASH};
-    s{%.*}{}gm if $comment->{PERCENT};
+    s/\s*\n+\s*/ /g;    # put on single line
   }
-  my $chunk = $feature->{chunk} || sub { split /;\n/, $_[0] };
-  @sql = map $chunk->($_), @sql;
-  for ( @sql ) {
-    # trim whitespace
-    s/^\s+//gm;
-    s/\s+$//gm;
-    # remove blank lines
-    s/^\n//gm;
-    # put on single line
-    s/\n/ /g;
-  }
-  return grep $_, @sql;
+
+  return @sql;
 }
 
 sub _run_sql {
