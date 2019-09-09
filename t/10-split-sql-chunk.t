@@ -14,7 +14,7 @@ sub make_dm {
 
 my $dm = make_dm('MySQL');
 
-is_deeply [ $dm->_split_sql_chunk( <<'END' ) ], [ 'SELECT * FROM YADAH END' ];
+is_deeply [ $dm->_split_sql_chunk( <<'END' ) ], [ 'BEGIN SELECT * FROM YADAH END' ];
 BEGIN
     -- stuff
     SELECT * FROM YADAH
@@ -38,7 +38,7 @@ CREATE FUNCTION add_rating() RETURNS trigger AS $add_rating$
  END;
 $add_rating$ LANGUAGE plpgsql;
 END
-  [ q{CREATE FUNCTION add_rating() RETURNS trigger AS $add_rating$ IF NEW."type" = 'like' THEN UPDATE "list_materials" SET "likes" = (SELECT COUNT(*) FROM "list_material_ratings" WHERE "list" = NEW."list" AND "material" = NEW."material" AND "type" = 'like') WHERE "list" = NEW."list" AND "material" = NEW."material"; END IF; IF NEW."type" = 'dislike' THEN UPDATE "list_materials" SET "dislikes" = (SELECT COUNT(*) FROM "list_material_ratings" WHERE "list" = NEW."list" AND "material" = NEW."material" AND "type" = 'dislike') WHERE "list" = NEW."list" AND "material" = NEW."material"; END IF; RETURN NULL; END; $add_rating$ LANGUAGE plpgsql} ];
+  [ q{CREATE FUNCTION add_rating() RETURNS trigger AS $add_rating$ BEGIN IF NEW."type" = 'like' THEN UPDATE "list_materials" SET "likes" = (SELECT COUNT(*) FROM "list_material_ratings" WHERE "list" = NEW."list" AND "material" = NEW."material" AND "type" = 'like') WHERE "list" = NEW."list" AND "material" = NEW."material"; END IF; IF NEW."type" = 'dislike' THEN UPDATE "list_materials" SET "dislikes" = (SELECT COUNT(*) FROM "list_material_ratings" WHERE "list" = NEW."list" AND "material" = NEW."material" AND "type" = 'dislike') WHERE "list" = NEW."list" AND "material" = NEW."material"; END IF; RETURN NULL; END; $add_rating$ LANGUAGE plpgsql} ];
 
 $dm = make_dm('Pg');
 is_deeply [ $dm->_split_sql_chunk( <<'END' ) ],

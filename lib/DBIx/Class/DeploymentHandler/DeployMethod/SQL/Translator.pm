@@ -344,10 +344,7 @@ sub _split_sql_chunk {
   my $storage_class = ref $self->storage;
   $storage_class =~ s/.*://;
   my $feature = $STORAGE2FEATURE{$storage_class} || $STORAGE2FEATURE{MySQL};
-  my $txn; $txn = $feature->{txn} if $self->txn_wrap;
   for ( @sql ) {
-    # strip transactions
-    s/^\s*($txn|COMMIT\b).*//mgi if $txn;
     # remove comments
     my $comment = $feature->{comment};
     s{--.*}{}gm if $comment->{DD};
@@ -589,11 +586,27 @@ sub _sqldiff_from_yaml {
   );
   $_->($source_schema, $dest_schema) for @$transforms;
 
-  return [SQL::Translator::Diff::schema_diff(
+  # SQL::Translator::Diff::schema_diff or rather the underlying
+  # SQL::Translator::Diff::produce_diff_sql has severe issues:
+  # 1. It is undocumented
+  # 2. It wraps the result in "BEGIN; ... COMMIT;" *SIGH*
+  # 3. In a first glance it seems it could also return undef in
+  #    list context, but the code is broken enough so that part
+  #    is never reached. *roll eyes*
+  my $i = 0;
+  my @stmts = SQL::Translator::Diff::schema_diff(
      $source_schema, $db,
      $dest_schema,   $db,
      { producer_args => $sqltargs }
-  )];
+  );
+
+  if ($self->txn_wrap) {
+    pop @stmts;                                         # remove final COMMIT
+    ++$i while $stmts[$i] =~ /^-- /;                    # skip leading comments
+    splice @stmts, $i, 1 if $stmts[$i] =~ /^BEGIN;/;    # remove first BEGIN;
+  }
+
+  return \@stmts;
 }
 
 sub _sql_from_yaml {
