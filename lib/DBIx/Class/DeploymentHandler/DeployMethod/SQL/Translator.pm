@@ -77,6 +77,12 @@ has databases => (
   default => sub { [qw( MySQL SQLite PostgreSQL )] },
 );
 
+has txn_prep => (
+  isa      => 'Bool',
+  is       => 'ro',
+  default  => 1,
+);
+
 has txn_wrap => (
   is => 'ro',
   isa => 'Bool',
@@ -261,17 +267,37 @@ sub _run_sql_array {
   return join "\n", @$sql
 }
 
+my %TXN = (
+  SQLServer => qr/(BEGIN\s+TRANSACTION\b|COMMIT\b)/i,
+  Sybase    => qr/(BEGIN\s+TRANSACTION\b|COMMIT\b)/i,
+  SQLite    => qr/(BEGIN\b|COMMIT\b)/i,
+  MySQL     => qr/(BEGIN\b|START\s+TRANSACTION\b|COMMIT\b)/i,
+  Oracle    => qr/COMMIT\b/i,
+  Pg        => qr/(BEGIN\b|COMMIT\b)/i,
+);
+
 sub _split_sql_chunk {
   my $self = shift;
+  my ($storage_class) = ref($self->storage) =~ /.*:(\w+)$/;
+  my $txn = $TXN{$storage_class} || $TXN{MySQL};
 
   # MySQL's DELIMITER is not understood by the server but handled on the client.
   # SQL::SplitStatement treats the statements between the DELIMITERs correctly
   # as ONE statement - but it does not remove the DELIMITER lines.
   # https://rt.cpan.org/Public/Bug/Display.html?id=130473
-  my @sql = grep { /^(?!DELIMITER\s+)/i } map { $self->sql_splitter->split($_) } @_;
+  # Transaction statements should not be present if txn_prep is false, if it
+  # is true then anything that looks like a transaction is removed here.
+  my @sql =
+    grep {
+      ($storage_class ne 'MySQL' || /^(?!DELIMITER\s+)/i) &&
+      (!$self->txn_prep || /^(?!$txn)/gim)
+    }
+    map {
+      $self->sql_splitter->split($_)
+    } @_;
 
   for ( @sql ) {
-    s/\s*\n+\s*/ /g;    # put on single line
+    s/\s*\n+\s*/ /g;    # put on single line... ¯\_(ツ)_/¯
   }
 
   return @sql;
@@ -505,12 +531,12 @@ sub _sqldiff_from_yaml {
   #    is never reached. *roll eyes*
   my $i = 0;
   my @stmts = SQL::Translator::Diff::schema_diff(
-     $source_schema, $db,
-     $dest_schema,   $db,
-     { producer_args => $sqltargs }
+    $source_schema, $db,
+    $dest_schema,   $db,
+    { producer_args => $sqltargs }
   );
 
-  if ($self->txn_wrap) {
+  if (!$self->txn_prep && $self->txn_wrap) {
     pop @stmts;                                         # remove final COMMIT
     ++$i while $stmts[$i] =~ /^-- /;                    # skip leading comments
     splice @stmts, $i, 1 if $stmts[$i] =~ /^BEGIN;/;    # remove first BEGIN;
@@ -1072,10 +1098,26 @@ The directory (default C<'sql'>) that scripts are stored in
 The types of databases (default C<< [qw( MySQL SQLite PostgreSQL )] >>) to
 generate files for
 
+=attr txn_prep
+
+This attribute will, when set to false (default is true), cause the DM to
+I<generate> SQL without enclosing C<BEGIN> and C<COMMIT> statements.
+
+The (current) default behavior is to create DDLs wrapped in transactions and
+to remove anything that looks like a transaction from the generated DDLs
+later I<when running the deployment>.
+
+Since this default behaviour is error prone it is strictly recommended to
+enable the C<txn_prep> attribute and remove all transaction statements from
+previously generated DDLs.
+
 =attr txn_wrap
 
 Set to true (which is the default) to wrap all upgrades and deploys in a single
-transaction.
+transaction. This option should be false if the DDL files contain transaction
+statements.
+
+Keep in mind that not all DBMSes support transactions over DDL statements.
 
 =attr schema_version
 

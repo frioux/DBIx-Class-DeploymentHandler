@@ -16,7 +16,7 @@ with 'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
     delegate_name        => 'deploy_method',
     attributes_to_assume => [qw(schema schema_version version_source)],
     attributes_to_copy   => [qw(
-      ignore_ddl databases script_directory sql_translator_args force_overwrite txn_wrap
+      ignore_ddl databases script_directory sql_translator_args force_overwrite txn_prep txn_wrap
     )],
   },
   'DBIx::Class::DeploymentHandler::WithApplicatorDumple' => {
@@ -174,6 +174,10 @@ L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator/sql_translator_a
 =item *
 
 L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator/force_overwrite>
+
+=item *
+
+L<DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator/txn_prep>
 
 =item *
 
