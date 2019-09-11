@@ -1107,8 +1107,8 @@ The (current) default behavior is to create DDLs wrapped in transactions and
 to remove anything that looks like a transaction from the generated DDLs
 later I<when running the deployment>.
 
-Since this default behaviour is error prone it is strictly recommended to
-enable the C<txn_prep> attribute and remove all transaction statements from
+Since this default behavior is error prone it is strictly recommended to set
+the C<txn_prep> attribute to false and remove all transaction statements from
 previously generated DDLs.
 
 =attr txn_wrap
