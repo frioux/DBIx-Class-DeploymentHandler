@@ -32,7 +32,6 @@ VERSION1: {
 
   ok($handler, 'DBIx::Class::DeploymentHandler w/1 instantiates correctly');
 
-  my $version = $s->schema_version;
   $handler->prepare_install;
 
   dies_ok {
@@ -65,7 +64,6 @@ VERSION2: {
 
   ok($handler, 'DBIx::Class::DeploymentHandler w/2 instantiates correctly');
 
-  my $version = $s->schema_version();
   $handler->prepare_install;
   dies_ok {
     $s->resultset('Foo')->create({
@@ -102,7 +100,6 @@ VERSION3: {
 
   ok($handler, 'DBIx::Class::DeploymentHandler w/3 instantiates correctly');
 
-  my $version = $s->schema_version();
   $handler->prepare_install;
   dies_ok {
     $s->resultset('Foo')->create({
@@ -135,7 +132,6 @@ DOWN2: {
 
   ok($handler, 'DBIx::Class::DeploymentHandler w/2 instantiates correctly');
 
-  my $version = $s->schema_version();
   lives_ok {
     $s->resultset('Foo')->create({
       bar => 'frew',
@@ -160,6 +156,44 @@ DOWN2: {
 
   is $handler->version_storage->database_version => 2,
     'database version is down to 2';
+}
+
+DOWN1: {
+  use_ok 'DBICVersion_v1';
+  my $s = DBICVersion::Schema->connect(@connection);
+  $DBICVersion::Schema::VERSION = 1;
+  ok($s, 'DBICVersion::Schema 1 instantiates correctly');
+  my $handler = DH->new({
+    ignore_ddl => 1,
+    script_directory => $sql_dir,
+    schema => $s,
+    databases => [],
+    txn_prep => 0,
+  });
+
+  ok($handler, 'DBIx::Class::DeploymentHandler w/1 instantiates correctly');
+
+  lives_ok {
+    $s->resultset('Foo')->create({
+      bar => 'frew',
+      baz => 'frew',
+    })
+  } 'schema at version 2';
+  $handler->downgrade;
+  dies_ok {
+    $s->resultset('Foo')->create({
+      bar => 'frew',
+      baz => 'frew',
+    })
+  } 'schema not at version 2';
+  lives_ok {
+    $s->resultset('Foo')->create({
+      bar => 'frew',
+    })
+  } 'schema is at version 1';
+
+  is $handler->version_storage->database_version => 1,
+    'database version is down to 1';
 
 }
 
