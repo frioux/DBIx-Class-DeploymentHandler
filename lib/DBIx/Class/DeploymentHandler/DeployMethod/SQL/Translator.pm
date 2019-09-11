@@ -271,7 +271,7 @@ my %TXN = (
   SQLServer => qr/(BEGIN\s+TRANSACTION\b|COMMIT\b)/i,
   Sybase    => qr/(BEGIN\s+TRANSACTION\b|COMMIT\b)/i,
   SQLite    => qr/(BEGIN\b|COMMIT\b)/i,
-  MySQL     => qr/(BEGIN\b|START\s+TRANSACTION\b|COMMIT\b)/i,
+  mysql     => qr/(BEGIN\b|START\s+TRANSACTION\b|COMMIT\b)/i,
   Oracle    => qr/COMMIT\b/i,
   Pg        => qr/(BEGIN\b|COMMIT\b)/i,
 );
@@ -279,7 +279,7 @@ my %TXN = (
 sub _split_sql_chunk {
   my $self = shift;
   my ($storage_class) = ref($self->storage) =~ /.*:(\w+)$/;
-  my $txn = $TXN{$storage_class} || $TXN{MySQL};
+  my $txn = $TXN{$storage_class} || $TXN{mysql};
 
   # MySQL's DELIMITER is not understood by the server but handled on the client.
   # SQL::SplitStatement treats the statements between the DELIMITERs correctly
@@ -289,7 +289,7 @@ sub _split_sql_chunk {
   # is true then anything that looks like a transaction is removed here.
   my @sql =
     grep {
-      ($storage_class ne 'MySQL' || /^(?!DELIMITER\s+)/i) &&
+      ($storage_class ne 'mysql' || /^(?!DELIMITER\s+)/i) &&
       (!$self->txn_prep || /^(?!$txn)/gim)
     }
     map {

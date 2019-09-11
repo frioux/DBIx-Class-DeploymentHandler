@@ -14,7 +14,7 @@ sub make_dm {
   }, 'DBIx::Class::DeploymentHandler::DeployMethod::SQL::Translator';
 }
 
-my $dm = make_dm('MySQL');
+my $dm = make_dm('mysql');
 
 is_deeply [ $dm->_split_sql_chunk( <<'END' ) ], [ 'BEGIN SELECT * FROM YADAH END' ];
 BEGIN
@@ -25,7 +25,7 @@ END
 
 is_deeply [ $dm->_split_sql_chunk( 'foo', ' ', 'bar' ) ], [qw(foo bar)];
 
-$dm = make_dm('MySQL', txn_prep => 1);  # default, bw-comp.
+$dm = make_dm('mysql', txn_prep => 1);  # default, bw-comp.
 
 is_deeply [ $dm->_split_sql_chunk( <<'END' ) ],
 BEGIN;
@@ -41,7 +41,7 @@ END
     'SELECT * FROM YADAH',
   ];
 
-$dm = make_dm('MySQL', txn_prep => 0);
+$dm = make_dm('mysql', txn_prep => 0);
 
 is_deeply [ $dm->_split_sql_chunk( <<'END' ) ],
 BEGIN;
@@ -59,7 +59,7 @@ END
     'Commit',
   ];
 
-$dm = make_dm('MySQL', txn_prep => 0);
+$dm = make_dm('mysql', txn_prep => 0);
 
 is_deeply [ $dm->_split_sql_chunk( <<'END' ) ],
 insert into door (color) VALUES ('#000');
