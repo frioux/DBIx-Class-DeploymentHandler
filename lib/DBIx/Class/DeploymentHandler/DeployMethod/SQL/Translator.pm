@@ -12,6 +12,7 @@ use Digest::MD5;
 
 use Try::Tiny;
 
+use SQL::SplitStatement '1.00020';
 use SQL::Translator;
 require SQL::Translator::Diff;
 
@@ -76,6 +77,12 @@ has databases => (
   default => sub { [qw( MySQL SQLite PostgreSQL )] },
 );
 
+has txn_prep => (
+  isa      => 'Bool',
+  is       => 'ro',
+  default  => 1,
+);
+
 has txn_wrap => (
   is => 'ro',
   isa => 'Bool',
@@ -94,6 +101,14 @@ sub _build_schema_version {
   my $self = shift;
   $self->schema->schema_version
 }
+
+has sql_splitter => (
+    is => 'ro',
+    lazy => 1,
+    builder => '_build_sql_splitter',
+);
+
+sub _build_sql_splitter { SQL::SplitStatement->new }
 
 sub __ddl_consume_with_prefix {
   my ($self, $type, $versions, $prefix) = @_;
@@ -252,122 +267,40 @@ sub _run_sql_array {
   return join "\n", @$sql
 }
 
-my %STORAGE2FEATURE = (
-  SQLServer => {
-    txn => qr/begin\s+transaction\b/i,
-    comment => {
-      DD => 1, # --
-      HASH => 1,
-      SSTAR => 1, # /* */
-      DS => 1, # //
-      PERCENT => 1,
-    },
-  },
-  Sybase => {
-    txn => qr/begin\s+transaction\b/i,
-    comment => {
-      DD => 1,
-      SSTAR => 1,
-      DS => 1,
-      PERCENT => 1,
-    },
-  },
-  SQLite => {
-    txn => qr/begin\b/i,
-    comment => {
-      DD => 1,
-      HASH => 1,
-    },
-  },
-  MySQL => {
-    txn => qr/(begin\b|start\s+transaction\b)/i,
-    comment => {
-      DD => 1,
-      HASH => 1,
-      SS => 1,
-    },
-  },
-  Oracle => {
-    comment => {
-      DD => 1,
-      HASH => 1,
-      SS => 1,
-    },
-  },
-  Pg => {
-    txn => qr/begin\b/i,
-    chunk => sub {
-      my ($c) = @_;
-      my @ret;
-      my $accumulator = '';
-      while (length $c) {
-        if ($c =~ s/\A([^\$]*?);//s) {
-          $accumulator .= $1;
-          push @ret, $accumulator;
-          $accumulator = '';
-        } elsif (
-          $c =~ s/\A(
-            .*?
-            ( \$ [^\$]* \$ )
-          )//xs
-        ) {
-          # got a $...$ .. $...$ chunk
-          $accumulator .= $1;
-          my $anchor = $2;
-          $c =~ s/\A(
-            .*?
-            \Q$anchor\E
-          )//xs;
-          $accumulator .= $1;
-        } elsif ($c =~ s/\A\s*\z//s) {
-          push @ret, $accumulator;
-          $accumulator = '';
-        } else {
-          push @ret, $accumulator.$c;
-          $accumulator = '';
-          last;
-        }
-      }
-      @ret;
-    },
-    comment => {
-      DD => 1,
-      HASH => 1,
-    },
-  },
+my %TXN = (
+  SQLServer => qr/(BEGIN\s+TRANSACTION\b|COMMIT\b)/i,
+  Sybase    => qr/(BEGIN\s+TRANSACTION\b|COMMIT\b)/i,
+  SQLite    => qr/(BEGIN\b|COMMIT\b)/i,
+  mysql     => qr/(BEGIN\b|START\s+TRANSACTION\b|COMMIT\b)/i,
+  Oracle    => qr/COMMIT\b/i,
+  Pg        => qr/(BEGIN\b|COMMIT\b)/i,
 );
 
-# split a chunk o' SQL into statements
 sub _split_sql_chunk {
   my $self = shift;
-  my @sql = map { $_.'' } @_; # copy
-  my $storage_class = ref $self->storage;
-  $storage_class =~ s/.*://;
-  my $feature = $STORAGE2FEATURE{$storage_class} || $STORAGE2FEATURE{MySQL};
+  my ($storage_class) = ref($self->storage) =~ /.*:(\w+)$/;
+  my $txn = $TXN{$storage_class} || $TXN{mysql};
+
+  # MySQL's DELIMITER is not understood by the server but handled on the client.
+  # SQL::SplitStatement treats the statements between the DELIMITERs correctly
+  # as ONE statement - but it does not remove the DELIMITER lines.
+  # https://rt.cpan.org/Public/Bug/Display.html?id=130473
+  # Transaction statements should not be present if txn_prep is false, if it
+  # is true then anything that looks like a transaction is removed here.
+  my @sql =
+    grep {
+      ($storage_class ne 'mysql' || /^(?!DELIMITER\s+)/i) &&
+      (!$self->txn_prep || /^(?!$txn)/gim)
+    }
+    map {
+      $self->sql_splitter->split($_)
+    } @_;
+
   for ( @sql ) {
-    # strip transactions
-    my $txn = $feature->{txn};
-    s/^\s*($txn|COMMIT\b).*//mgi if $txn;
-    # remove comments
-    my $comment = $feature->{comment};
-    s{--.*}{}gm if $comment->{DD};
-    s{/\* .*? \*/}{}xs if $comment->{SS};
-    s{//.*}{}gm if $comment->{DS};
-    s{#.*}{}gm if $comment->{HASH};
-    s{%.*}{}gm if $comment->{PERCENT};
+    s/\s*\n+\s*/ /g;    # put on single line... ¯\_(ツ)_/¯
   }
-  my $chunk = $feature->{chunk} || sub { split /;\n/, $_[0] };
-  @sql = map $chunk->($_), @sql;
-  for ( @sql ) {
-    # trim whitespace
-    s/^\s+//gm;
-    s/\s+$//gm;
-    # remove blank lines
-    s/^\n//gm;
-    # put on single line
-    s/\n/ /g;
-  }
-  return grep $_, @sql;
+
+  return @sql;
 }
 
 sub _run_sql {
@@ -589,11 +522,27 @@ sub _sqldiff_from_yaml {
   );
   $_->($source_schema, $dest_schema) for @$transforms;
 
-  return [SQL::Translator::Diff::schema_diff(
-     $source_schema, $db,
-     $dest_schema,   $db,
-     { producer_args => $sqltargs }
-  )];
+  # SQL::Translator::Diff::schema_diff or rather the underlying
+  # SQL::Translator::Diff::produce_diff_sql has severe issues:
+  # 1. It is undocumented
+  # 2. It wraps the result in "BEGIN; ... COMMIT;" *SIGH*
+  # 3. In a first glance it seems it could also return undef in
+  #    list context, but the code is broken enough so that part
+  #    is never reached. *roll eyes*
+  my $i = 0;
+  my @stmts = SQL::Translator::Diff::schema_diff(
+    $source_schema, $db,
+    $dest_schema,   $db,
+    { producer_args => $sqltargs }
+  );
+
+  if (!$self->txn_prep && $self->txn_wrap) {
+    pop @stmts;                                         # remove final COMMIT
+    ++$i while $stmts[$i] =~ /^-- /;                    # skip leading comments
+    splice @stmts, $i, 1 if $stmts[$i] =~ /^BEGIN;/;    # remove first BEGIN;
+  }
+
+  return \@stmts;
 }
 
 sub _sql_from_yaml {
@@ -1149,10 +1098,26 @@ The directory (default C<'sql'>) that scripts are stored in
 The types of databases (default C<< [qw( MySQL SQLite PostgreSQL )] >>) to
 generate files for
 
+=attr txn_prep
+
+This attribute will, when set to false (default is true), cause the DM to
+I<generate> SQL without enclosing C<BEGIN> and C<COMMIT> statements.
+
+The (current) default behavior is to create DDLs wrapped in transactions and
+to remove anything that looks like a transaction from the generated DDLs
+later I<when running the deployment>.
+
+Since this default behavior is error prone it is strictly recommended to set
+the C<txn_prep> attribute to false and remove all transaction statements from
+previously generated DDLs.
+
 =attr txn_wrap
 
 Set to true (which is the default) to wrap all upgrades and deploys in a single
-transaction.
+transaction. This option should be false if the DDL files contain transaction
+statements.
+
+Keep in mind that not all DBMSes support transactions over DDL statements.
 
 =attr schema_version
 

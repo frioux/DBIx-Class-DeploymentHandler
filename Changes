@@ -1,6 +1,10 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - Add txn_wrap attribute to DBIC::DeploymentHandler
+ - Bugfix: Do not remove "false" transactions in deploy()
+ - use SQL::SplitStatement to split SQL statements in DDLs
+ - Add txn_prep attribute to keep backwards-compatibility
 
 0.002232  2019-06-06 21:49:17-04:00 America/New_York
  - Add missing dependency on YAML.pm
