@@ -297,7 +297,7 @@ sub _split_sql_chunk {
     } @_;
 
   for ( @sql ) {
-    s/\s*\n+\s*/ /g;    # put on single line... ¯\_(ツ)_/¯
+    s/\s*\n+\s*/ /g;    # put on single line
   }
 
   return @sql;
