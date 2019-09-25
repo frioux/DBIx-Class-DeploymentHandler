@@ -5,6 +5,7 @@ Revision history for {{$dist->name}}
  - Bugfix: Do not remove "false" transactions in deploy()
  - use SQL::SplitStatement to split SQL statements in DDLs
  - Add txn_prep attribute to keep backwards-compatibility
+ - Fixes GH #47, #68, #72 - thanks @augenslat
 
 0.002232  2019-06-06 21:49:17-04:00 America/New_York
  - Add missing dependency on YAML.pm
