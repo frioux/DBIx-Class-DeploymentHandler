@@ -27,7 +27,7 @@ has to_version => (
 
 sub _build_to_version {
   my $version = $_[0]->schema_version;
-  ref($version) ? $version->numify : $version;
+  ref($version) ? int($version->numify) : $version;
 }
 
 has schema_version => (
