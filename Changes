@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+ - Fix SQL::Translator producer_args deprecation warning #77 - thanks
+   @paultcochrane
 
 0.002233  2019-09-25 13:32:11-04:00 America/New_York
  - Add txn_wrap attribute to DBIC::DeploymentHandler
