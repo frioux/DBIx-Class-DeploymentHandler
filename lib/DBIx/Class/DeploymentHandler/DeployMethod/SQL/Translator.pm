@@ -533,7 +533,7 @@ sub _sqldiff_from_yaml {
   my @stmts = SQL::Translator::Diff::schema_diff(
     $source_schema, $db,
     $dest_schema,   $db,
-    { producer_args => $sqltargs }
+    { sqlt_args => $sqltargs }
   );
 
   if (!$self->txn_prep && $self->txn_wrap) {
