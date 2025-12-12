@@ -344,7 +344,7 @@ sub _load_sandbox {
 package %s;
 {
   our $app;
-  $app ||= require $_file;
+  $app ||= do $_file;
   if ( !$app && ( my $error = $@ || $! )) { die $error; }
   $app;
 }
