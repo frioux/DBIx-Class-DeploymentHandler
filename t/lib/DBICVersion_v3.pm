@@ -1,5 +1,6 @@
 package DBICVersion::Foo;
 
+use utf8;
 use base 'DBIx::Class::Core';
 use strict;
 use warnings;
@@ -28,6 +29,34 @@ __PACKAGE__->add_columns(
 );
 
 __PACKAGE__->set_primary_key('foo');
+
+
+sub sqlt_deploy_hook {
+  my( $self, $sqlt_table ) =  @_;
+
+  $sqlt_table->schema->add_procedure(
+    name => 'test_utf',
+    parameters => [ name => '_string', type => 'text' ],
+    extra => {
+      returns => { type => 'VOID' },
+      definitions => [
+        { language => 'sql' },
+        { quote    => '$$', body => 'SELECT "перевірка ЮТФ/check UTF"' },
+      ]
+    }
+  );
+
+  $sqlt_table->schema->add_trigger(
+    name =>  'test_utf',
+    perform_action_when =>  'before',
+    database_events     =>  'update',
+    on_table            =>  $sqlt_table->name,
+    scope               =>  'row',
+    action              =>  q!EXECUTE PROCEDURE test_utf("перевірка ЮТФ/check UTF")!
+  );
+
+}
+
 
 package DBICVersion::Schema;
 use base 'DBIx::Class::Schema';

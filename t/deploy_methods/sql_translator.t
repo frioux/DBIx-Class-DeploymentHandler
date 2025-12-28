@@ -200,7 +200,12 @@ VERSION3: {
    ok( $dm, 'DBIC::DH::SQL::Translator w/3.0 instantiates correctly');
 
    my $version = $s->schema_version();
-   $dm->prepare_deploy;
+   {
+      my @warns;
+      local $SIG{__WARN__} = sub { push @warns, shift };
+      $dm->prepare_deploy;
+      ok scalar @warns == 0, "UTF handled correctly. No 'Wide character in print' warning.";
+   }
    ok(
       -f file($sql_dir, qw(SQLite deploy 3.0 001-auto.sql )),
       '2.0 schema gets generated properly'

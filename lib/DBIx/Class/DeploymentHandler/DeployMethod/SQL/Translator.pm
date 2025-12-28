@@ -20,6 +20,7 @@ require DBIx::Class::Storage;   # loaded for type constraint
 use DBIx::Class::DeploymentHandler::Types;
 
 use Path::Class qw(file dir);
+use utf8;
 
 with 'DBIx::Class::DeploymentHandler::HandlesDeploy';
 
@@ -803,6 +804,7 @@ sub prepare_protoschema {
 
   open my $file, q(>), $filename;
   binmode $file;
+  utf8::encode($yml);
   print {$file} $yml;
   close $file;
 }
